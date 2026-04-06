@@ -20,8 +20,9 @@
     "test:typecheck": "tsc --noEmit",
     "test:parity": "vitest run --reporter=verbose",
     "lint": "npx eslint src/ tests/",
-    "bench": "echo 'No benchmarks yet'",
-    "test:coverage": "npx vitest run --coverage"
+    "bench": "npx vitest bench benchmarks/",
+    "test:coverage": "npx vitest run --coverage",
+    "test:mutation": "npx stryker run"
   },
   "devDependencies": {
     "@stryker-mutator/core": "^8.7.1",
