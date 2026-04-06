@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test:typecheck": "tsc --noEmit",
     "test:parity": "vitest run --reporter=verbose",
-    "lint": "eslint src/ tests/",
+    "lint": "npx eslint src/ tests/",
     "bench": "echo 'No benchmarks yet'",
     "test:coverage": "npx vitest run --coverage"
   },
