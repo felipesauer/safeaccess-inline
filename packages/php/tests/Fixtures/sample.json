@@ -1,0 +1,13 @@
+{
+    "user": {
+        "name": "Alice",
+        "age": 30,
+        "address": {
+            "city": "Porto Alegre",
+            "country": "Brazil"
+        }
+    },
+    "tags": ["php", "testing", "pest"],
+    "score": 9.5,
+    "active": true
+}

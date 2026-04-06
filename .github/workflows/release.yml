@@ -1,0 +1,159 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+permissions: {}
+
+jobs:
+    # ──────────────────────────────────────────────────────────
+    # Step 1: Release Please — creates/updates release PRs
+    # ──────────────────────────────────────────────────────────
+    release-please:
+        name: Release Please
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+        outputs:
+            php_released: ${{ steps.release.outputs['packages/php--release_created'] }}
+            php_tag: ${{ steps.release.outputs['packages/php--tag_name'] }}
+            php_version: ${{ steps.release.outputs['packages/php--version'] }}
+            js_released: ${{ steps.release.outputs['packages/js--release_created'] }}
+            js_tag: ${{ steps.release.outputs['packages/js--tag_name'] }}
+            js_version: ${{ steps.release.outputs['packages/js--version'] }}
+
+        steps:
+            - name: Run Release Please
+              id: release
+              uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+    # ──────────────────────────────────────────────────────────
+    # Step 2: Sync tag to PHP split repo
+    # ──────────────────────────────────────────────────────────
+    sync-php-tag:
+        name: Sync PHP Tag
+        permissions:
+            contents: read
+        needs: [release-please]
+        if: needs.release-please.outputs.php_released == 'true'
+        runs-on: ubuntu-latest
+        env:
+            PHP_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safe-access-inline-php' }}
+
+        steps:
+            - name: Checkout mono-repo
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Split, push and tag PHP split repo
+              env:
+                  SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+              run: |
+                  VERSION="${{ needs.release-please.outputs.php_version }}"
+                  TAG="v${VERSION}"
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+                  SHA=$(git subtree split --prefix=packages/php)
+                  REMOTE="https://x-access-token:${SPLIT_TOKEN}@github.com/${PHP_REPO}.git"
+
+                  git remote add split-php "${REMOTE}" 2>/dev/null || git remote set-url split-php "${REMOTE}"
+                  git push split-php "${SHA}:refs/heads/main" --force
+
+                  git push split-php ":refs/tags/${TAG}" 2>/dev/null || true
+                  git tag -d "${TAG}" 2>/dev/null || true
+                  git tag -a "${TAG}" "${SHA}" -m "Release ${TAG}"
+                  git push split-php "${TAG}"
+
+                  echo "✅ Split and tagged ${PHP_REPO} with ${TAG} (${SHA})"
+
+    # ──────────────────────────────────────────────────────────
+    # Step 3: Sync tag to JS split repo
+    # ──────────────────────────────────────────────────────────
+    sync-js-tag:
+        name: Sync JS Tag
+        permissions:
+            contents: read
+        needs: [release-please]
+        if: needs.release-please.outputs.js_released == 'true'
+        runs-on: ubuntu-latest
+        env:
+            JS_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
+
+        steps:
+            - name: Checkout mono-repo
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Split, push and tag JS split repo
+              env:
+                  SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+              run: |
+                  VERSION="${{ needs.release-please.outputs.js_version }}"
+                  TAG="v${VERSION}"
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+                  SHA=$(git subtree split --prefix=packages/js)
+                  REMOTE="https://x-access-token:${SPLIT_TOKEN}@github.com/${JS_REPO}.git"
+
+                  git remote add split-js "${REMOTE}" 2>/dev/null || git remote set-url split-js "${REMOTE}"
+                  git push split-js "${SHA}:refs/heads/main" --force
+
+                  git push split-js ":refs/tags/${TAG}" 2>/dev/null || true
+                  git tag -d "${TAG}" 2>/dev/null || true
+                  git tag -a "${TAG}" "${SHA}" -m "Release ${TAG}"
+                  git push split-js "${TAG}"
+
+                  echo "✅ Split and tagged ${JS_REPO} with ${TAG} (${SHA})"
+
+    # ──────────────────────────────────────────────────────────
+    # Step 4: Publish JS to npm
+    # ──────────────────────────────────────────────────────────
+    publish-npm:
+        name: Publish to npm
+        permissions:
+            contents: read
+            id-token: write
+        needs: [release-please, sync-js-tag]
+        if: needs.release-please.outputs.js_released == 'true'
+        runs-on: ubuntu-latest
+        env:
+            JS_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
+
+        steps:
+            - name: Checkout JS split repo (tagged version)
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  repository: ${{ env.JS_REPO }}
+                  ref: "v${{ needs.release-please.outputs.js_version }}"
+                  token: ${{ secrets.SPLIT_TOKEN }}
+
+            - name: Setup Node
+              uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+              with:
+                  node-version: 24
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Install dependencies
+              run: npm install --ignore-scripts
+
+            - name: Build
+              run: npm run build
+
+            - name: Publish
+              run: npm publish --access public --provenance
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

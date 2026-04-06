@@ -1,0 +1,81 @@
+name: JS CI
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "packages/js/**"
+            - ".github/workflows/js-ci.yml"
+    pull_request:
+        branches: [main]
+        paths:
+            - "packages/js/**"
+            - ".github/workflows/js-ci.yml"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        name: Node ${{ matrix.node }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                node: ["22", "24"]
+
+        defaults:
+            run:
+                working-directory: packages/js
+
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+            - name: Setup Node.js
+              uses: ./.github/actions/setup-node-cached
+              with:
+                  node-version: ${{ matrix.node }}
+                  working-directory: packages/js
+
+            - name: Install dependencies
+              working-directory: .
+              run: npm install
+
+            - name: Build
+              run: npm run build
+
+            - name: Run tests
+              run: npm test -- --coverage
+
+            - name: Upload coverage to Codecov
+              if: matrix.node == '24'
+              uses: ./.github/actions/upload-coverage
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: javascript
+                  directory: packages/js/coverage
+
+            - name: Typecheck
+              if: matrix.node == '24'
+              run: npm run typecheck
+
+            # Validates type-level tests (.test-d.ts) via Vitest typecheck
+            - name: Type-level tests
+              if: matrix.node == '24'
+              run: npm run test:typecheck
+
+            # Cross-parity ensures JS and PHP produce identical results
+            - name: Cross-parity tests
+              if: matrix.node == '24'
+              run: npm run test:parity
+
+            - name: Lint
+              if: matrix.node == '24'
+              run: npm run lint
+
+            # Benchmark is a report, not a quality gate — never fails the build
+            - name: Benchmark (report only)
+              if: matrix.node == '24'
+              continue-on-error: true
+              run: npm run bench

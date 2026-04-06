@@ -1,0 +1,33 @@
+{
+  "name": "@safe-access/inline",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Safe nested data access with dot notation \u2014 JavaScript/TypeScript",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:typecheck": "tsc --noEmit",
+    "test:parity": "vitest run --reporter=verbose",
+    "lint": "eslint src/ tests/",
+    "bench": "echo 'No benchmarks yet'",
+    "test:coverage": "npx vitest run --coverage"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "^8.7.1",
+    "@stryker-mutator/vitest-runner": "^8.7.1",
+    "@vitest/coverage-v8": "^1.6.1",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

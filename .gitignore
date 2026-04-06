@@ -1,0 +1,59 @@
+# PHP
+packages/php/vendor/
+packages/php/.phpunit.cache/
+packages/php/.php-cs-fixer.cache
+packages/php/.phpstan.cache/
+packages/php/coverage/
+packages/php/coverage.xml
+packages/php/.infection.cache/
+packages/php/coverage-infection/
+packages/php/reports/
+packages/php/.phpunit.result.cache
+packages/php/benchmarks/baseline.txt
+
+
+# JS/TS
+packages/js/node_modules/
+packages/js/dist/
+packages/js/coverage/
+packages/js/.stryker-tmp/
+packages/js/reports/
+packages/js/benchmarks/baseline.txt
+
+# Root tooling (husky, commitlint, lint-staged)
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+*.code-workspace
+.env
+.env.*
+!.env.example
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+*.log
+coverage/
+.cache/
+tmp/
+.bg-shell/
+.github/agents/
+.github/data/
+.github/skills/
+.github/copilot-instructions.md
+.stryker-tmp/

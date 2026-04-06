@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <user>
+        <name>Alice</name>
+        <age>30</age>
+        <address>
+            <city>Porto Alegre</city>
+            <country>Brazil</country>
+        </address>
+    </user>
+    <score>9.5</score>
+</root>

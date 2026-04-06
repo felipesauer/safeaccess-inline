@@ -1,0 +1,62 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Source files
+*.php text diff=php
+*.ts text diff=typescript
+*.js text diff=javascript
+*.json text
+*.yml text
+*.yaml text
+*.xml text
+*.md text
+*.txt text
+*.ini text
+*.env text
+*.neon text
+
+# Config files
+*.editorconfig text
+.gitattributes text
+.gitignore text
+
+# Shell scripts
+*.sh text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.zip binary
+*.tar.gz binary
+*.pdf binary
+
+# Export ignore — files excluded from `git archive`
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.github/ export-ignore
+/.husky/ export-ignore
+/.nvmrc export-ignore
+/docs/ export-ignore
+/commitlint.config.js export-ignore
+/.lintstagedrc.json export-ignore
+/package.json export-ignore
+/release-please-config.json export-ignore
+/.release-please-manifest.json export-ignore
+
+# GitHub Linguist overrides
+packages/php/vendor/ linguist-vendored
+docs/ linguist-documentation

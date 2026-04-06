@@ -1,0 +1,15 @@
+# Default owner for everything in the repo
+* @felipesauer
+
+# Package-specific ownership
+/packages/php/ @felipesauer
+/packages/js/ @felipesauer
+
+# CI/CD and release configuration
+/.github/ @felipesauer
+/release-please-config.json @felipesauer
+
+# Documentation
+README.md @felipesauer
+packages/js/README.md @felipesauer
+packages/php/README.md @felipesauer

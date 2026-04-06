@@ -1,0 +1,54 @@
+name: Split Packages
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+concurrency:
+    group: split-packages
+    cancel-in-progress: false
+
+permissions:
+    contents: read
+
+jobs:
+    split-php:
+        name: Split PHP Package
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout mono-repo
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Split and push packages/php
+              env:
+                  SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+                  TARGET_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safe-access-inline-php' }}
+              run: |
+                  SHA=$(git subtree split --prefix=packages/php)
+                  git remote add split-php "https://x-access-token:${SPLIT_TOKEN}@github.com/${TARGET_REPO}.git" 2>/dev/null || true
+                  git push split-php "${SHA}:refs/heads/main" --force
+
+    split-js:
+        name: Split JS Package
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout mono-repo
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Split and push packages/js
+              env:
+                  SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+                  TARGET_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
+              run: |
+                  SHA=$(git subtree split --prefix=packages/js)
+                  git remote add split-js "https://x-access-token:${SPLIT_TOKEN}@github.com/${TARGET_REPO}.git" 2>/dev/null || true
+                  git push split-js "${SHA}:refs/heads/main" --force
+
