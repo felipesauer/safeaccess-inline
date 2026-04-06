@@ -25,6 +25,9 @@ export class SecurityParser implements SecurityParserInterface {
      * @param options.maxDepth - Maximum allowed structural nesting depth. Default: 512.
      * @param options.maxPayloadBytes - Maximum allowed raw payload size in bytes. Default: 10 MB.
      * @param options.maxKeys - Maximum total number of keys across the entire structure. Default: 10000.
+     *   This value is also passed to `XmlParser` as the element-count cap for the Node.js manual XML
+     *   parser path. Setting it below a document's element count will cause `fromXml()` to throw
+     *   `SecurityException`. Non-positive or non-finite values disable that guard — prefer the default.
      * @param options.maxCountRecursiveDepth - Maximum recursion depth when counting keys. Default: 100.
      * @param options.maxResolveDepth - Maximum recursion depth for path resolution. Default: 100.
      */
@@ -37,11 +40,11 @@ export class SecurityParser implements SecurityParserInterface {
             maxResolveDepth?: number;
         } = {},
     ) {
-        this.maxDepth = options.maxDepth ?? 512;
-        this.maxPayloadBytes = options.maxPayloadBytes ?? 10 * 1024 * 1024;
-        this.maxKeys = options.maxKeys ?? 10_000;
-        this.maxCountRecursiveDepth = options.maxCountRecursiveDepth ?? 100;
-        this.maxResolveDepth = options.maxResolveDepth ?? 100;
+        this.maxDepth = SecurityParser.clampOption(options.maxDepth, 512);
+        this.maxPayloadBytes = SecurityParser.clampOption(options.maxPayloadBytes, 10 * 1024 * 1024);
+        this.maxKeys = SecurityParser.clampOption(options.maxKeys, 10_000);
+        this.maxCountRecursiveDepth = SecurityParser.clampOption(options.maxCountRecursiveDepth, 100);
+        this.maxResolveDepth = SecurityParser.clampOption(options.maxResolveDepth, 100);
     }
 
     /**
@@ -161,6 +164,15 @@ export class SecurityParser implements SecurityParserInterface {
     }
 
     /**
+     * Return the configured maximum total key count.
+     *
+     * @returns Maximum allowed key count.
+     */
+    getMaxKeys(): number {
+        return this.maxKeys;
+    }
+
+    /**
      * Recursively count keys in a data structure.
      *
      * @param obj - Data to count keys in.
@@ -212,5 +224,10 @@ export class SecurityParser implements SecurityParserInterface {
         }
 
         return max;
+    }
+
+    private static clampOption(value: number | undefined, defaultValue: number): number {
+        /* Stryker disable next-line ConditionalExpression -- equivalent: Number.isFinite covers undefined (isFinite(undefined)===false); simplest safe form */
+        return Number.isFinite(value) ? (value as number) : defaultValue;
     }
 }

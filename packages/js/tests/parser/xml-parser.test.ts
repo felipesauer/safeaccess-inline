@@ -122,6 +122,30 @@ describe(XmlParser.name, () => {
     it('throws InvalidFormatException for opening tag without closing tag', () => {
         expect(() => makeParser().parse('<root><unclosed>')).toThrow(InvalidFormatException);
     });
+
+    it('throws InvalidFormatException when closing tag is embedded inside opening tag body (closeTagStart <= openGt)', () => {
+        // <abc</abc> — backward scan finds 'abc' at the end, confirms '</abc',
+        // but closeTagStart (4) is <= openGt (9), meaning the close marker is
+        // inside the opening-tag span — structurally impossible, must throw
+        expect(() => makeParser().parse('<abc</abc>')).toThrow(InvalidFormatException);
+    });
+
+    it('throws InvalidFormatException when document does not end with > (no closing tag)', () => {
+        // '<root>unclosed text' ends with 't', not '>' — triggers the
+        // doc[doc.length - 1] !== '>' guard in extractRootContent
+        expect(() => makeParser().parse('<root>unclosed text')).toThrow(InvalidFormatException);
+    });
+
+    it('throws InvalidFormatException when opening tag has no closing > at all', () => {
+        // '<root' has no '>' — openGt === -1 guard in extractRootContent
+        expect(() => makeParser().parse('<root')).toThrow(InvalidFormatException);
+    });
+
+    it('throws InvalidFormatException when tag name found at end but not preceded by </ (space before tag name)', () => {
+        // '<root>text root>' — backward scan finds 'root' at the end but
+        // the preceding char is ' ' not '/', triggering the </ guard
+        expect(() => makeParser().parse('<root>text root>')).toThrow(InvalidFormatException);
+    });
 });
 
 describe(`${XmlParser.name} > nested elements`, () => {
@@ -195,6 +219,63 @@ describe(`${XmlParser.name} > security — depth limit`, () => {
         expect(() =>
             new XmlParser(0).parse('<root><a><b>value</b></a></root>'),
         ).toThrow(SecurityException);
+    });
+});
+
+describe(`${XmlParser.name} > security — element count limit (maxElements)`, () => {
+    it('throws SecurityException when element count exceeds custom maxElements', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(3) + '</root>';
+        expect(() => new XmlParser(10, 2).parse(xml)).toThrow(SecurityException);
+    });
+
+    it('does not throw when element count equals maxElements', () => {
+        // <root> + 3 × <item> = 4 opening tags counted by the guard
+        const xml = '<root>' + '<item>x</item>'.repeat(3) + '</root>';
+        expect(() => new XmlParser(10, 4).parse(xml)).not.toThrow();
+    });
+
+    it('includes element count and limit in SecurityException message', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(3) + '</root>';
+        expect(() => new XmlParser(10, 2).parse(xml)).toThrow(
+            /XML element count \d+ exceeds maximum of \d+/i,
+        );
+    });
+});
+
+describe(`${XmlParser.name} > constructor — maxElements clamping (SEC-017)`, () => {
+    it('clamps NaN to 10 000 so the element guard still fires at 10 000', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(10_001) + '</root>';
+        expect(() => new XmlParser(100, NaN).parse(xml)).toThrow(SecurityException);
+    });
+
+    it('does not throw for NaN when element count is within the clamped default limit', () => {
+        const xml = '<root><item>x</item></root>';
+        expect(() => new XmlParser(100, NaN).parse(xml)).not.toThrow();
+    });
+
+    it('clamps Infinity to 10 000 so the element guard still fires at 10 000', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(10_001) + '</root>';
+        expect(() => new XmlParser(100, Infinity).parse(xml)).toThrow(SecurityException);
+    });
+
+    it('clamps zero to 10 000 so the element guard still fires at 10 000', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(10_001) + '</root>';
+        expect(() => new XmlParser(100, 0).parse(xml)).toThrow(SecurityException);
+    });
+
+    it('clamps negative values to 10 000 so the element guard still fires at 10 000', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(10_001) + '</root>';
+        expect(() => new XmlParser(100, -1).parse(xml)).toThrow(SecurityException);
+    });
+
+    it('accepts a valid positive finite maxElements and enforces it', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(5) + '</root>';
+        expect(() => new XmlParser(100, 4).parse(xml)).toThrow(SecurityException);
+    });
+
+    it('uses the provided positive finite maxElements when within limit — no exception', () => {
+        const xml = '<root>' + '<item>x</item>'.repeat(3) + '</root>';
+        expect(() => new XmlParser(100, 10).parse(xml)).not.toThrow();
     });
 });
 
@@ -400,5 +481,100 @@ describe(`${XmlParser.name} > browser DOMParser path`, () => {
         stubDomParser(root);
         const result = makeParser().parse('<root/>');
         expect(result['name']).toEqual({ '#text': 'Bob' });
+    });
+});
+
+describe(`${XmlParser.name} > linear scanner — nesting counter`, () => {
+    it('extracts outer element when same-name elements nest (kills nestDepth++ mutant)', () => {
+        // nestDepth must be incremented at inner <a> so the first </a> does not
+        // prematurely close the outer element
+        const result = makeParser().parse('<root><a><a>inner</a>rest</a></root>');
+        const a = result['a'] as Record<string, unknown>;
+        expect(a['a']).toBe('inner');
+    });
+
+    it('resolves 3-deep same-name nesting (kills off-by-one in nestDepth-- condition)', () => {
+        // nestDepth starts at 1, increments twice, decrements 3× — only
+        // when it hits exactly 0 should inner content be collected
+        const result = makeParser().parse('<root><a><a><a>deep</a></a></a></root>');
+        const a1 = result['a'] as Record<string, unknown>;
+        const a2 = a1['a'] as Record<string, unknown>;
+        expect(a2['a']).toBe('deep');
+    });
+
+    it('does not count a self-closing same-name tag as open nestDepth (kills self-closing increment mutant)', () => {
+        // <a/> inside <a>…</a> must NOT increment nestDepth; if it did, the first
+        // </a> would only bring nestDepth to 1 and the parser would scan past it
+        const result = makeParser().parse('<root><a><a/>text</a></root>');
+        const a = result['a'] as Record<string, unknown>;
+        expect(a['a']).toBe('');
+    });
+});
+
+describe(`${XmlParser.name} > linear scanner — self-closing detection`, () => {
+    it('treats <tag   /> (spaces before />) as self-closing (kills trimEnd mutant)', () => {
+        const result = makeParser().parse('<root><empty   /></root>');
+        expect(result['empty']).toBe('');
+    });
+
+    it('treats <tag attr="v" /> as self-closing (attribute + space + /)', () => {
+        const result = makeParser().parse('<root><flag enabled="true" /></root>');
+        expect(result['flag']).toBe('');
+    });
+});
+
+describe(`${XmlParser.name} > linear scanner — skip non-element tokens`, () => {
+    it('skips XML comment nodes inside children (kills nextChar === "!" mutant)', () => {
+        const result = makeParser().parse('<root><!-- comment --><name>Alice</name></root>');
+        expect(result['name']).toBe('Alice');
+        expect(Object.keys(result)).toEqual(['name']);
+    });
+
+    it('skips processing instructions inside children (kills nextChar === "?" mutant)', () => {
+        const result = makeParser().parse('<root><?pi data?><name>Bob</name></root>');
+        expect(result['name']).toBe('Bob');
+        expect(Object.keys(result)).toEqual(['name']);
+    });
+
+    it('skips stray closing tags inside children (kills nextChar === "/" mutant)', () => {
+        const result = makeParser().parse('<root></stray><name>Charlie</name></root>');
+        expect(result['name']).toBe('Charlie');
+        expect(Object.keys(result)).toEqual(['name']);
+    });
+
+    it('handles comment-like token with no closing > (gt === -1 ternary branch)', () => {
+        // '<!no close tag' in inner content — no '>' found, so i is set to
+        // content.length terminating the loop; content falls through as #text
+        const result = makeParser().parse('<root><!no close tag</root>');
+        expect(result['#text']).toBe('<!no close tag');
+    });
+
+    it('skips child tag whose name starts with a digit (kills !\\[a-zA-Z_\\] continue branch)', () => {
+        // <1tag> — nextChar is '1', fails [a-zA-Z_] test; loop advances past it
+        // and the content falls through as #text
+        const result = makeParser().parse('<root><1tag>value</root>');
+        expect(result['#text']).toBe('<1tag>value');
+    });
+});
+
+describe(`${XmlParser.name} > linear scanner — unclosed and malformed tags`, () => {
+    it('skips an unclosed child and continues parsing siblings (kills innerEnd === -1 check mutant)', () => {
+        // <unclosed> has no </unclosed> — parser must skip it and continue
+        const result = makeParser().parse('<root><unclosed><name>Bob</name></root>');
+        expect(result['name']).toBe('Bob');
+    });
+
+    it('accepts closing tag at end of string with no trailing > (c === undefined branch)', () => {
+        // </a is the last token with no > — charAfter is undefined; the undefined
+        // branch must accept this as the close tag or the inner value is lost
+        const result = makeParser().parse('<root><a>1</a</root>');
+        expect(result['a']).toBe('1');
+    });
+
+    it('handles a trailing bare < in inner content gracefully (nextChar === undefined break)', () => {
+        // Bare < at the very end of inner content — nextChar is undefined, the
+        // outer loop must terminate without crashing
+        const result = makeParser().parse('<root><name>Alice</name><</root>');
+        expect(result['name']).toBe('Alice');
     });
 });

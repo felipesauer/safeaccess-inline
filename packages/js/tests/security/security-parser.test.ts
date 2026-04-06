@@ -38,6 +38,58 @@ describe(SecurityParser.name, () => {
     });
 });
 
+describe(`${SecurityParser.name} > constructor — NaN/Infinity clamping (SEC-020)`, () => {
+    it('clamps NaN maxDepth to default 512', () => {
+        const parser = new SecurityParser({ maxDepth: NaN });
+        expect(parser.maxDepth).toBe(512);
+    });
+
+    it('clamps Infinity maxDepth to default 512', () => {
+        const parser = new SecurityParser({ maxDepth: Infinity });
+        expect(parser.maxDepth).toBe(512);
+    });
+
+    it('clamps NaN maxPayloadBytes to default', () => {
+        const parser = new SecurityParser({ maxPayloadBytes: NaN });
+        expect(parser.maxPayloadBytes).toBe(10 * 1024 * 1024);
+    });
+
+    it('clamps NaN maxKeys to default 10 000', () => {
+        const parser = new SecurityParser({ maxKeys: NaN });
+        expect(parser.maxKeys).toBe(10_000);
+    });
+
+    it('clamps Infinity maxKeys to default 10 000', () => {
+        const parser = new SecurityParser({ maxKeys: Infinity });
+        expect(parser.maxKeys).toBe(10_000);
+    });
+
+    it('clamps NaN maxCountRecursiveDepth to default 100', () => {
+        const parser = new SecurityParser({ maxCountRecursiveDepth: NaN });
+        expect(parser.maxCountRecursiveDepth).toBe(100);
+    });
+
+    it('clamps NaN maxResolveDepth to default 100', () => {
+        const parser = new SecurityParser({ maxResolveDepth: NaN });
+        expect(parser.maxResolveDepth).toBe(100);
+    });
+
+    it('assertPayloadSize still fires when maxPayloadBytes was clamped from NaN', () => {
+        const parser = new SecurityParser({ maxPayloadBytes: NaN });
+        const large = 'x'.repeat(10 * 1024 * 1024 + 1);
+        expect(() => parser.assertPayloadSize(large)).toThrow(SecurityException);
+    });
+
+    it('assertMaxKeys still fires when maxKeys was clamped from NaN', () => {
+        const parser = new SecurityParser({ maxKeys: NaN });
+        const data: Record<string, unknown> = {};
+        for (let i = 0; i < 10_001; i++) {
+            data[`k${i}`] = i;
+        }
+        expect(() => parser.assertMaxKeys(data)).toThrow(SecurityException);
+    });
+});
+
 describe(`${SecurityParser.name} > getMaxDepth`, () => {
     it('returns the configured max depth', () => {
         const parser = new SecurityParser({ maxDepth: 42 });
@@ -59,6 +111,18 @@ describe(`${SecurityParser.name} > getMaxResolveDepth`, () => {
     it('returns the default max resolve depth when not overridden', () => {
         const parser = new SecurityParser();
         expect(parser.getMaxResolveDepth()).toBe(100);
+    });
+});
+
+describe(`${SecurityParser.name} > getMaxKeys`, () => {
+    it('returns the configured max key count', () => {
+        const parser = new SecurityParser({ maxKeys: 500 });
+        expect(parser.getMaxKeys()).toBe(500);
+    });
+
+    it('returns the default max key count when not overridden', () => {
+        const parser = new SecurityParser();
+        expect(parser.getMaxKeys()).toBe(10_000);
     });
 });
 

@@ -308,6 +308,24 @@ describe(`${SecurityGuard.name} > depth boundary (assertSafeKeys)`, () => {
     });
 });
 
+describe(`${SecurityGuard.name} > constructor — NaN/Infinity clamping (SEC-020)`, () => {
+    it('clamps NaN maxDepth to default 512 so depth guard still fires', () => {
+        const guard = new SecurityGuard(NaN);
+        expect(guard.maxDepth).toBe(512);
+    });
+
+    it('clamps Infinity maxDepth to default 512', () => {
+        const guard = new SecurityGuard(Infinity);
+        expect(guard.maxDepth).toBe(512);
+    });
+
+    it('assertSafeKeys still enforces depth after NaN maxDepth is clamped to 512', () => {
+        const guard = new SecurityGuard(NaN);
+        // With 512 levels clamped, a 1-level object is safe
+        expect(() => guard.assertSafeKeys({ safe: 1 })).not.toThrow();
+    });
+});
+
 describe(`${SecurityGuard.name} > depth boundary (sanitize)`, () => {
     it('does not throw sanitize at exactly maxDepth nesting level', () => {
         const guard = new SecurityGuard(1);

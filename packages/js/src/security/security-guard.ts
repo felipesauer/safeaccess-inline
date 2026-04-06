@@ -35,7 +35,7 @@ export class SecurityGuard implements SecurityGuardInterface {
      * @param extraForbiddenKeys - Additional keys to forbid beyond defaults.
      */
     constructor(maxDepth: number = 512, /* Stryker disable next-line ArrayDeclaration -- equivalent: default [] produces identical behavior; no extra keys added to Set */ extraForbiddenKeys: string[] = []) {
-        this.maxDepth = maxDepth;
+        this.maxDepth = Number.isFinite(maxDepth) ? maxDepth : 512;
 
         /* Stryker disable next-line ConditionalExpression -- equivalent: if (false) still produces the same forbiddenKeysMap for empty arrays since Set(DEFAULT)=DEFAULT */
         if (extraForbiddenKeys.length === 0) {
