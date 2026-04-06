@@ -701,6 +701,21 @@ describe(XmlAccessor.name, () => {
         expect(k.length).toBe(4);
         expect(k[3]).toBe('4');
     });
+
+    it('throws SecurityException when opening-tag count exceeds SecurityParser.maxKeys (getMaxKeys flows to XmlParser.maxElements)', () => {
+        const secParser = new SecurityParser({ maxKeys: 2 });
+        const parser = makeParser(secParser);
+        // <root> + 3 × <item> = 4 opening tags; 4 > maxKeys(2) → SecurityException
+        const xml = '<root>' + '<item>x</item>'.repeat(3) + '</root>';
+        expect(() => new XmlAccessor(parser).from(xml)).toThrow(SecurityException);
+    });
+
+    it('does not throw when opening-tag count is within SecurityParser.maxKeys', () => {
+        const secParser = new SecurityParser({ maxKeys: 10 });
+        const parser = makeParser(secParser);
+        const xml = '<root>' + '<item>x</item>'.repeat(3) + '</root>';
+        expect(() => new XmlAccessor(parser).from(xml)).not.toThrow();
+    });
 });
 
 // AnyAccessor

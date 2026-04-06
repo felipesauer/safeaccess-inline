@@ -571,3 +571,17 @@ describe(`${DotNotationParser.name} > deepMerge branch conditions`, () => {
         expect(result['a']).toEqual({ key: 'val' });
     });
 });
+
+describe(`${DotNotationParser.name} > getMaxKeys`, () => {
+    it('returns the max key count from the configured SecurityParser', () => {
+        const parser = new DotNotationParser(
+            new SecurityGuard(),
+            new SecurityParser({ maxKeys: 42 }),
+        );
+        expect(parser.getMaxKeys()).toBe(42);
+    });
+
+    it('returns the default max key count when not overridden', () => {
+        expect(makeParser().getMaxKeys()).toBe(10_000);
+    });
+});

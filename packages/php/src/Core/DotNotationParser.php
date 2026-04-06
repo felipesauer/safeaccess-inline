@@ -182,6 +182,12 @@ final class DotNotationParser implements ValidatableParserInterface
         return $this->securityParser->getMaxDepth();
     }
 
+    /** {@inheritDoc} */
+    public function getMaxKeys(): int
+    {
+        return $this->securityParser->getMaxKeys();
+    }
+
     /**
      * Retrieve parsed segments from cache or parse and cache the path.
      *

@@ -176,4 +176,19 @@ describe(SecurityParser::class, function (): void {
             expect(true)->toBeTrue();
         });
     });
+
+    // getMaxKeys()
+    describe(SecurityParser::class . ' > getMaxKeys', function (): void {
+        it('returns the configured max key count', function (): void {
+            $parser = new SecurityParser(maxKeys: 250);
+
+            expect($parser->getMaxKeys())->toBe(250);
+        });
+
+        it('returns the default max key count when not overridden', function (): void {
+            $parser = new SecurityParser();
+
+            expect($parser->getMaxKeys())->toBe(10_000);
+        });
+    });
 });

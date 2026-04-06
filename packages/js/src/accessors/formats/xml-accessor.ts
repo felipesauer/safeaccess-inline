@@ -51,6 +51,8 @@ export class XmlAccessor extends AbstractAccessor {
             throw new SecurityException('XML DOCTYPE declarations are not allowed.');
         }
 
-        return new XmlParser(this.parser.getMaxDepth()).parse(raw);
+        // Pass getMaxKeys() as the element-count cap: each XML opening tag maps to at most
+        // one output key, so maxKeys is a sound upper bound for the ReDoS guard.
+        return new XmlParser(this.parser.getMaxDepth(), this.parser.getMaxKeys()).parse(raw);
     }
 }

@@ -64,4 +64,11 @@ export interface SecurityParserInterface {
      * @returns Maximum allowed resolve depth.
      */
     getMaxResolveDepth(): number;
+
+    /**
+     * Return the configured maximum total key count.
+     *
+     * @returns Maximum allowed key count.
+     */
+    getMaxKeys(): number;
 }

@@ -358,4 +358,22 @@ describe(DotNotationParser::class, function (): void {
                 ->toThrow(SecurityException::class);
         });
     });
+
+    // getMaxKeys()
+    describe(DotNotationParser::class . ' > getMaxKeys', function (): void {
+        it('returns the max key count from the configured SecurityParser', function (): void {
+            $guard = new SecurityGuard();
+            $securityParser = new SecurityParser(maxKeys: 99);
+            $filterParser = new SegmentFilterParser($guard);
+            $segmentParser = new SegmentParser($filterParser);
+            $resolver = new SegmentPathResolver($filterParser);
+            $parser = new DotNotationParser($guard, $securityParser, new FakePathCache(), $segmentParser, $resolver);
+
+            expect($parser->getMaxKeys())->toBe(99);
+        });
+
+        it('returns the default max key count when not overridden', function (): void {
+            expect($this->parser->getMaxKeys())->toBe(10_000);
+        });
+    });
 });

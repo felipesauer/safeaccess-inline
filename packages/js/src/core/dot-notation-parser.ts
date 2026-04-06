@@ -264,6 +264,15 @@ export class DotNotationParser {
     }
 
     /**
+     * Return the configured maximum total key count.
+     *
+     * @returns Maximum allowed key count from the security parser.
+     */
+    getMaxKeys(): number {
+        return this.securityParser.getMaxKeys();
+    }
+
+    /**
      * Parse a dot-notation path into segments, using cache when available.
      *
      * @param path - Dot-notation path string.

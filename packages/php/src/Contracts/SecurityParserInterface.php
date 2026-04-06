@@ -78,4 +78,11 @@ interface SecurityParserInterface
      * @return int Maximum allowed resolve depth.
      */
     public function getMaxResolveDepth(): int;
+
+    /**
+     * Return the configured maximum total key count.
+     *
+     * @return int Maximum allowed key count.
+     */
+    public function getMaxKeys(): int;
 }

@@ -69,6 +69,10 @@ final class XmlAccessor extends AbstractAccessor
         }
 
         $json = json_encode($xml, JSON_THROW_ON_ERROR);
+        // getMaxKeys() is intentionally not consulted here: PHP delegates XML parsing to
+        // libxml2 via simplexml_load_string(LIBXML_NONET), which handles element-count
+        // limits natively. The JS counterpart passes getMaxKeys() to its manual
+        // regex-based parser as a ReDoS guard.
         // Use the configured max depth instead of the hardcoded 512
         // so that a custom SecurityParser with a tighter limit is respected.
         $maxDepth = max(1, $this->dotNotationParser->getMaxDepth());

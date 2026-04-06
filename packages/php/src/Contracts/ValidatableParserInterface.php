@@ -57,4 +57,15 @@ interface ValidatableParserInterface extends ParserInterface
      * @return int Maximum allowed structural depth.
      */
     public function getMaxDepth(): int;
+
+    /**
+     * Return the configured maximum total key count.
+     *
+     * Used by format parsers that enforce a document element-count limit before
+     * structural traversal runs. Accessor implementations that wrap XML parsers
+     * can pass this value as an upper bound to prevent document-bombing attacks.
+     *
+     * @return int Maximum allowed key count.
+     */
+    public function getMaxKeys(): int;
 }

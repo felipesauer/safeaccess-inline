@@ -131,6 +131,16 @@ final class SecurityParser implements SecurityParserInterface
     }
 
     /**
+     * Return the configured maximum total key count.
+     *
+     * @return int Maximum allowed key count.
+     */
+    public function getMaxKeys(): int
+    {
+        return $this->maxKeys;
+    }
+
+    /**
      * Assert that structural nesting depth does not exceed the policy limit.
      *
      * @param mixed $data     Data to measure structural depth of.
