@@ -148,3 +148,17 @@ describe(`${Inline.name} > withStrictMode + make (parity)`, () => {
         ).toThrow(SecurityException);
     });
 });
+
+describe('AbstractAccessor.keys (parity)', () => {
+    it('returns string keys for object-keyed data (JS and PHP both return string[])', () => {
+        const accessor = Inline.fromJson('{"name":"Alice","age":30}');
+        expect(accessor.keys()).toEqual(['name', 'age']);
+    });
+
+    it('returns numeric indices as strings for NDJSON (parity with PHP array_map strval fix)', () => {
+        // PHP: array_keys(['Alice', 'Bob']) = [0, 1] → cast → ['0', '1']
+        // JS:  Object.keys({'0': {...}, '1': {...}}) = ['0', '1'] (already strings)
+        const accessor = Inline.fromNdjson('{"name":"Alice"}\n{"name":"Bob"}');
+        expect(accessor.keys()).toEqual(['0', '1']);
+    });
+});

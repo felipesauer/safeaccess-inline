@@ -358,6 +358,12 @@ describe(NdjsonAccessor::class, function (): void {
 
             expect($accessor->get('0', 'none'))->toBe('none');
         });
+
+        it('keys() returns numeric line positions as strings (parity with JS Object.keys)', function (): void {
+            $accessor = factory()->ndjson("{\"name\":\"Alice\"}\n{\"name\":\"Bob\"}");
+
+            expect($accessor->keys())->toBe(['0', '1']);
+        });
     });
 });
 

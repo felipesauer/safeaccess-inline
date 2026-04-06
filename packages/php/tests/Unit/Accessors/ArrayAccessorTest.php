@@ -170,6 +170,12 @@ describe(ArrayAccessor::class, function (): void {
             expect($this->accessor->keys())->toBe(['name', 'age']);
         });
 
+        it('keys returns numeric indices as strings for a sequential array (parity with JS Object.keys)', function (): void {
+            $accessor = makeArrayAccessor(['x', 'y', 'z']);
+
+            expect($accessor->keys())->toBe(['0', '1', '2']);
+        });
+
         it('keys returns an empty array for a non-array value at path', function (): void {
             expect($this->accessor->keys('name'))->toBe([]);
         });

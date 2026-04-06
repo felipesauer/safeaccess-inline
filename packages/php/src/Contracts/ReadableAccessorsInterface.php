@@ -103,7 +103,9 @@ interface ReadableAccessorsInterface
      *
      * @param string|null $path Dot-notation path, or null for root.
      *
-     * @return array<int|string> List of keys.
+     * @return array<string> List of keys. Integer keys (e.g. from numeric arrays)
+     *   are cast to strings so the return type is symmetric with the JS implementation,
+     *   which always returns string[] via Object.keys().
      */
     public function keys(?string $path = null): array;
 }

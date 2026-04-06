@@ -258,7 +258,7 @@ abstract class AbstractAccessor implements AccessorsInterface
     public function keys(?string $path = null): array
     {
         $target = $path !== null ? $this->get($path, []) : $this->data;
-        return is_array($target) ? array_keys($target) : [];
+        return is_array($target) ? array_map('strval', array_keys($target)) : [];
     }
 
     /** {@inheritDoc} */
