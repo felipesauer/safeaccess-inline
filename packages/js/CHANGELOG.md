@@ -2,6 +2,13 @@
 
 All notable changes to the `@safeaccess/inline` JavaScript/TypeScript package are documented in this file.
 
+## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.0...js-v0.1.1) (2026-04-07)
+
+
+### Features
+
+* **js:** bootstrap release tracking for rebranded package ([5fc07d7](https://github.com/felipesauer/safeaccess-inline/commit/5fc07d7126870d72145bbfc80609370c9d1509c7))
+
 ## 0.1.0 (2026-04-07)
 
 ### Bug Fixes
