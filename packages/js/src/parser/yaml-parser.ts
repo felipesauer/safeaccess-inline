@@ -108,23 +108,22 @@ export class YamlParser {
                 isSequence = true;
                 const itemContent = trimmed === '-' ? '' : trimmed.slice(2).trim();
 
-                if (itemContent !== '' && /^([^\s:][^:]*?)\s*:\s*(.*)$/.exec(itemContent)) {
+                const match =
+                    itemContent !== '' ? /^([^\s:][^:]*?)\s*:\s*(.*)$/.exec(itemContent) : null;
+                if (match !== null) {
                     const childIndent = currentIndent + 2;
                     const childEnd = this.findBlockEnd(lines, childIndent, i + 1, end);
-                    const match = /^([^\s:][^:]*?)\s*:\s*(.*)$/.exec(itemContent);
-                    if (match !== null) {
-                        const subMap: Record<string, unknown> = {};
-                        subMap[match[1] as string] = this.resolveValue(
-                            match[2] as string,
-                            lines,
-                            i,
-                            childIndent,
-                            childEnd,
-                        );
-                        this.mergeChildLines(lines, i + 1, childEnd, childIndent, subMap);
-                        arrResult.push(subMap);
-                        i = childEnd;
-                    }
+                    const subMap: Record<string, unknown> = {};
+                    subMap[match[1] as string] = this.resolveValue(
+                        match[2] as string,
+                        lines,
+                        i,
+                        childIndent,
+                        childEnd,
+                    );
+                    this.mergeChildLines(lines, i + 1, childEnd, childIndent, subMap);
+                    arrResult.push(subMap);
+                    i = childEnd;
                 } else if (itemContent === '') {
                     const childIndent = currentIndent + 2;
                     const childEnd = this.findBlockEnd(lines, childIndent, i + 1, end);
@@ -191,12 +190,6 @@ export class YamlParser {
             }
 
             const childCurrentIndent = childLine.length - childTrimmed.length;
-
-            /* c8 ignore start */
-            if (childCurrentIndent < childIndent) {
-                break;
-            }
-            /* c8 ignore stop */
 
             if (childCurrentIndent === childIndent) {
                 const cm = /^([^\s:][^:]*?)\s*:\s*(.*)$/.exec(childTrimmed);
