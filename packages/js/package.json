@@ -1,8 +1,8 @@
 {
   "name": "@safe-access/inline",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": false,
-  "description": "Safe nested data access with dot notation \u2014 JavaScript/TypeScript",
+  "description": "Safe nested data access with dot notation — JavaScript/TypeScript",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
