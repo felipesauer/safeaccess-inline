@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9" width="80" alt="safe-access-inline logo">
+  <img src="https://github.com/user-attachments/assets/28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9" width="80" alt="safeaccess-inline logo">
 </p>
 
 <h1 align="center">Safe Access Inline</h1>
@@ -9,10 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/felipesauer/safe-access-inline/actions"><img src="https://img.shields.io/github/actions/workflow/status/felipesauer/safe-access-inline/ci.yml?branch=main&label=CI" alt="CI"></a>
-  <a href="https://codecov.io/gh/felipesauer/safe-access-inline"><img src="https://img.shields.io/codecov/c/github/felipesauer/safe-access-inline?label=Coverage" alt="Coverage"></a>
-  <a href="https://www.npmjs.com/package/@safe-access/inline"><img src="https://img.shields.io/npm/v/@safe-access/inline?label=npm" alt="npm"></a>
-  <a href="https://packagist.org/packages/safe-access/inline"><img src="https://img.shields.io/packagist/v/safe-access/inline?label=packagist" alt="Packagist"></a>
+  <a href="https://codecov.io/gh/felipesauer/safeaccess-inline"><img src="https://img.shields.io/codecov/c/github/felipesauer/safeaccess-inline?label=Coverage" alt="Coverage"></a>
+  <a href="https://www.npmjs.com/package/@safeaccess/inline"><img src="https://img.shields.io/npm/v/@safeaccess/inline?label=npm" alt="npm"></a>
+  <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
 </p>
 
@@ -32,10 +31,10 @@ Accessing nested data from untrusted sources (API responses, config files, user 
 
 ## Packages
 
-| Package | Language | Install |
-|---------|----------|---------|
-| [`safe-access/inline`](packages/php/) | PHP 8.2+ | `composer require safe-access/inline` |
-| [`@safe-access/inline`](packages/js/) | TypeScript (ESM) | `npm install @safe-access/inline` |
+| Package                              | Language         | Install                              |
+| ------------------------------------ | ---------------- | ------------------------------------ |
+| [`safeaccess/inline`](packages/php/) | PHP 8.2+         | `composer require safeaccess/inline` |
+| [`@safeaccess/inline`](packages/js/) | TypeScript (ESM) | `npm install @safeaccess/inline`     |
 
 Both packages expose the same public API surface and are tested for behavioral parity.
 
@@ -44,7 +43,7 @@ Both packages expose the same public API surface and are tested for behavioral p
 ### PHP
 
 ```bash
-composer require safe-access/inline
+composer require safeaccess/inline
 ```
 
 **Requirements:** PHP 8.2+, extensions: `json`, `simplexml`, `libxml`
@@ -52,7 +51,7 @@ composer require safe-access/inline
 ### JavaScript / TypeScript
 
 ```bash
-npm install @safe-access/inline
+npm install @safeaccess/inline
 ```
 
 **Requirements:** Node.js 22+
@@ -80,50 +79,50 @@ $accessor->has('user.email');          // false (original unchanged)
 ### TypeScript
 
 ```typescript
-import { Inline } from '@safe-access/inline';
+import { Inline } from '@safeaccess/inline';
 
 const accessor = Inline.fromJson('{"user": {"name": "Alice", "age": 30}}');
 
-accessor.get('user.name');           // 'Alice'
-accessor.get('user.email', 'N/A');   // 'N/A' (default when missing)
-accessor.has('user.age');            // true
-accessor.getOrFail('user.name');     // 'Alice' (throws if missing)
+accessor.get('user.name'); // 'Alice'
+accessor.get('user.email', 'N/A'); // 'N/A' (default when missing)
+accessor.has('user.age'); // true
+accessor.getOrFail('user.name'); // 'Alice' (throws if missing)
 
 // Immutable writes — original is never modified
 const updated = accessor.set('user.email', 'alice@example.com');
-updated.get('user.email');           // 'alice@example.com'
-accessor.has('user.email');          // false (original unchanged)
+updated.get('user.email'); // 'alice@example.com'
+accessor.has('user.email'); // false (original unchanged)
 ```
 
 ## Dot Notation Syntax
 
 ### Basic Syntax (PHP & TypeScript)
 
-| Syntax | Example | Description |
-|--------|---------|-------------|
-| `key.key` | `user.name` | Nested key access |
-| `key.0.key` | `users.0.name` | Numeric key (array index) |
-| `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names |
-| `$` or `$.path` | `$.user.name` | Optional `$` root prefix (stripped) |
+| Syntax            | Example            | Description                         |
+| ----------------- | ------------------ | ----------------------------------- |
+| `key.key`         | `user.name`        | Nested key access                   |
+| `key.0.key`       | `users.0.name`     | Numeric key (array index)           |
+| `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names           |
+| `$` or `$.path`   | `$.user.name`      | Optional `$` root prefix (stripped) |
 
 ### Advanced PathQuery (PHP only)
 
 The PHP package includes a full PathQuery engine:
 
-| Syntax | Example | Description |
-|--------|---------|-------------|
-| `[0]` | `users[0]` | Bracket index access |
-| `*` or `[*]` | `users.*` | Wildcard — expand all children |
-| `..key` | `..name` | Recursive descent — find key at any depth |
-| `..['a','b']` | `..['name','age']` | Multi-key recursive descent |
-| `[0,1,2]` | `users[0,1,2]` | Multi-index — select multiple indices |
-| `['a','b']` | `['name','age']` | Multi-key — select multiple keys |
-| `[0:5]` | `items[0:5]` | Slice — indices 0 through 4 |
-| `[::2]` | `items[::2]` | Slice with step — every 2nd item |
-| `[::-1]` | `items[::-1]` | Reverse slice |
-| `[?expr]` | `users[?age>18]` | Filter predicate expression |
-| `.{fields}` | `.{name, age}` | Projection — select fields |
-| `.{alias: src}` | `.{fullName: name}` | Aliased projection |
+| Syntax          | Example             | Description                               |
+| --------------- | ------------------- | ----------------------------------------- |
+| `[0]`           | `users[0]`          | Bracket index access                      |
+| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
+| `..key`         | `..name`            | Recursive descent — find key at any depth |
+| `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
+| `[0,1,2]`       | `users[0,1,2]`      | Multi-index — select multiple indices     |
+| `['a','b']`     | `['name','age']`    | Multi-key — select multiple keys          |
+| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
+| `[::2]`         | `items[::2]`        | Slice with step — every 2nd item          |
+| `[::-1]`        | `items[::-1]`       | Reverse slice                             |
+| `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
+| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
+| `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
 #### Filter Expressions (PHP only)
 
@@ -167,6 +166,7 @@ $accessor->get('users.0.name'); // 'Alice'
 const accessor = Inline.fromJson('{"users": [{"name": "Alice"}, {"name": "Bob"}]}');
 accessor.get('users.0.name'); // 'Alice'
 ```
+
 </details>
 
 <details>
@@ -197,6 +197,7 @@ const yaml = `database:
 const accessor = Inline.fromYaml(yaml);
 accessor.get('database.credentials.user'); // 'admin'
 ```
+
 </details>
 
 <details>
@@ -217,6 +218,7 @@ $accessor = Inline::fromXml(simplexml_load_string($xml));
 const accessor = Inline.fromXml('<config><database><host>localhost</host></database></config>');
 accessor.get('database.host'); // 'localhost'
 ```
+
 </details>
 
 <details>
@@ -233,6 +235,7 @@ $accessor->get('database.host'); // 'localhost'
 const accessor = Inline.fromIni('[database]\nhost=localhost\nport=5432');
 accessor.get('database.host'); // 'localhost'
 ```
+
 </details>
 
 <details>
@@ -249,6 +252,7 @@ $accessor->get('DB_HOST'); // 'localhost'
 const accessor = Inline.fromEnv('APP_NAME=MyApp\nAPP_DEBUG=true\nDB_HOST=localhost');
 accessor.get('DB_HOST'); // 'localhost'
 ```
+
 </details>
 
 <details>
@@ -268,6 +272,7 @@ const accessor = Inline.fromNdjson('{"id":1,"name":"Alice"}\n{"id":2,"name":"Bob
 accessor.get('0.name'); // 'Alice'
 accessor.get('1.name'); // 'Bob'
 ```
+
 </details>
 
 <details>
@@ -290,6 +295,7 @@ accessor.get('users.0.name'); // 'Alice'
 const objAccessor = Inline.fromObject({ name: 'Alice', age: 30 });
 objAccessor.get('name'); // 'Alice'
 ```
+
 </details>
 
 <details>
@@ -306,6 +312,7 @@ $accessor->get('0.column_name');
 const accessor = Inline.withParserIntegration(new MyCsvIntegration()).fromAny(csvString);
 accessor.get('0.column_name');
 ```
+
 </details>
 
 <details>
@@ -320,10 +327,11 @@ $accessor->get('key'); // 'value'
 
 ```typescript
 // TypeScript
-import { Inline, TypeFormat } from '@safe-access/inline';
+import { Inline, TypeFormat } from '@safeaccess/inline';
 const accessor = Inline.from(TypeFormat.Json, '{"key": "value"}');
 accessor.get('key'); // 'value'
 ```
+
 </details>
 
 ## Reading & Writing
@@ -370,29 +378,29 @@ $readonly->set('a.b', 99);             // throws ReadonlyViolationException
 const accessor = Inline.fromJson('{"a": {"b": 1, "c": 2}}');
 
 // Read
-accessor.get('a.b');                  // 1
+accessor.get('a.b'); // 1
 accessor.get('a.missing', 'default'); // 'default'
-accessor.getOrFail('a.b');            // 1 (throws PathNotFoundException if missing)
-accessor.has('a.b');                  // true
-accessor.all();                       // { a: { b: 1, c: 2 } }
-accessor.count();                     // 1
-accessor.count('a');                  // 2
-accessor.keys();                      // ['a']
-accessor.keys('a');                   // ['b', 'c']
+accessor.getOrFail('a.b'); // 1 (throws PathNotFoundException if missing)
+accessor.has('a.b'); // true
+accessor.all(); // { a: { b: 1, c: 2 } }
+accessor.count(); // 1
+accessor.count('a'); // 2
+accessor.keys(); // ['a']
+accessor.keys('a'); // ['b', 'c']
 accessor.getMany({
     'a.b': null,
     'a.x': 'fallback',
-});                                   // { 'a.b': 1, 'a.x': 'fallback' }
-accessor.getRaw();                    // original JSON string
+}); // { 'a.b': 1, 'a.x': 'fallback' }
+accessor.getRaw(); // original JSON string
 
 // Write (immutable)
 const updated = accessor.set('a.d', 3).remove('a.c').merge('a', { e: 4 }).mergeAll({ f: 5 });
-updated.all();                        // { a: { b: 1, d: 3, e: 4 }, f: 5 }
+updated.all(); // { a: { b: 1, d: 3, e: 4 }, f: 5 }
 
 // Readonly mode
 const readonly = accessor.readonly();
-readonly.get('a.b');                  // 1
-readonly.set('a.b', 99);             // throws ReadonlyViolationException
+readonly.get('a.b'); // 1
+readonly.set('a.b', 99); // throws ReadonlyViolationException
 ```
 
 ## Configure
@@ -415,10 +423,9 @@ $accessor = Inline::withSecurityGuard(new SecurityGuard(extraForbiddenKeys: ['se
 ### TypeScript
 
 ```typescript
-import { Inline, SecurityGuard, SecurityParser } from '@safe-access/inline';
+import { Inline, SecurityGuard, SecurityParser } from '@safeaccess/inline';
 
-const accessor = Inline
-    .withSecurityGuard(new SecurityGuard(512, ['secret']))
+const accessor = Inline.withSecurityGuard(new SecurityGuard(512, ['secret']))
     .withSecurityParser(new SecurityParser({ maxDepth: 5 }))
     .withStrictMode(true)
     .fromJson(untrustedInput);
@@ -426,13 +433,13 @@ const accessor = Inline
 
 ### Builder Methods
 
-| Method | Description |
-|--------|-------------|
-| `withSecurityGuard(guard)` | Custom forbidden-key rules and depth limits |
-| `withSecurityParser(parser)` | Custom payload size and structural limits |
-| `withPathCache(cache)` | Path segment cache for repeated lookups |
-| `withParserIntegration(integration)` | Custom format parser for `fromAny()` |
-| `withStrictMode(false)` | Disable security validation (trusted input only) |
+| Method                               | Description                                      |
+| ------------------------------------ | ------------------------------------------------ |
+| `withSecurityGuard(guard)`           | Custom forbidden-key rules and depth limits      |
+| `withSecurityParser(parser)`         | Custom payload size and structural limits        |
+| `withPathCache(cache)`               | Path segment cache for repeated lookups          |
+| `withParserIntegration(integration)` | Custom format parser for `fromAny()`             |
+| `withStrictMode(false)`              | Disable security validation (trusted input only) |
 
 ## Security
 
@@ -444,22 +451,22 @@ The two packages block different key sets tailored to their runtime:
 
 **PHP** (`packages/php`)
 
-| Category | Examples | Reason |
-|----------|----------|--------|
-| PHP magic methods | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, `__call`, `__get`, `__set`, `__invoke`, ... | Prevent triggering PHP magic behavior via data keys |
-| Prototype pollution | `__proto__`, `constructor`, `prototype` | Prevent prototype pollution attacks |
-| PHP superglobals | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_REQUEST`, `_SERVER`, `_ENV`, `_FILES`, `_SESSION` | Prevent superglobal variable access |
-| Stream wrapper URIs | `php://input`, `php://filter`, `phar://...`, `data://...`, `file://...`, ... | Prevent stream wrapper injection |
+| Category            | Examples                                                                                                      | Reason                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| PHP magic methods   | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, `__call`, `__get`, `__set`, `__invoke`, ... | Prevent triggering PHP magic behavior via data keys |
+| Prototype pollution | `__proto__`, `constructor`, `prototype`                                                                       | Prevent prototype pollution attacks                 |
+| PHP superglobals    | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_REQUEST`, `_SERVER`, `_ENV`, `_FILES`, `_SESSION`                    | Prevent superglobal variable access                 |
+| Stream wrapper URIs | `php://input`, `php://filter`, `phar://...`, `data://...`, `file://...`, ...                                  | Prevent stream wrapper injection                    |
 
 **TypeScript** (`packages/js`)
 
-| Category | Examples | Reason |
-|----------|----------|--------|
-| Prototype pollution | `__proto__`, `constructor`, `prototype` | Prevent prototype pollution attacks |
-| Legacy prototype manipulation | `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__` | Prevent legacy prototype tampering |
-| Property shadow | `hasOwnProperty` | Overriding it can bypass guard checks |
-| Node.js globals | `__dirname`, `__filename` | Prevent path-injection via dynamic property access |
-| Protocol / stream URIs | `javascript:`, `blob:`, `ws://`, `wss://`, `node:`, `file://`, `http://`, `https://`, `ftp://`, `data:`, ... | Prevent URI injection and XSS vectors |
+| Category                      | Examples                                                                                                     | Reason                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Prototype pollution           | `__proto__`, `constructor`, `prototype`                                                                      | Prevent prototype pollution attacks                |
+| Legacy prototype manipulation | `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`                               | Prevent legacy prototype tampering                 |
+| Property shadow               | `hasOwnProperty`                                                                                             | Overriding it can bypass guard checks              |
+| Node.js globals               | `__dirname`, `__filename`                                                                                    | Prevent path-injection via dynamic property access |
+| Protocol / stream URIs        | `javascript:`, `blob:`, `ws://`, `wss://`, `node:`, `file://`, `http://`, `https://`, `ftp://`, `data:`, ... | Prevent URI injection and XSS vectors              |
 
 Keys starting with `__` are matched **case-insensitively**. Stream wrapper URIs and protocol schemes are matched by **prefix**.
 
@@ -479,21 +486,21 @@ const accessor = Inline.withSecurityGuard(guard).fromJson(data);
 
 ### Structural Limits
 
-| Limit | Default | Description |
-|-------|---------|-------------|
-| `maxPayloadBytes` | 10 MB (10,485,760) | Maximum raw string input size |
-| `maxKeys` | 10,000 | Maximum total key count across the entire structure |
-| `maxDepth` | 512 | Maximum structural nesting depth |
-| `maxResolveDepth` | 100 | Maximum recursion for path resolution and deep merge |
-| `maxCountRecursiveDepth` | 100 | Maximum recursion when counting keys |
+| Limit                    | Default            | Description                                          |
+| ------------------------ | ------------------ | ---------------------------------------------------- |
+| `maxPayloadBytes`        | 10 MB (10,485,760) | Maximum raw string input size                        |
+| `maxKeys`                | 10,000             | Maximum total key count across the entire structure  |
+| `maxDepth`               | 512                | Maximum structural nesting depth                     |
+| `maxResolveDepth`        | 100                | Maximum recursion for path resolution and deep merge |
+| `maxCountRecursiveDepth` | 100                | Maximum recursion when counting keys                 |
 
 ### Format-Specific Protections
 
-| Format | Protection |
-|--------|-----------|
-| XML | Rejects `<!DOCTYPE` — prevents XXE (XML External Entity) attacks |
-| YAML | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
-| All | Forbidden key validation on every parsed key |
+| Format | Protection                                                              |
+| ------ | ----------------------------------------------------------------------- |
+| XML    | Rejects `<!DOCTYPE` — prevents XXE (XML External Entity) attacks        |
+| YAML   | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
+| All    | Forbidden key validation on every parsed key                            |
 
 Disable for fully trusted input: `Inline::withStrictMode(false)` / `Inline.withStrictMode(false)`.
 
@@ -541,32 +548,42 @@ import {
     SecurityException,
     PathNotFoundException,
     ReadonlyViolationException,
-} from '@safe-access/inline';
+} from '@safeaccess/inline';
 
 try {
     const accessor = Inline.fromJson(untrustedInput);
     const value = accessor.getOrFail('config.key');
 } catch (e) {
-    if (e instanceof InvalidFormatException) { /* malformed input */ }
-    if (e instanceof SecurityException) { /* security violation */ }
-    if (e instanceof PathNotFoundException) { /* path not found */ }
-    if (e instanceof ReadonlyViolationException) { /* readonly violation */ }
-    if (e instanceof AccessorException) { /* any library error */ }
+    if (e instanceof InvalidFormatException) {
+        /* malformed input */
+    }
+    if (e instanceof SecurityException) {
+        /* security violation */
+    }
+    if (e instanceof PathNotFoundException) {
+        /* path not found */
+    }
+    if (e instanceof ReadonlyViolationException) {
+        /* readonly violation */
+    }
+    if (e instanceof AccessorException) {
+        /* any library error */
+    }
 }
 ```
 
 ### Exception Hierarchy
 
-| Exception | Extends | When |
-|-----------|---------|------|
-| `AccessorException` | `RuntimeException` / `Error` | Root — catch-all for any library error |
-| `SecurityException` | `AccessorException` | Forbidden key, payload too large, structural limits exceeded |
-| `InvalidFormatException` | `AccessorException` | Malformed JSON, XML, INI, NDJSON |
-| `YamlParseException` | `InvalidFormatException` | Unsafe or malformed YAML |
-| `PathNotFoundException` | `AccessorException` | `getOrFail()` on a missing path |
-| `ReadonlyViolationException` | `AccessorException` | Write on a readonly accessor |
-| `UnsupportedTypeException` | `AccessorException` | Unknown accessor class in `make()` |
-| `ParserException` | `AccessorException` | Reserved for custom parser-level errors; built-in depth limits use `SecurityException` |
+| Exception                    | Extends                      | When                                                                                   |
+| ---------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `AccessorException`          | `RuntimeException` / `Error` | Root — catch-all for any library error                                                 |
+| `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded                           |
+| `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                                                       |
+| `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                                               |
+| `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                                                        |
+| `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                                           |
+| `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                                                     |
+| `ParserException`            | `AccessorException`          | Reserved for custom parser-level errors; built-in depth limits use `SecurityException` |
 
 ## Advanced Usage
 
@@ -600,9 +617,14 @@ $accessor->get('deeply.nested.path'); // cache hit — skips parsing
 // TypeScript — implement PathCacheInterface
 const cache: PathCacheInterface = {
     get: (path) => cacheMap.get(path) ?? null,
-    set: (path, segments) => { cacheMap.set(path, segments); },
+    set: (path, segments) => {
+        cacheMap.set(path, segments);
+    },
     has: (path) => cacheMap.has(path),
-    clear: () => { cacheMap.clear(); return cache; },
+    clear: () => {
+        cacheMap.clear();
+        return cache;
+    },
 };
 const accessor = Inline.withPathCache(cache).fromJson(data);
 ```
@@ -649,52 +671,52 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 #### Static Factory Methods
 
-| Method | Input | Returns |
-|--------|-------|---------|
-| `fromArray(data)` | Array / plain object | `ArrayAccessor` |
-| `fromObject(data)` | Object | `ObjectAccessor` |
-| `fromJson(data)` | JSON `string` | `JsonAccessor` |
-| `fromXml(data)` | XML `string` | `XmlAccessor` |
-| `fromYaml(data)` | YAML `string` | `YamlAccessor` |
-| `fromIni(data)` | INI `string` | `IniAccessor` |
-| `fromEnv(data)` | dotenv `string` | `EnvAccessor` |
-| `fromNdjson(data)` | NDJSON `string` | `NdjsonAccessor` |
-| `fromAny(data, integration?)` | Any format | `AnyAccessor` |
-| `from(typeFormat, data)` | `TypeFormat` enum | `AccessorsInterface` |
-| `make(accessorClass, data)` | Accessor class | `AbstractAccessor` |
+| Method                        | Input                | Returns              |
+| ----------------------------- | -------------------- | -------------------- |
+| `fromArray(data)`             | Array / plain object | `ArrayAccessor`      |
+| `fromObject(data)`            | Object               | `ObjectAccessor`     |
+| `fromJson(data)`              | JSON `string`        | `JsonAccessor`       |
+| `fromXml(data)`               | XML `string`         | `XmlAccessor`        |
+| `fromYaml(data)`              | YAML `string`        | `YamlAccessor`       |
+| `fromIni(data)`               | INI `string`         | `IniAccessor`        |
+| `fromEnv(data)`               | dotenv `string`      | `EnvAccessor`        |
+| `fromNdjson(data)`            | NDJSON `string`      | `NdjsonAccessor`     |
+| `fromAny(data, integration?)` | Any format           | `AnyAccessor`        |
+| `from(typeFormat, data)`      | `TypeFormat` enum    | `AccessorsInterface` |
+| `make(accessorClass, data)`   | Accessor class       | `AbstractAccessor`   |
 
 #### Accessor Read Methods
 
-| Method | Returns |
-|--------|---------|
-| `get(path, default?)` | Value at path, or default |
-| `getOrFail(path)` | Value or throws `PathNotFoundException` |
-| `getAt(segments, default?)` | Value at key segments |
-| `has(path)` | `boolean` |
-| `hasAt(segments)` | `boolean` |
-| `getMany(paths)` | `Record<string, unknown>` |
-| `all()` | All parsed data |
-| `count(path?)` | Element count |
-| `keys(path?)` | Key names |
-| `getRaw()` | Original input |
+| Method                      | Returns                                 |
+| --------------------------- | --------------------------------------- |
+| `get(path, default?)`       | Value at path, or default               |
+| `getOrFail(path)`           | Value or throws `PathNotFoundException` |
+| `getAt(segments, default?)` | Value at key segments                   |
+| `has(path)`                 | `boolean`                               |
+| `hasAt(segments)`           | `boolean`                               |
+| `getMany(paths)`            | `Record<string, unknown>`               |
+| `all()`                     | All parsed data                         |
+| `count(path?)`              | Element count                           |
+| `keys(path?)`               | Key names                               |
+| `getRaw()`                  | Original input                          |
 
 #### Accessor Write Methods (immutable)
 
-| Method | Description |
-|--------|-------------|
-| `set(path, value)` | Set at path |
-| `setAt(segments, value)` | Set at key segments |
-| `remove(path)` | Remove at path |
-| `removeAt(segments)` | Remove at key segments |
-| `merge(path, value)` | Deep-merge at path |
-| `mergeAll(value)` | Deep-merge at root |
+| Method                   | Description            |
+| ------------------------ | ---------------------- |
+| `set(path, value)`       | Set at path            |
+| `setAt(segments, value)` | Set at key segments    |
+| `remove(path)`           | Remove at path         |
+| `removeAt(segments)`     | Remove at key segments |
+| `merge(path, value)`     | Deep-merge at path     |
+| `mergeAll(value)`        | Deep-merge at root     |
 
 #### Modifier Methods
 
-| Method | Description |
-|--------|-------------|
-| `readonly(flag?)` | Block all writes |
-| `strict(flag?)` | Toggle security validation |
+| Method            | Description                |
+| ----------------- | -------------------------- |
+| `readonly(flag?)` | Block all writes           |
+| `strict(flag?)`   | Toggle security validation |
 
 #### TypeFormat Enum
 
@@ -702,21 +724,21 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 ## Comparison
 
-| Feature | Safe Access Inline | `lodash.get` | Laravel `data_get` | `jmespath` |
-|---------|-------------------|-------------|-------------------|-----------|
-| Language | PHP + TypeScript | JavaScript | PHP | Multi |
-| Security validation | Built-in | None | None | None |
-| Forbidden key blocking | Yes | No | No | No |
-| Payload size limits | Yes | No | No | No |
-| Immutable writes | Yes | No | No | N/A |
-| Readonly mode | Yes | No | No | N/A |
-| JSON support | Yes | Manual | Manual | Manual |
-| YAML / XML / INI / ENV | Yes | No | No | No |
-| Multiple formats | 9 formats | Object only | Array only | Object only |
-| Custom format integration | Yes | No | No | No |
-| Wildcard / Filter (PHP) | Yes | No | Partial (`*`) | Yes |
-| Type-safe (TypeScript) | Strict mode | `any` | N/A | `any` |
-| Zero prod dependencies | Yes | lodash | Laravel | jmespath |
+| Feature                   | Safe Access Inline | `lodash.get` | Laravel `data_get` | `jmespath`  |
+| ------------------------- | ------------------ | ------------ | ------------------ | ----------- |
+| Language                  | PHP + TypeScript   | JavaScript   | PHP                | Multi       |
+| Security validation       | Built-in           | None         | None               | None        |
+| Forbidden key blocking    | Yes                | No           | No                 | No          |
+| Payload size limits       | Yes                | No           | No                 | No          |
+| Immutable writes          | Yes                | No           | No                 | N/A         |
+| Readonly mode             | Yes                | No           | No                 | N/A         |
+| JSON support              | Yes                | Manual       | Manual             | Manual      |
+| YAML / XML / INI / ENV    | Yes                | No           | No                 | No          |
+| Multiple formats          | 9 formats          | Object only  | Array only         | Object only |
+| Custom format integration | Yes                | No           | No                 | No          |
+| Wildcard / Filter (PHP)   | Yes                | No           | Partial (`*`)      | Yes         |
+| Type-safe (TypeScript)    | Strict mode        | `any`        | N/A                | `any`       |
+| Zero prod dependencies    | Yes                | lodash       | Laravel            | jmespath    |
 
 ## Project Structure
 

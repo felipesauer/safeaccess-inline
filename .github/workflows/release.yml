@@ -44,7 +44,7 @@ jobs:
         if: needs.release-please.outputs.php_released == 'true'
         runs-on: ubuntu-latest
         env:
-            PHP_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safe-access-inline-php' }}
+            PHP_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safeaccess-inline-php' }}
 
         steps:
             - name: Checkout mono-repo
@@ -87,7 +87,7 @@ jobs:
         if: needs.release-please.outputs.js_released == 'true'
         runs-on: ubuntu-latest
         env:
-            JS_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
+            JS_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safeaccess-inline-js' }}
 
         steps:
             - name: Checkout mono-repo
@@ -131,21 +131,21 @@ jobs:
         if: needs.release-please.outputs.js_released == 'true'
         runs-on: ubuntu-latest
         env:
-            JS_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
+            JS_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safeaccess-inline-js' }}
 
         steps:
             - name: Checkout JS split repo (tagged version)
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
               with:
                   repository: ${{ env.JS_REPO }}
-                  ref: "v${{ needs.release-please.outputs.js_version }}"
+                  ref: 'v${{ needs.release-please.outputs.js_version }}'
                   token: ${{ secrets.SPLIT_TOKEN }}
 
             - name: Setup Node
               uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
               with:
                   node-version: 24
-                  registry-url: "https://registry.npmjs.org"
+                  registry-url: 'https://registry.npmjs.org'
 
             - name: Install dependencies
               run: npm install --ignore-scripts

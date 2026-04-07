@@ -1,11 +1,11 @@
 {
-    "name": "safe-access/inline",
+    "name": "safeaccess/inline",
     "version": "0.1.0",
     "description": "Safe nested data access with dot notation for PHP.",
     "type": "library",
     "license": "MIT",
     "keywords": [
-        "safe-access",
+        "safeaccess",
         "dot-notation",
         "nested-data",
         "data-access",
@@ -13,7 +13,7 @@
         "object-access",
         "null-safe"
     ],
-    "homepage": "https://github.com/felipesauer/safe-access-inline",
+    "homepage": "https://github.com/felipesauer/safeaccess-inline",
     "authors": [
         {
             "name": "Felipe Sauer",
@@ -22,8 +22,8 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/felipesauer/safe-access-inline/issues",
-        "source": "https://github.com/felipesauer/safe-access-inline/tree/main/packages/php"
+        "issues": "https://github.com/felipesauer/safeaccess-inline/issues",
+        "source": "https://github.com/felipesauer/safeaccess-inline/tree/main/packages/php"
     },
     "require": {
         "php": "^8.2",

@@ -12,8 +12,8 @@ Contributions are welcome. This document describes how to set up, develop, and s
 ## Quick Start
 
 ```bash
-git clone https://github.com/felipesauer/safe-access-inline.git
-cd safe-access-inline
+git clone https://github.com/felipesauer/safeaccess-inline.git
+cd safeaccess-inline
 ```
 
 ## PHP Development
@@ -45,13 +45,13 @@ cd packages/js
 
 Available scripts (currently no-ops — source and tests are being built in subsequent milestones):
 
-| Script | Purpose |
-|---|---|
-| `npm run build` | Compile TypeScript |
-| `npm test` | Run tests |
+| Script              | Purpose                 |
+| ------------------- | ----------------------- |
+| `npm run build`     | Compile TypeScript      |
+| `npm test`          | Run tests               |
 | `npm run typecheck` | Type-check without emit |
-| `npm run lint` | Run ESLint |
-| `npm run bench` | Run benchmarks |
+| `npm run lint`      | Run ESLint              |
+| `npm run bench`     | Run benchmarks          |
 
 ## Commit Messages
 
