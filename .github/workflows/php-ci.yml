@@ -55,7 +55,8 @@ jobs:
               run: composer install --no-interaction --prefer-dist ${{ matrix.deps == 'core' && '--no-dev' || '' }}
 
             - name: Run tests
-              run: vendor/bin/pest --coverage --coverage-clover coverage.xml ${{ matrix.deps == 'full' && '--min=95' || '' }}
+              if: matrix.deps == 'full'
+              run: vendor/bin/pest --coverage --coverage-clover coverage.xml --min=95
 
             - name: Upload coverage to Codecov
               if: matrix.php == '8.4' && matrix.deps == 'full'

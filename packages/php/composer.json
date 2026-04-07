@@ -55,6 +55,7 @@
         "test": "pest --bail --profile --coverage --strict-coverage --min=100",
         "test:coverage": "php -d pcov.enabled=1 vendor/bin/pest --bail --profile --coverage --strict-coverage --min=100",
         "test:mutation": "bash scripts/mutation.sh",
+        "test:parity": "vendor/bin/pest tests/Unit/ParityTest.php",
         "analyse": "phpstan analyse",
         "format": "php-cs-fixer fix"
     },
