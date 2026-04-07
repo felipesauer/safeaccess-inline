@@ -24,14 +24,28 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
 
+            - name: Validate SPLIT_TOKEN
+              env:
+                  SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+              run: |
+                  if [[ -z "${SPLIT_TOKEN}" ]]; then
+                    echo "::error::SPLIT_TOKEN secret is not set or empty"
+                    exit 1
+                  fi
+
             - name: Split and push packages/php
               env:
                   SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
                   TARGET_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safe-access-inline-php' }}
               run: |
+                  echo "Target: ${TARGET_REPO}"
                   SHA=$(git subtree split --prefix=packages/php)
+                  echo "Split SHA: ${SHA}"
                   git remote add split-php "https://x-access-token:${SPLIT_TOKEN}@github.com/${TARGET_REPO}.git" 2>/dev/null || true
-                  git push split-php "${SHA}:refs/heads/main" --force
+                  git push split-php "${SHA}:refs/heads/main" --force 2>&1 || {
+                    echo "::error::Push to ${TARGET_REPO} failed. Check that SPLIT_TOKEN has Contents read+write permission on the target repository."
+                    exit 1
+                  }
 
     split-js:
         name: Split JS Package
@@ -43,12 +57,25 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
 
+            - name: Validate SPLIT_TOKEN
+              env:
+                  SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+              run: |
+                  if [[ -z "${SPLIT_TOKEN}" ]]; then
+                    echo "::error::SPLIT_TOKEN secret is not set or empty"
+                    exit 1
+                  fi
+
             - name: Split and push packages/js
               env:
                   SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
                   TARGET_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
               run: |
+                  echo "Target: ${TARGET_REPO}"
                   SHA=$(git subtree split --prefix=packages/js)
+                  echo "Split SHA: ${SHA}"
                   git remote add split-js "https://x-access-token:${SPLIT_TOKEN}@github.com/${TARGET_REPO}.git" 2>/dev/null || true
-                  git push split-js "${SHA}:refs/heads/main" --force
-
+                  git push split-js "${SHA}:refs/heads/main" --force 2>&1 || {
+                    echo "::error::Push to ${TARGET_REPO} failed. Check that SPLIT_TOKEN has Contents read+write permission on the target repository."
+                    exit 1
+                  }
