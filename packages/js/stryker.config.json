@@ -1,0 +1,24 @@
+{
+    "testRunner": "vitest",
+    "mutate": [
+        "src/**/*.ts",
+        "!src/**/*.test.ts",
+        "!src/index.ts",
+        "!src/contracts/**/*.ts",
+        "!src/exceptions/**/*.ts",
+        "!src/security/forbidden-keys.ts",
+        "!src/parser/yaml-parser.ts",
+        "!src/parser/xml-parser.ts"
+    ],
+    "thresholds": {
+        "high": 100,
+        "low": 100,
+        "break": 100
+    },
+    "timeoutMS": 60000,
+    "concurrency": 4,
+    "reporters": ["html", "clear-text", "progress"],
+    "htmlReporter": {
+        "fileName": "reports/stryker/mutation.html"
+    }
+}

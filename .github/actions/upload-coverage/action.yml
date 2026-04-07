@@ -1,0 +1,29 @@
+name: Upload Coverage
+description: Upload coverage reports to Codecov
+
+inputs:
+    token:
+        description: Codecov token
+        required: true
+    flags:
+        description: Coverage report flags (e.g. php, javascript)
+        required: true
+    files:
+        description: Path to coverage XML file (PHP clover XML)
+        required: false
+        default: ''
+    directory:
+        description: Path to coverage directory (JS coverage dir)
+        required: false
+        default: ''
+
+runs:
+    using: composite
+    steps:
+        - name: Upload coverage to Codecov
+          uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
+          with:
+              token: ${{ inputs.token }}
+              flags: ${{ inputs.flags }}
+              files: ${{ inputs.files }}
+              directory: ${{ inputs.directory }}

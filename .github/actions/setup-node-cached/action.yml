@@ -1,0 +1,29 @@
+name: Setup Node.js (cached)
+description: Set up Node.js and restore the root node_modules cache.
+
+inputs:
+  node-version:
+    description: Node.js version to install (e.g. "22", "24").
+    required: true
+  working-directory:
+    description: >
+      Informational only — the directory the caller is working in.
+      Does not affect the cache path; npm workspaces installs at the repo root.
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Cache root node_modules
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        path: node_modules
+        key: node-${{ inputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          node-${{ inputs.node-version }}-

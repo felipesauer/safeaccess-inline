@@ -1,0 +1,25 @@
+{
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "packages": {
+        "packages/php": {
+            "release-type": "php",
+            "component": "php",
+            "include-component-in-tag": true,
+            "initial-version": "0.1.0",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": true,
+            "bump-patch-for-minor-pre-major": true,
+            "extra-files": ["composer.json"]
+        },
+        "packages/js": {
+            "release-type": "node",
+            "component": "js",
+            "include-component-in-tag": true,
+            "initial-version": "0.1.0",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": true,
+            "bump-patch-for-minor-pre-major": true
+        }
+    },
+    "separate-pull-requests": true
+}

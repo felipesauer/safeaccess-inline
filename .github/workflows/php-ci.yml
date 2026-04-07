@@ -1,0 +1,90 @@
+name: PHP CI
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "packages/php/**"
+            - ".github/workflows/php-ci.yml"
+    pull_request:
+        branches: [main]
+        paths:
+            - "packages/php/**"
+            - ".github/workflows/php-ci.yml"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        name: PHP ${{ matrix.php }} (${{ matrix.deps }})
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                php: ["8.2", "8.3", "8.4"]
+                deps: ["core", "full"]
+
+        defaults:
+            run:
+                working-directory: packages/php
+
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+              with:
+                  php-version: ${{ matrix.php }}
+                  extensions: json, simplexml, libxml
+                  coverage: pcov
+
+            - name: Get Composer cache directory
+              id: composer-cache
+              run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+              with:
+                  path: ${{ steps.composer-cache.outputs.dir }}
+                  key: php-${{ matrix.php }}-${{ matrix.deps }}-composer-${{ hashFiles('packages/php/composer.lock') }}
+                  restore-keys: php-${{ matrix.php }}-${{ matrix.deps }}-composer-
+
+            - name: Install dependencies
+              run: composer install --no-interaction --prefer-dist ${{ matrix.deps == 'core' && '--no-dev' || '' }}
+
+            - name: Run tests
+              if: matrix.deps == 'full'
+              run: vendor/bin/pest --coverage --coverage-clover coverage.xml --min=95
+
+            - name: Upload coverage to Codecov
+              if: matrix.php == '8.4' && matrix.deps == 'full'
+              uses: ./.github/actions/upload-coverage
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: php
+                  files: packages/php/coverage.xml
+
+            - name: Run PHPStan
+              if: matrix.deps == 'full' && matrix.php == '8.4'
+              run: vendor/bin/phpstan analyse
+
+            - name: Check code style
+              if: matrix.deps == 'full' && matrix.php == '8.4'
+              run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+            # Cross-parity ensures PHP and JS produce identical results
+            - name: Cross-parity tests
+              if: matrix.deps == 'full' && matrix.php == '8.4'
+              run: composer test:parity
+
+            # Benchmark is a report, not a quality gate — never fails the build
+            - name: Benchmark (report only)
+              if: matrix.deps == 'full' && matrix.php == '8.4'
+              continue-on-error: true
+              run: composer bench
+
+            - name: Mutation tests (MSI = 100%)
+              if: matrix.deps == 'full' && matrix.php == '8.4'
+              run: bash scripts/mutation.sh

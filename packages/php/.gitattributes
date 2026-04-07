@@ -1,0 +1,12 @@
+/.php-cs-fixer.dist.php export-ignore
+/.php-cs-fixer.cache export-ignore
+/.phpstan.cache/ export-ignore
+/phpstan.neon export-ignore
+/phpstan-extension.neon export-ignore
+/phpunit.xml.dist export-ignore
+/tests/ export-ignore
+/coverage/ export-ignore
+/coverage.xml export-ignore
+/phpstan/ export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
