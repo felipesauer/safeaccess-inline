@@ -2,6 +2,13 @@
 
 All notable changes to the `safe-access/inline` PHP package are documented in this file.
 
+## 0.1.0 (2026-04-07)
+
+
+### Features
+
+* **php:** bootstrap initial release tracking ([8990f1e](https://github.com/felipesauer/safe-access-inline/commit/8990f1ef30efc2fba2f178721a6b20818ce5b9d5))
+
 ## [0.1.0] — 2026-04-06
 
 ### Features
