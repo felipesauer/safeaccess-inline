@@ -1,14 +1,11 @@
 <p align="center">
-  <img src="../../public/logo.svg" width="80" alt="safe-access-inline logo">
+  <img src="../../public/logo.svg" width="80" alt="safeaccess-inline logo">
 </p>
 
 <h1 align="center">Safe Access Inline — PHP</h1>
 
 <p align="center">
-  <a href="https://github.com/felipesauer/safe-access-inline/actions"><img src="https://img.shields.io/github/actions/workflow/status/felipesauer/safe-access-inline/ci.yml?branch=main&label=CI" alt="CI"></a>
-  <a href="https://codecov.io/gh/felipesauer/safe-access-inline"><img src="https://img.shields.io/codecov/c/github/felipesauer/safe-access-inline?flag=php&label=Coverage" alt="Coverage"></a>
-  <a href="https://packagist.org/packages/safe-access/inline"><img src="https://img.shields.io/packagist/v/safe-access/inline?label=packagist" alt="Packagist"></a>
-  <a href="https://packagist.org/packages/safe-access/inline"><img src="https://img.shields.io/packagist/dt/safe-access/inline?label=downloads" alt="Downloads"></a>
+  <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
 </p>
 
@@ -19,7 +16,7 @@ Safe nested data access with dot notation for PHP. Navigate deeply nested arrays
 ## Installation
 
 ```bash
-composer require safe-access/inline
+composer require safeaccess/inline
 ```
 
 **Requirements:** PHP 8.2+, extensions: `json`, `simplexml`, `libxml`
@@ -48,29 +45,29 @@ $accessor->has('user.email');          // false (original unchanged)
 
 ### Basic Syntax
 
-| Syntax | Example | Description |
-|--------|---------|-------------|
-| `key.key` | `user.name` | Nested key access |
-| `key.0.key` | `users.0.name` | Numeric key (array index) |
-| `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names |
-| `$` or `$.path` | `$.user.name` | Optional root prefix (stripped) |
+| Syntax            | Example            | Description                     |
+| ----------------- | ------------------ | ------------------------------- |
+| `key.key`         | `user.name`        | Nested key access               |
+| `key.0.key`       | `users.0.name`     | Numeric key (array index)       |
+| `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names       |
+| `$` or `$.path`   | `$.user.name`      | Optional root prefix (stripped) |
 
 ### Advanced PathQuery
 
-| Syntax | Example | Description |
-|--------|---------|-------------|
-| `[0]` | `users[0]` | Bracket index access |
-| `*` or `[*]` | `users.*` | Wildcard — expand all children |
-| `..key` | `..name` | Recursive descent — find key at any depth |
-| `..['a','b']` | `..['name','age']` | Multi-key recursive descent |
-| `[0,1,2]` | `users[0,1,2]` | Multi-index selection |
-| `['a','b']` | `['name','age']` | Multi-key selection |
-| `[0:5]` | `items[0:5]` | Slice — indices 0 through 4 |
-| `[::2]` | `items[::2]` | Slice with step |
-| `[::-1]` | `items[::-1]` | Reverse slice |
-| `[?expr]` | `users[?age>18]` | Filter predicate expression |
-| `.{fields}` | `.{name, age}` | Projection — select fields |
-| `.{alias: src}` | `.{fullName: name}` | Aliased projection |
+| Syntax          | Example             | Description                               |
+| --------------- | ------------------- | ----------------------------------------- |
+| `[0]`           | `users[0]`          | Bracket index access                      |
+| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
+| `..key`         | `..name`            | Recursive descent — find key at any depth |
+| `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
+| `[0,1,2]`       | `users[0,1,2]`      | Multi-index selection                     |
+| `['a','b']`     | `['name','age']`    | Multi-key selection                       |
+| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
+| `[::2]`         | `items[::2]`        | Slice with step                           |
+| `[::-1]`        | `items[::-1]`       | Reverse slice                             |
+| `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
+| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
+| `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
 ### Filter Expressions
 
@@ -105,6 +102,7 @@ $orders->get('[?@.price * @.qty > 20]');           // first order only
 $accessor = Inline::fromJson('{"users": [{"name": "Alice"}, {"name": "Bob"}]}');
 $accessor->get('users.0.name'); // 'Alice'
 ```
+
 </details>
 
 <details>
@@ -121,6 +119,7 @@ YAML;
 $accessor = Inline::fromYaml($yaml);
 $accessor->get('database.credentials.user'); // 'admin'
 ```
+
 </details>
 
 <details>
@@ -133,6 +132,7 @@ $accessor->get('database.host'); // 'localhost'
 // Also accepts SimpleXMLElement
 $accessor = Inline::fromXml(simplexml_load_string($xml));
 ```
+
 </details>
 
 <details>
@@ -142,6 +142,7 @@ $accessor = Inline::fromXml(simplexml_load_string($xml));
 $accessor = Inline::fromIni("[database]\nhost=localhost\nport=5432");
 $accessor->get('database.host'); // 'localhost'
 ```
+
 </details>
 
 <details>
@@ -151,6 +152,7 @@ $accessor->get('database.host'); // 'localhost'
 $accessor = Inline::fromEnv("APP_NAME=MyApp\nDB_HOST=localhost");
 $accessor->get('DB_HOST'); // 'localhost'
 ```
+
 </details>
 
 <details>
@@ -161,6 +163,7 @@ $ndjson = '{"id":1,"name":"Alice"}' . "\n" . '{"id":2,"name":"Bob"}';
 $accessor = Inline::fromNdjson($ndjson);
 $accessor->get('0.name'); // 'Alice'
 ```
+
 </details>
 
 <details>
@@ -173,6 +176,7 @@ $accessor->get('users.0.name'); // 'Alice'
 $accessor = Inline::fromObject((object) ['name' => 'Alice']);
 $accessor->get('name'); // 'Alice'
 ```
+
 </details>
 
 <details>
@@ -183,6 +187,7 @@ use SafeAccess\Inline\Enums\TypeFormat;
 $accessor = Inline::from(TypeFormat::Json, '{"key": "value"}');
 $accessor->get('key'); // 'value'
 ```
+
 </details>
 
 ## Reading & Writing
@@ -235,13 +240,13 @@ $accessor = Inline::withSecurityGuard(new SecurityGuard(extraForbiddenKeys: ['se
 
 ### Builder Methods
 
-| Method | Description |
-|--------|-------------|
-| `withSecurityGuard($guard)` | Custom forbidden-key rules and depth limits |
-| `withSecurityParser($parser)` | Custom payload size and structural limits |
-| `withPathCache($cache)` | Path segment cache for repeated lookups |
-| `withParserIntegration($integration)` | Custom format parser for `fromAny()` |
-| `withStrictMode(false)` | Disable security validation (trusted input only) |
+| Method                                | Description                                      |
+| ------------------------------------- | ------------------------------------------------ |
+| `withSecurityGuard($guard)`           | Custom forbidden-key rules and depth limits      |
+| `withSecurityParser($parser)`         | Custom payload size and structural limits        |
+| `withPathCache($cache)`               | Path segment cache for repeated lookups          |
+| `withParserIntegration($integration)` | Custom format parser for `fromAny()`             |
+| `withStrictMode(false)`               | Disable security validation (trusted input only) |
 
 ## Security
 
@@ -249,12 +254,12 @@ All public entry points validate input **by default**. Every key passes through 
 
 ### Forbidden Keys
 
-| Category | Examples | Reason |
-|----------|----------|--------|
-| PHP magic methods | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, ... | Prevent PHP magic behavior via data keys |
-| Prototype pollution | `__proto__`, `constructor`, `prototype` | Prevent prototype pollution attacks |
-| PHP superglobals | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_SERVER`, `_ENV`, ... | Prevent superglobal access |
-| Stream wrappers | `php://input`, `phar://...`, `data://...`, `file://...` | Prevent stream wrapper injection |
+| Category            | Examples                                                              | Reason                                   |
+| ------------------- | --------------------------------------------------------------------- | ---------------------------------------- |
+| PHP magic methods   | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, ... | Prevent PHP magic behavior via data keys |
+| Prototype pollution | `__proto__`, `constructor`, `prototype`                               | Prevent prototype pollution attacks      |
+| PHP superglobals    | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_SERVER`, `_ENV`, ...         | Prevent superglobal access               |
+| Stream wrappers     | `php://input`, `phar://...`, `data://...`, `file://...`               | Prevent stream wrapper injection         |
 
 Add custom forbidden keys:
 
@@ -265,21 +270,21 @@ $accessor = Inline::withSecurityGuard($guard)->fromJson($data);
 
 ### Structural Limits
 
-| Limit | Default | Description |
-|-------|---------|-------------|
-| `maxPayloadBytes` | 10 MB | Maximum raw string input size |
-| `maxKeys` | 10,000 | Maximum total key count |
-| `maxDepth` | 512 | Maximum structural nesting depth |
-| `maxResolveDepth` | 100 | Maximum recursion for path resolution |
-| `maxCountRecursiveDepth` | 100 | Maximum recursion when counting keys |
+| Limit                    | Default | Description                           |
+| ------------------------ | ------- | ------------------------------------- |
+| `maxPayloadBytes`        | 10 MB   | Maximum raw string input size         |
+| `maxKeys`                | 10,000  | Maximum total key count               |
+| `maxDepth`               | 512     | Maximum structural nesting depth      |
+| `maxResolveDepth`        | 100     | Maximum recursion for path resolution |
+| `maxCountRecursiveDepth` | 100     | Maximum recursion when counting keys  |
 
 ### Format-Specific Protections
 
-| Format | Protection |
-|--------|-----------|
-| XML | Rejects `<!DOCTYPE` — prevents XXE attacks |
-| YAML | Blocks unsafe tags, anchors, aliases, merge keys |
-| All | Forbidden key validation on every parsed key |
+| Format | Protection                                       |
+| ------ | ------------------------------------------------ |
+| XML    | Rejects `<!DOCTYPE` — prevents XXE attacks       |
+| YAML   | Blocks unsafe tags, anchors, aliases, merge keys |
+| All    | Forbidden key validation on every parsed key     |
 
 > Disable for trusted input: `Inline::withStrictMode(false)->fromJson($trustedInput)`
 
@@ -314,16 +319,16 @@ try {
 
 ### Exception Hierarchy
 
-| Exception | Extends | When |
-|-----------|---------|------|
-| `AccessorException` | `RuntimeException` | Root — catch-all |
-| `SecurityException` | `AccessorException` | Forbidden key, payload, structural limits |
-| `InvalidFormatException` | `AccessorException` | Malformed JSON, XML, INI, NDJSON |
-| `YamlParseException` | `InvalidFormatException` | Unsafe or malformed YAML |
-| `PathNotFoundException` | `AccessorException` | `getOrFail()` on missing path |
-| `ReadonlyViolationException` | `AccessorException` | Write on readonly accessor |
-| `UnsupportedTypeException` | `AccessorException` | Unknown class in `make()` |
-| `ParserException` | `AccessorException` | Internal parser errors |
+| Exception                    | Extends                  | When                                      |
+| ---------------------------- | ------------------------ | ----------------------------------------- |
+| `AccessorException`          | `RuntimeException`       | Root — catch-all                          |
+| `SecurityException`          | `AccessorException`      | Forbidden key, payload, structural limits |
+| `InvalidFormatException`     | `AccessorException`      | Malformed JSON, XML, INI, NDJSON          |
+| `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |
+| `PathNotFoundException`      | `AccessorException`      | `getOrFail()` on missing path             |
+| `ReadonlyViolationException` | `AccessorException`      | Write on readonly accessor                |
+| `UnsupportedTypeException`   | `AccessorException`      | Unknown class in `make()`                 |
+| `ParserException`            | `AccessorException`      | Internal parser errors                    |
 
 ## Advanced Usage
 
@@ -373,52 +378,52 @@ $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvStr
 
 #### Static Factory Methods
 
-| Method | Input | Returns |
-|--------|-------|---------|
-| `fromArray($data)` | `array<array-key, mixed>` | `ArrayAccessor` |
-| `fromObject($data)` | `object` | `ObjectAccessor` |
-| `fromJson($data)` | JSON `string` | `JsonAccessor` |
-| `fromXml($data)` | XML `string` or `SimpleXMLElement` | `XmlAccessor` |
-| `fromYaml($data)` | YAML `string` | `YamlAccessor` |
-| `fromIni($data)` | INI `string` | `IniAccessor` |
-| `fromEnv($data)` | dotenv `string` | `EnvAccessor` |
-| `fromNdjson($data)` | NDJSON `string` | `NdjsonAccessor` |
-| `fromAny($data, $integration?)` | `mixed` | `AnyAccessor` |
-| `from($typeFormat, $data)` | `TypeFormat` enum | `AccessorsInterface` |
-| `make($class, $data)` | `class-string` | `AbstractAccessor` |
+| Method                          | Input                              | Returns              |
+| ------------------------------- | ---------------------------------- | -------------------- |
+| `fromArray($data)`              | `array<array-key, mixed>`          | `ArrayAccessor`      |
+| `fromObject($data)`             | `object`                           | `ObjectAccessor`     |
+| `fromJson($data)`               | JSON `string`                      | `JsonAccessor`       |
+| `fromXml($data)`                | XML `string` or `SimpleXMLElement` | `XmlAccessor`        |
+| `fromYaml($data)`               | YAML `string`                      | `YamlAccessor`       |
+| `fromIni($data)`                | INI `string`                       | `IniAccessor`        |
+| `fromEnv($data)`                | dotenv `string`                    | `EnvAccessor`        |
+| `fromNdjson($data)`             | NDJSON `string`                    | `NdjsonAccessor`     |
+| `fromAny($data, $integration?)` | `mixed`                            | `AnyAccessor`        |
+| `from($typeFormat, $data)`      | `TypeFormat` enum                  | `AccessorsInterface` |
+| `make($class, $data)`           | `class-string`                     | `AbstractAccessor`   |
 
 #### Accessor Read Methods
 
-| Method | Returns |
-|--------|---------|
-| `get($path, $default?)` | Value at path, or default |
-| `getOrFail($path)` | Value or throws `PathNotFoundException` |
-| `getAt($segments, $default?)` | Value at key segments |
-| `has($path)` | `bool` |
-| `hasAt($segments)` | `bool` |
-| `getMany($paths)` | `array<string, mixed>` |
-| `all()` | `array<string, mixed>` |
-| `count($path?)` | `int` |
-| `keys($path?)` | `list<string>` |
-| `getRaw()` | `mixed` |
+| Method                        | Returns                                 |
+| ----------------------------- | --------------------------------------- |
+| `get($path, $default?)`       | Value at path, or default               |
+| `getOrFail($path)`            | Value or throws `PathNotFoundException` |
+| `getAt($segments, $default?)` | Value at key segments                   |
+| `has($path)`                  | `bool`                                  |
+| `hasAt($segments)`            | `bool`                                  |
+| `getMany($paths)`             | `array<string, mixed>`                  |
+| `all()`                       | `array<string, mixed>`                  |
+| `count($path?)`               | `int`                                   |
+| `keys($path?)`                | `list<string>`                          |
+| `getRaw()`                    | `mixed`                                 |
 
 #### Accessor Write Methods (immutable)
 
-| Method | Description |
-|--------|-------------|
-| `set($path, $value)` | Set at path |
-| `setAt($segments, $value)` | Set at key segments |
-| `remove($path)` | Remove at path |
-| `removeAt($segments)` | Remove at key segments |
-| `merge($path, $value)` | Deep-merge at path |
-| `mergeAll($value)` | Deep-merge at root |
+| Method                     | Description            |
+| -------------------------- | ---------------------- |
+| `set($path, $value)`       | Set at path            |
+| `setAt($segments, $value)` | Set at key segments    |
+| `remove($path)`            | Remove at path         |
+| `removeAt($segments)`      | Remove at key segments |
+| `merge($path, $value)`     | Deep-merge at path     |
+| `mergeAll($value)`         | Deep-merge at root     |
 
 #### Modifier Methods
 
-| Method | Description |
-|--------|-------------|
-| `readonly($flag?)` | Block all writes |
-| `strict($flag?)` | Toggle security validation |
+| Method             | Description                |
+| ------------------ | -------------------------- |
+| `readonly($flag?)` | Block all writes           |
+| `strict($flag?)`   | Toggle security validation |
 
 ## Contributing
 

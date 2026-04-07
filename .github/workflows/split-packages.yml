@@ -36,7 +36,7 @@ jobs:
             - name: Split and push packages/php
               env:
                   SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
-                  TARGET_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safe-access-inline-php' }}
+                  TARGET_REPO: ${{ github.repository_owner }}/${{ vars.PHP_REPO_NAME || 'safeaccess-inline-php' }}
               run: |
                   echo "Target: ${TARGET_REPO}"
                   SHA=$(git subtree split --prefix=packages/php)
@@ -69,7 +69,7 @@ jobs:
             - name: Split and push packages/js
               env:
                   SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
-                  TARGET_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safe-access-inline-js' }}
+                  TARGET_REPO: ${{ github.repository_owner }}/${{ vars.JS_REPO_NAME || 'safeaccess-inline-js' }}
               run: |
                   echo "Target: ${TARGET_REPO}"
                   SHA=$(git subtree split --prefix=packages/js)

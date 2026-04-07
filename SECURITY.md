@@ -4,10 +4,10 @@
 
 Only the latest release of each package receives security updates.
 
-| Package                                       | Version | Supported |
-| --------------------------------------------  | ------- | :-------: |
-| `safe-access/inline` (PHP)                    | 0.x     | ✅        |
-| `@safe-access/inline` (JS/TS)          | 0.x     | ✅        |
+| Package                      | Version | Supported |
+| ---------------------------- | ------- | :-------: |
+| `safeaccess/inline` (PHP)    | 0.x     |    ✅     |
+| `@safeaccess/inline` (JS/TS) | 0.x     |    ✅     |
 
 ## Reporting a Vulnerability
 
@@ -15,12 +15,12 @@ If you discover a security vulnerability, please report it responsibly using Git
 
 ### How to report
 
-1. Go to the [**Security** tab → **Report a vulnerability**](https://github.com/felipesauer/safe-access-inline/security/advisories/new).
+1. Go to the [**Security** tab → **Report a vulnerability**](https://github.com/felipesauer/safeaccess-inline/security/advisories/new).
 2. Fill in the form with:
-   - Clear description of the vulnerability
-   - Steps to reproduce
-   - Affected package(s) and version(s)
-   - Potential impact
+    - Clear description of the vulnerability
+    - Steps to reproduce
+    - Affected package(s) and version(s)
+    - Potential impact
 
 **Do not** open a public issue for security problems.
 
@@ -35,16 +35,18 @@ We follow **coordinated disclosure**: we ask that you do not publicly disclose t
 ## Scope
 
 **In scope** (considered security issues):
+
 - Injection attacks (code execution during parsing/transformation)
 - Denial of Service (excessive resource usage or crashes)
 - Unintended data exposure/leakage
 - Vulnerabilities in direct dependencies
 
 **Out of scope**:
+
 - Non-security bugs (incorrect output without security impact)
 - Feature requests or usability issues
 - Issues in `devDependencies` / `require-dev`
 
 ---
 
-**Thank you** for helping keep `safe-access-inline` secure!
+**Thank you** for helping keep `safeaccess-inline` secure!
