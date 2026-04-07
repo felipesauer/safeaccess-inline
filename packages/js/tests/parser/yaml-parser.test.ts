@@ -373,7 +373,7 @@ describe(`${YamlParser.name} > partially-quoted strings`, () => {
     });
 
     it('does not strip a string that starts and ends with different quote chars', () => {
-        expect(makeParser().parse("msg: \"hello'")).toEqual({ msg: '"hello\'' });
+        expect(makeParser().parse('msg: "hello\'')).toEqual({ msg: '"hello\'' });
     });
 });
 
@@ -409,13 +409,20 @@ describe(`${YamlParser.name} > mergeChildLines sibling rows`, () => {
     });
 
     it('ignores an over-indented sibling line in mergeChildLines', () => {
-        const yaml =
-            'items:\n  - role: admin\n      over: ignored\n    level: 1\n  - role: user';
+        const yaml = 'items:\n  - role: admin\n      over: ignored\n    level: 1\n  - role: user';
         const result = makeParser().parse(yaml);
         const items = result['items'] as unknown[];
         expect((items[0] as Record<string, unknown>)['level']).toBe(1);
         expect((items[0] as Record<string, unknown>)['over']).toBeUndefined();
         expect((items[1] as Record<string, unknown>)['role']).toBe('user');
+    });
+
+    it('skips a non-key-value sibling line in mergeChildLines', () => {
+        const yaml = 'items:\n  - key: value\n    baretext\n    name: Alice';
+        const result = makeParser().parse(yaml);
+        const items = result['items'] as unknown[];
+        expect((items[0] as Record<string, unknown>)['key']).toBe('value');
+        expect((items[0] as Record<string, unknown>)['name']).toBe('Alice');
     });
 });
 
@@ -439,6 +446,12 @@ describe(`${YamlParser.name} > block scalar — blank lines and folded`, () => {
             text: 'hello\n\nworld',
         });
     });
+
+    it('drops a root-level comment line inside a literal block scalar', () => {
+        expect(makeParser().parse('text: |\n  first\n# root comment\n  second')).toEqual({
+            text: 'first\nsecond',
+        });
+    });
 });
 
 describe(`${YamlParser.name} > inline flow — key with space before colon`, () => {
@@ -448,4 +461,3 @@ describe(`${YamlParser.name} > inline flow — key with space before colon`, () 
         });
     });
 });
-

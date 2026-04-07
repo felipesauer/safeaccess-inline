@@ -8,7 +8,13 @@ function makeParser(maxDepth = 10): XmlParser {
 }
 
 type FakeAttr = { name: string; value: string };
-type FakeNode = { nodeType: number; textContent?: string; nodeName?: string; attributes?: FakeAttrs; childNodes?: FakeChildNodes };
+type FakeNode = {
+    nodeType: number;
+    textContent?: string;
+    nodeName?: string;
+    attributes?: FakeAttrs;
+    childNodes?: FakeChildNodes;
+};
 type FakeAttrs = { length: number; [index: number]: FakeAttr | undefined };
 type FakeChildNodes = { length: number; [index: number]: FakeNode | undefined };
 
@@ -16,28 +22,31 @@ function makeTextNode(text: string): FakeNode {
     return { nodeType: 3, textContent: text };
 }
 
-function makeElement(
-    name: string,
-    children: FakeNode[] = [],
-    attrs: FakeAttr[] = [],
-): FakeNode {
+function makeElement(name: string, children: FakeNode[] = [], attrs: FakeAttr[] = []): FakeNode {
     const attributes: FakeAttrs = { length: attrs.length };
-    attrs.forEach((a, i) => { attributes[i] = a; });
+    attrs.forEach((a, i) => {
+        attributes[i] = a;
+    });
     const childNodes: FakeChildNodes = { length: children.length };
-    children.forEach((c, i) => { childNodes[i] = c; });
+    children.forEach((c, i) => {
+        childNodes[i] = c;
+    });
     return { nodeType: 1, nodeName: name, attributes, childNodes };
 }
 
 function stubDomParser(root: FakeNode | null, hasParserError = false): void {
     const parserErrorEl = hasParserError ? { textContent: 'parse failed' } : null;
-    vi.stubGlobal('DOMParser', class {
-        parseFromString(): unknown {
-            return {
-                querySelector: (sel: string) => sel === 'parsererror' ? parserErrorEl : null,
-                documentElement: root,
-            };
-        }
-    });
+    vi.stubGlobal(
+        'DOMParser',
+        class {
+            parseFromString(): unknown {
+                return {
+                    querySelector: (sel: string) => (sel === 'parsererror' ? parserErrorEl : null),
+                    documentElement: root,
+                };
+            }
+        },
+    );
 }
 
 describe(XmlParser.name, () => {
@@ -48,9 +57,10 @@ describe(XmlParser.name, () => {
     });
 
     it('parses multiple sibling elements', () => {
-        expect(
-            makeParser().parse('<root><name>Alice</name><age>30</age></root>'),
-        ).toEqual({ name: 'Alice', age: '30' });
+        expect(makeParser().parse('<root><name>Alice</name><age>30</age></root>')).toEqual({
+            name: 'Alice',
+            age: '30',
+        });
     });
 
     it('returns empty object for whitespace-only root content', () => {
@@ -66,9 +76,9 @@ describe(XmlParser.name, () => {
     });
 
     it('strips XML declaration header before parsing', () => {
-        expect(
-            makeParser().parse('<?xml version="1.0"?><root><key>value</key></root>'),
-        ).toEqual({ key: 'value' });
+        expect(makeParser().parse('<?xml version="1.0"?><root><key>value</key></root>')).toEqual({
+            key: 'value',
+        });
     });
 
     it('throws InvalidFormatException for non-XML string', () => {
@@ -76,7 +86,9 @@ describe(XmlParser.name, () => {
     });
 
     it('throws InvalidFormatException with message for non-XML string', () => {
-        expect(() => makeParser().parse('not xml at all')).toThrow(/XmlAccessor failed to parse XML string/i);
+        expect(() => makeParser().parse('not xml at all')).toThrow(
+            /XmlAccessor failed to parse XML string/i,
+        );
     });
 
     it('ignores leading and trailing whitespace around XML', () => {
@@ -88,7 +100,9 @@ describe(XmlParser.name, () => {
     });
 
     it('throws for XML with non-XML prefix', () => {
-        expect(() => makeParser().parse('header<root>value</root>')).toThrow(InvalidFormatException);
+        expect(() => makeParser().parse('header<root>value</root>')).toThrow(
+            InvalidFormatException,
+        );
     });
 
     it('throws for self-closing XML with non-XML prefix', () => {
@@ -104,7 +118,9 @@ describe(XmlParser.name, () => {
     });
 
     it('parses root element with attributes', () => {
-        expect(makeParser().parse('<root id="1"><key>value</key></root>')).toEqual({ key: 'value' });
+        expect(makeParser().parse('<root id="1"><key>value</key></root>')).toEqual({
+            key: 'value',
+        });
     });
 
     it('parses self-closing root element with attributes', () => {
@@ -150,17 +166,15 @@ describe(XmlParser.name, () => {
 
 describe(`${XmlParser.name} > nested elements`, () => {
     it('parses two-level nesting', () => {
-        expect(
-            makeParser().parse('<root><user><name>Alice</name></user></root>'),
-        ).toEqual({ user: { name: 'Alice' } });
+        expect(makeParser().parse('<root><user><name>Alice</name></user></root>')).toEqual({
+            user: { name: 'Alice' },
+        });
     });
 
     it('parses three-level nesting', () => {
-        expect(
-            makeParser().parse(
-                '<root><a><b><c>deep</c></b></a></root>',
-            ),
-        ).toEqual({ a: { b: { c: 'deep' } } });
+        expect(makeParser().parse('<root><a><b><c>deep</c></b></a></root>')).toEqual({
+            a: { b: { c: 'deep' } },
+        });
     });
 
     it('returns plain string when child has only text content', () => {
@@ -198,27 +212,25 @@ describe(`${XmlParser.name} > security — depth limit`, () => {
     });
 
     it('throws SecurityException when nesting exceeds maxDepth', () => {
-        expect(() =>
-            new XmlParser(1).parse('<root><a><b><c>deep</c></b></a></root>'),
-        ).toThrow(SecurityException);
+        expect(() => new XmlParser(1).parse('<root><a><b><c>deep</c></b></a></root>')).toThrow(
+            SecurityException,
+        );
     });
 
     it('includes actual depth and maxDepth in SecurityException message', () => {
-        expect(() =>
-            new XmlParser(1).parse('<root><a><b><c>deep</c></b></a></root>'),
-        ).toThrow(/XML structural depth \d+ exceeds maximum of \d+/i);
+        expect(() => new XmlParser(1).parse('<root><a><b><c>deep</c></b></a></root>')).toThrow(
+            /XML structural depth \d+ exceeds maximum of \d+/i,
+        );
     });
 
     it('includes depth value 2 in SecurityException message when maxDepth is 1', () => {
-        expect(() =>
-            new XmlParser(1).parse('<root><a><b><c>deep</c></b></a></root>'),
-        ).toThrow(/2/);
+        expect(() => new XmlParser(1).parse('<root><a><b><c>deep</c></b></a></root>')).toThrow(/2/);
     });
 
     it('throws SecurityException with maxDepth=0 when nesting is encountered', () => {
-        expect(() =>
-            new XmlParser(0).parse('<root><a><b>value</b></a></root>'),
-        ).toThrow(SecurityException);
+        expect(() => new XmlParser(0).parse('<root><a><b>value</b></a></root>')).toThrow(
+            SecurityException,
+        );
     });
 });
 
@@ -338,15 +350,18 @@ describe(`${XmlParser.name} > browser DOMParser path`, () => {
 
     it('passes application/xml as MIME type to DOMParser', () => {
         let capturedType = '';
-        vi.stubGlobal('DOMParser', class {
-            parseFromString(_xml: string, type: string): unknown {
-                capturedType = type;
-                return {
-                    querySelector: () => null,
-                    documentElement: makeElement('root', []),
-                };
-            }
-        });
+        vi.stubGlobal(
+            'DOMParser',
+            class {
+                parseFromString(_xml: string, type: string): unknown {
+                    capturedType = type;
+                    return {
+                        querySelector: () => null,
+                        documentElement: makeElement('root', []),
+                    };
+                }
+            },
+        );
         makeParser().parse('<root/>');
         expect(capturedType).toBe('application/xml');
     });
@@ -362,15 +377,18 @@ describe(`${XmlParser.name} > browser DOMParser path`, () => {
     });
 
     it('uses Unknown error when parseerror textContent is null', () => {
-        vi.stubGlobal('DOMParser', class {
-            parseFromString(): unknown {
-                return {
-                    querySelector: (sel: string) =>
-                        sel === 'parsererror' ? { textContent: null } : null,
-                    documentElement: null,
-                };
-            }
-        });
+        vi.stubGlobal(
+            'DOMParser',
+            class {
+                parseFromString(): unknown {
+                    return {
+                        querySelector: (sel: string) =>
+                            sel === 'parsererror' ? { textContent: null } : null,
+                        documentElement: null,
+                    };
+                }
+            },
+        );
         expect(() => makeParser().parse('<root/>')).toThrow(/Unknown error/);
     });
 
@@ -388,7 +406,12 @@ describe(`${XmlParser.name} > browser DOMParser path`, () => {
 
     it('ignores undefined attribute slots', () => {
         const attrs: FakeAttrs = { length: 2, 0: { name: 'a', value: '1' }, 1: undefined };
-        const root: FakeNode = { nodeType: 1, nodeName: 'root', attributes: attrs, childNodes: { length: 0 } };
+        const root: FakeNode = {
+            nodeType: 1,
+            nodeName: 'root',
+            attributes: attrs,
+            childNodes: { length: 0 },
+        };
         stubDomParser(root);
         expect(makeParser().parse('<root a="1"/>')).toEqual({ '@a': '1' });
     });
@@ -416,7 +439,12 @@ describe(`${XmlParser.name} > browser DOMParser path`, () => {
     it('ignores undefined child node slots', () => {
         const undef: FakeNode = undefined as unknown as FakeNode;
         const childNodes: FakeChildNodes = { length: 2, 0: makeTextNode('hello'), 1: undef };
-        const root: FakeNode = { nodeType: 1, nodeName: 'root', attributes: { length: 0 }, childNodes };
+        const root: FakeNode = {
+            nodeType: 1,
+            nodeName: 'root',
+            attributes: { length: 0 },
+            childNodes,
+        };
         stubDomParser(root);
         const result = makeParser().parse('<root/>');
         expect(result['#text']).toBe('hello');
@@ -439,7 +467,9 @@ describe(`${XmlParser.name} > browser DOMParser path`, () => {
             makeElement('item', [makeTextNode('c')]),
         ]);
         stubDomParser(root);
-        const result = makeParser().parse('<root><item>a</item><item>b</item><item>c</item></root>');
+        const result = makeParser().parse(
+            '<root><item>a</item><item>b</item><item>c</item></root>',
+        );
         expect(Array.isArray(result['item'])).toBe(true);
         expect((result['item'] as unknown[]).length).toBe(3);
     });
@@ -569,6 +599,14 @@ describe(`${XmlParser.name} > linear scanner — unclosed and malformed tags`, (
         // branch must accept this as the close tag or the inner value is lost
         const result = makeParser().parse('<root><a>1</a</root>');
         expect(result['a']).toBe('1');
+    });
+
+    it('skips close-tag prefix that matches a longer tag name', () => {
+        // </a matches the prefix of </ab> — the char after </a is 'b', not
+        // a delimiter, so the scanner must skip it and keep looking for </a>
+        const result = makeParser().parse('<root><a><ab>inner</ab>rest</a></root>');
+        const a = result['a'] as Record<string, unknown>;
+        expect(a['ab']).toBe('inner');
     });
 
     it('handles a trailing bare < in inner content gracefully (nextChar === undefined break)', () => {
