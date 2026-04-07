@@ -2,6 +2,13 @@
 
 All notable changes to the `@safe-access/inline` JavaScript/TypeScript package are documented in this file.
 
+## 0.1.0 (2026-04-07)
+
+
+### Bug Fixes
+
+* **ci:** achieve 100% branch coverage on Vitest 4.x and fix docs-ci workflow ([#14](https://github.com/felipesauer/safe-access-inline/issues/14)) ([11daf5a](https://github.com/felipesauer/safe-access-inline/commit/11daf5aaa1ff1b901c8297921533485f1584a330))
+
 ## [0.1.0] — 2026-04-06
 
 ### Features
