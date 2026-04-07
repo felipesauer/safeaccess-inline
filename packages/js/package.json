@@ -1,6 +1,6 @@
 {
     "name": "@safeaccess/inline",
-    "version": "0.1.1",
+    "version": "0.1.0",
     "private": false,
     "description": "Safe nested data access with dot notation — JavaScript/TypeScript",
     "license": "MIT",
@@ -23,6 +23,11 @@
         "bench": "npx vitest bench benchmarks/",
         "test:coverage": "npx vitest run --coverage",
         "test:mutation": "npx stryker run"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/felipesauer/safeaccess-inline",
+        "directory": "packages/js"
     },
     "devDependencies": {
         "@stryker-mutator/core": "^9.6.0",
