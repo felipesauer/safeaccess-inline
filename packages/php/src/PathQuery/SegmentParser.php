@@ -331,7 +331,7 @@ final class SegmentParser
      * Parse a simple dot-notation path into plain string keys.
      *
      * Handles bracket notation and escaped dots. Does not produce typed
-     * segments — used for set/remove operations via {@see DotNotationParser}.
+     * segments - used for set/remove operations via {@see DotNotationParser}.
      *
      * @param string $path Simple dot-notation path.
      *

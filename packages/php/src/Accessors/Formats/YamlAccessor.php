@@ -16,6 +16,10 @@ use SafeAccess\Inline\Parser\Yaml\YamlParser;
  * are blocked as unsafe constructs.
  *
  * @api
+ *
+ * @example
+ * $accessor = Inline::fromYaml("key: value\nnested:\n  a: 1");
+ * $accessor->get('nested.a'); // 1
  */
 final class YamlAccessor extends AbstractAccessor
 {
@@ -28,6 +32,10 @@ final class YamlAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\YamlParseException    When the YAML is malformed or contains unsafe constructs.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromYaml("name: Alice\nage: 30");
+     * $accessor->get('name'); // 'Alice'
      */
     public function from(mixed $data): static
     {
@@ -46,7 +54,7 @@ final class YamlAccessor extends AbstractAccessor
         assert(is_string($raw));
 
         // YamlParseException extends InvalidFormatException and is the only
-        // exception YamlParser (final class) can throw — no catch needed.
-        return (new YamlParser())->parse($raw);
+        // exception YamlParser (final class) can throw - no catch needed.
+        return (new YamlParser($this->dotNotationParser->getMaxDepth()))->parse($raw);
     }
 }

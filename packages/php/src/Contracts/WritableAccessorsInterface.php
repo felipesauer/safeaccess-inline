@@ -70,8 +70,8 @@ interface WritableAccessorsInterface
     /**
      * Deep-merge an array into the value at a dot-notation path.
      *
-     * @param string       $path  Dot-notation path to the merge target.
-     * @param array<mixed> $value Array to merge into the existing value.
+     * @param string              $path  Dot-notation path to the merge target.
+     * @param array<string, mixed> $value Array to merge into the existing value.
      *
      * @return static New accessor instance with merged data.
      *
@@ -83,7 +83,7 @@ interface WritableAccessorsInterface
     /**
      * Deep-merge an array into the root data.
      *
-     * @param array<mixed> $value Array to merge into the root.
+     * @param array<string, mixed> $value Array to merge into the root.
      *
      * @return static New accessor instance with merged data.
      *

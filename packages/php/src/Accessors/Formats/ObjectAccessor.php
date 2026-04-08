@@ -16,6 +16,11 @@ use SafeAccess\Inline\Exceptions\SecurityException;
  * objects and arrays of objects.
  *
  * @api
+ *
+ * @example
+ * $obj = (object) ['user' => (object) ['name' => 'Alice']];
+ * $accessor = Inline::fromObject($obj);
+ * $accessor->get('user.name'); // 'Alice'
  */
 final class ObjectAccessor extends AbstractAccessor
 {
@@ -28,6 +33,9 @@ final class ObjectAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is not an object.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException          When data contains forbidden keys or exceeds depth limit.
+     *
+     * @example
+     * $accessor = (new ObjectAccessor($parser))->from((object) ['name' => 'Alice']);
      */
     public function from(mixed $data): static
     {
@@ -80,7 +88,7 @@ final class ObjectAccessor extends AbstractAccessor
             }
         }
 
-        // keys are always strings — get_object_vars() guarantees it; PHPStan loses the constraint through the recursive call
+        // keys are always strings - get_object_vars() guarantees it; PHPStan loses the constraint through the recursive call
         /** @var array<string, mixed> $typed */
         $typed = $result;
 

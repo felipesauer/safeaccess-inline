@@ -81,6 +81,10 @@ class Inline extends InlineBuilderAccessor
      * @return ObjectAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromObject((object) ['name' => 'Alice']);
+     * $accessor->get('name'); // 'Alice'
      */
     protected function fromObject(object $data): ObjectAccessor
     {
@@ -115,6 +119,10 @@ class Inline extends InlineBuilderAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When the XML is malformed.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When the XML contains a DOCTYPE declaration.
+     *
+     * @example
+     * $accessor = Inline::fromXml('<root><key>value</key></root>');
+     * $accessor->get('key'); // 'value'
      */
     protected function fromXml(string|\SimpleXMLElement $data): XmlAccessor
     {
@@ -130,6 +138,10 @@ class Inline extends InlineBuilderAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\YamlParseException When the YAML is malformed or contains unsafe constructs.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromYaml("name: Alice");
+     * $accessor->get('name'); // 'Alice'
      */
     protected function fromYaml(string $data): YamlAccessor
     {
@@ -145,6 +157,10 @@ class Inline extends InlineBuilderAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When the INI is malformed.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromIni("[section]\nkey=value");
+     * $accessor->get('section.key'); // 'value'
      */
     protected function fromIni(string $data): IniAccessor
     {
@@ -159,6 +175,10 @@ class Inline extends InlineBuilderAccessor
      * @return EnvAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromEnv("APP_NAME=MyApp");
+     * $accessor->get('APP_NAME'); // 'MyApp'
      */
     protected function fromEnv(string $data): EnvAccessor
     {
@@ -174,6 +194,10 @@ class Inline extends InlineBuilderAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When any JSON line is malformed.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromNdjson('{"id":1}' . "\n" . '{"id":2}');
+     * $accessor->get('0.id'); // 1
      */
     protected function fromNdjson(string $data): NdjsonAccessor
     {
@@ -190,6 +214,10 @@ class Inline extends InlineBuilderAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When no integration is available.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::withParserIntegration(new MyCsvIntegration())->fromAny($csvString);
+     * $accessor->get('0.column'); // first row, 'column' field
      */
     protected function fromAny(mixed $data, ?ParseIntegrationInterface $integration = null): AnyAccessor
     {

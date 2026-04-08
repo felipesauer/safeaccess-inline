@@ -28,7 +28,7 @@ interface ParseIntegrationInterface
      *
      * @param mixed $raw Raw input data previously validated by {@see assertFormat()}.
      *
-     * @return array<mixed> Parsed data as a nested associative array.
+     * @return array<string, mixed> Parsed data as a nested associative array.
      *
      * @throws \Throwable When the implementation fails to parse the data.
      */

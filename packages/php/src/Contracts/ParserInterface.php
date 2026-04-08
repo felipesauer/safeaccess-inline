@@ -11,7 +11,7 @@ namespace SafeAccess\Inline\Contracts;
  * removing values from nested arrays using dot-notation path strings
  * or pre-parsed segment arrays.
  *
- * @internal Not part of the public API — consumers should not implement or type-hint against this interface directly.
+ * @internal Not part of the public API - consumers should not implement or type-hint against this interface directly.
  */
 interface ParserInterface
 {

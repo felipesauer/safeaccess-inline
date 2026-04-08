@@ -14,6 +14,9 @@ namespace SafeAccess\Inline\Exceptions;
  *
  * @see AccessorException   Parent exception class.
  * @see \SafeAccess\Inline\Inline Facade that dispatches typed accessor creation.
+ *
+ * @example
+ * throw new UnsupportedTypeException('TypeFormat Csv is not supported.');
  */
 class UnsupportedTypeException extends AccessorException
 {

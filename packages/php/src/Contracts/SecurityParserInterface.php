@@ -37,7 +37,7 @@ interface SecurityParserInterface
     /**
      * Assert that total key count does not exceed the limit.
      *
-     * @param array<mixed> $data          Data to count keys in.
+     * @param array<string, mixed> $data          Data to count keys in.
      * @param int|null     $maxKeys       Override limit, or null to use configured default.
      * @param int|null     $maxCountDepth Override recursion depth limit, or null for default.
      *

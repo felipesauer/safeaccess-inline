@@ -10,7 +10,7 @@ namespace SafeAccess\Inline\Contracts;
  * Adds structural validation and payload size assertion on top of
  * the base {@see ParserInterface} CRUD operations.
  *
- * @internal Not part of the public API — used only by AbstractAccessor internally.
+ * @internal Not part of the public API - used only by AbstractAccessor internally.
  */
 interface ValidatableParserInterface extends ParserInterface
 {
@@ -30,7 +30,7 @@ interface ValidatableParserInterface extends ParserInterface
      * Validate data structure against security constraints.
      *
      * Assert key safety, maximum keys, and structural depth
-     * using configured {@see SecurityPolicy} and {@see SecurityOptions}.
+     * using configured {@see \SafeAccess\Inline\Contracts\SecurityGuardInterface} and {@see \SafeAccess\Inline\Contracts\SecurityParserInterface}.
      *
      * @param array<mixed> $data Data to validate.
      *

@@ -14,6 +14,10 @@ use SafeAccess\Inline\Exceptions\InvalidFormatException;
  * via the `(array)` operator. No string parsing is involved.
  *
  * @api
+ *
+ * @example
+ * $accessor = Inline::fromArray(['name' => 'Alice']);
+ * $accessor->get('name'); // 'Alice'
  */
 final class ArrayAccessor extends AbstractAccessor
 {
@@ -26,6 +30,9 @@ final class ArrayAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is neither array nor object.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException          When data contains forbidden keys.
+     *
+     * @example
+     * $accessor = (new ArrayAccessor($parser))->from(['key' => 'value']);
      */
     public function from(mixed $data): static
     {

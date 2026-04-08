@@ -46,10 +46,10 @@ interface SecurityGuardInterface
     /**
      * Remove all forbidden keys from a data structure recursively.
      *
-     * @param array<mixed> $data  Data to sanitize.
-     * @param int          $depth Current recursion depth.
+     * @param array<string, mixed> $data  Data to sanitize.
+     * @param int                  $depth Current recursion depth (internal).
      *
-     * @return array<mixed> Sanitized data without forbidden keys.
+     * @return array<string, mixed> Sanitized data without forbidden keys.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When recursion depth exceeds the limit.
      */

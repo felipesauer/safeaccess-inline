@@ -25,19 +25,19 @@ use SafeAccess\Inline\Security\SecurityParser;
  */
 class InlineBuilderAccessor
 {
-    /** @var SecurityGuardInterface|null */
+    /** @var SecurityGuardInterface|null Custom key-safety guard override. */
     private ?SecurityGuardInterface $securityGuard = null;
 
-    /** @var SecurityParserInterface|null */
+    /** @var SecurityParserInterface|null Custom structural security parser override. */
     private ?SecurityParserInterface $securityParser = null;
 
-    /** @var PathCacheInterface|null */
+    /** @var PathCacheInterface|null Custom path-segment cache override. */
     private ?PathCacheInterface $pathCache = null;
 
-    /** @var ParseIntegrationInterface|null */
+    /** @var ParseIntegrationInterface|null Custom format integration for AnyAccessor. */
     private ?ParseIntegrationInterface $parseIntegration = null;
 
-    /** @var bool|null */
+    /** @var bool|null Strict mode override for created accessors. */
     private ?bool $strictMode = null;
 
     /**

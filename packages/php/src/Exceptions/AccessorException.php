@@ -18,6 +18,9 @@ namespace SafeAccess\Inline\Exceptions;
  * @see SecurityException       Thrown on security constraint violations.
  * @see ReadonlyViolationException Thrown on write attempts to a readonly accessor.
  * @see UnsupportedTypeException   Thrown when an unsupported format or accessor class is requested.
+ *
+ * @example
+ * throw new AccessorException('Something went wrong.');
  */
 class AccessorException extends \RuntimeException
 {
