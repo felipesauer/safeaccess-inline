@@ -9,15 +9,51 @@ import { DotNotationParser } from '../src/core/dot-notation-parser.js';
 import { SecurityGuard } from '../src/security/security-guard.js';
 import { SecurityParser } from '../src/security/security-parser.js';
 import { SecurityException } from '../src/exceptions/security-exception.js';
+import { InvalidFormatException } from '../src/exceptions/invalid-format-exception.js';
+import { FakeParseIntegration } from './mocks/fake-parse-integration.js';
 
-describe('Inline.fromObject (static)', () => {
+describe(`${Inline.name} > fromAny (parity)`, () => {
+    it('throws InvalidFormatException when integration rejects the input', () => {
+        const integration = new FakeParseIntegration(false, {});
+        expect(() => Inline.fromAny('bad-input', integration)).toThrow(InvalidFormatException);
+    });
+
+    it('inline integration override takes precedence over builder integration', () => {
+        const builderIntegration = new FakeParseIntegration(true, { from: 'builder' });
+        const overrideIntegration = new FakeParseIntegration(true, { from: 'override' });
+
+        const accessor = new Inline()
+            .withParserIntegration(builderIntegration)
+            .fromAny('raw', overrideIntegration);
+
+        expect(accessor.get('from')).toBe('override');
+    });
+
+    it('resolves nested path through AnyAccessor', () => {
+        const integration = new FakeParseIntegration(true, { user: { name: 'Alice' } });
+        const accessor = Inline.fromAny('raw', integration);
+        expect(accessor.get('user.name')).toBe('Alice');
+    });
+
+    it('throws InvalidFormatException when no integration is available', () => {
+        expect(() => Inline.fromAny('data')).toThrow(InvalidFormatException);
+    });
+
+    it('throws InvalidFormatException with guidance message when no integration is set', () => {
+        expect(() => Inline.fromAny('data')).toThrow(
+            'AnyAccessor requires a ParseIntegrationInterface',
+        );
+    });
+});
+
+describe(`${Inline.name} > fromObject (static)`, () => {
     it('returns correct accessor and resolves property', () => {
         const accessor = Inline.fromObject({ user: { name: 'Alice' } });
         expect(accessor.get('user.name')).toBe('Alice');
     });
 });
 
-describe('Inline.make (parity)', () => {
+describe(`${Inline.name} > make (parity)`, () => {
     it('creates IniAccessor by constructor', () => {
         const accessor = Inline.make(IniAccessor, '[section]\nkey=value');
         expect(accessor.get('section.key')).toBe('value');
@@ -39,7 +75,7 @@ describe('Inline.make (parity)', () => {
     });
 });
 
-describe('AbstractAccessor.getMany (parity)', () => {
+describe(`${Inline.name} > getMany (parity)`, () => {
     it('returns multiple values keyed by path', () => {
         const accessor = Inline.fromArray({ a: 1, b: { c: 2 } });
         const result = accessor.getMany({ a: null, 'b.c': null });
@@ -53,7 +89,7 @@ describe('AbstractAccessor.getMany (parity)', () => {
     });
 });
 
-describe('AbstractAccessor.getRaw (parity)', () => {
+describe(`${Inline.name} > getRaw (parity)`, () => {
     it('stores raw input for ArrayAccessor', () => {
         const raw = { name: 'Alice', age: 30 };
         const accessor = Inline.fromArray(raw);
@@ -100,9 +136,9 @@ describe(`${Inline.name} > withStrictMode (parity)`, () => {
     });
 
     it('withStrictMode(true) enforces forbidden key validation for JSON', () => {
-        expect(() =>
-            Inline.withStrictMode(true).fromJson('{"__proto__":"injected"}'),
-        ).toThrow(SecurityException);
+        expect(() => Inline.withStrictMode(true).fromJson('{"__proto__":"injected"}')).toThrow(
+            SecurityException,
+        );
     });
 
     it('strict(false) bypasses payload size validation for JSON', () => {
@@ -149,16 +185,197 @@ describe(`${Inline.name} > withStrictMode + make (parity)`, () => {
     });
 });
 
-describe('AbstractAccessor.keys (parity)', () => {
+describe(`${Inline.name} > keys (parity)`, () => {
     it('returns string keys for object-keyed data (JS and PHP both return string[])', () => {
         const accessor = Inline.fromJson('{"name":"Alice","age":30}');
         expect(accessor.keys()).toEqual(['name', 'age']);
     });
 
     it('returns numeric indices as strings for NDJSON (parity with PHP array_map strval fix)', () => {
-        // PHP: array_keys(['Alice', 'Bob']) = [0, 1] → cast → ['0', '1']
-        // JS:  Object.keys({'0': {...}, '1': {...}}) = ['0', '1'] (already strings)
         const accessor = Inline.fromNdjson('{"name":"Alice"}\n{"name":"Bob"}');
         expect(accessor.keys()).toEqual(['0', '1']);
+    });
+});
+
+describe(`${Inline.name} > PathQuery > wildcard (parity)`, () => {
+    it('expands all children with a wildcard', () => {
+        const accessor = Inline.fromArray({ users: [{ name: 'Alice' }, { name: 'Bob' }] });
+        expect(accessor.get('users.*.name')).toEqual(['Alice', 'Bob']);
+    });
+
+    it('returns null for a wildcard on a scalar value', () => {
+        const accessor = Inline.fromArray({ x: 42 });
+        expect(accessor.get('x.*')).toBeNull();
+    });
+});
+
+describe(`${Inline.name} > PathQuery > filter (parity)`, () => {
+    it('filters array items that satisfy a condition', () => {
+        const accessor = Inline.fromArray({
+            items: [
+                { name: 'Alice', age: 30 },
+                { name: 'Bob', age: 20 },
+                { name: 'Charlie', age: 35 },
+            ],
+        });
+        expect(accessor.get('items[?age > 25].name')).toEqual(['Alice', 'Charlie']);
+    });
+
+    it('returns empty array when no items match the filter', () => {
+        const accessor = Inline.fromArray({
+            items: [{ name: 'Alice', age: 10 }],
+        });
+        expect(accessor.get('items[?age > 100]')).toEqual([]);
+    });
+
+    it('filters with equality on a string field', () => {
+        const accessor = Inline.fromArray({
+            users: [
+                { role: 'admin', name: 'Alice' },
+                { role: 'user', name: 'Bob' },
+            ],
+        });
+        expect(accessor.get("users[?role == 'admin'].name")).toEqual(['Alice']);
+    });
+
+    it('filters with logical AND', () => {
+        const accessor = Inline.fromArray({
+            items: [
+                { a: 1, b: 2 },
+                { a: 1, b: 5 },
+                { a: 3, b: 2 },
+            ],
+        });
+        expect(accessor.get('items[?a == 1 && b == 2]')).toEqual([{ a: 1, b: 2 }]);
+    });
+
+    it('filters with starts_with function', () => {
+        const accessor = Inline.fromArray({
+            items: [{ name: 'Alice' }, { name: 'Anna' }, { name: 'Bob' }],
+        });
+        expect(accessor.get("items[?starts_with(@.name, 'A')].name")).toEqual(['Alice', 'Anna']);
+    });
+
+    it('filters with contains function on a string', () => {
+        const accessor = Inline.fromArray({
+            items: [{ tag: 'hello-world' }, { tag: 'foo-bar' }],
+        });
+        expect(accessor.get("items[?contains(@.tag, 'world')].tag")).toEqual(['hello-world']);
+    });
+});
+
+describe(`${Inline.name} > PathQuery > multi-key and multi-index (parity)`, () => {
+    it("selects multiple keys with ['a','b']", () => {
+        const accessor = Inline.fromArray({ a: 1, b: 2, c: 3 });
+        expect(accessor.get("['a','b']")).toEqual([1, 2]);
+    });
+
+    it('selects multiple indices [0,2]', () => {
+        const accessor = Inline.fromArray({ items: ['x', 'y', 'z'] });
+        expect(accessor.get('items[0,2]')).toEqual(['x', 'z']);
+    });
+
+    it('resolves a negative index [-1] as a key lookup', () => {
+        const accessor = Inline.fromArray({ items: ['a', 'b', 'c'] });
+        expect(accessor.get('items[-1]')).toBeNull();
+    });
+});
+
+describe(`${Inline.name} > PathQuery > slice (parity)`, () => {
+    it('slices an array [1:3]', () => {
+        const accessor = Inline.fromArray({ items: [10, 20, 30, 40, 50] });
+        expect(accessor.get('items[1:3]')).toEqual([20, 30]);
+    });
+
+    it('slices with a step [0:6:2]', () => {
+        const accessor = Inline.fromArray({ items: [0, 1, 2, 3, 4, 5] });
+        expect(accessor.get('items[0:6:2]')).toEqual([0, 2, 4]);
+    });
+
+    it('returns null for a slice on a scalar', () => {
+        const accessor = Inline.fromArray({ x: 'hello' });
+        expect(accessor.get('x[0:2]')).toBeNull();
+    });
+});
+
+describe(`${Inline.name} > PathQuery > recursive descent (parity)`, () => {
+    it('collects all values for a recursive descent key', () => {
+        const accessor = Inline.fromArray({
+            a: { name: 'top' },
+            b: { nested: { name: 'deep' } },
+        });
+        expect(accessor.get('..name')).toEqual(['top', 'deep']);
+    });
+
+    it('collects values for DescentMulti with multiple keys', () => {
+        const accessor = Inline.fromArray({
+            a: { x: 1, y: 2 },
+            b: { x: 3, z: 4 },
+        });
+        const result = accessor.get("..['x','y']") as number[];
+        expect(result).toEqual([1, 3, 2]);
+    });
+});
+
+describe(`${Inline.name} > PathQuery > projection (parity)`, () => {
+    it('projects specific fields from a map', () => {
+        const accessor = Inline.fromArray({ name: 'Alice', age: 30, city: 'NYC' });
+        expect(accessor.get('.{name,age}')).toEqual({ name: 'Alice', age: 30 });
+    });
+
+    it('projects fields with an alias', () => {
+        const accessor = Inline.fromArray({ name: 'Alice', age: 30 });
+        expect(accessor.get('.{fullName: name, years: age}')).toEqual({
+            fullName: 'Alice',
+            years: 30,
+        });
+    });
+
+    it('projects fields from a list of items', () => {
+        const accessor = Inline.fromArray({
+            users: [
+                { name: 'Alice', age: 30 },
+                { name: 'Bob', age: 25 },
+            ],
+        });
+        expect(accessor.get('users.{name}')).toEqual([{ name: 'Alice' }, { name: 'Bob' }]);
+    });
+
+    it('sets projected field to null when source key is missing', () => {
+        const accessor = Inline.fromArray({ name: 'Alice' });
+        expect(accessor.get('.{name,missing}')).toEqual({ name: 'Alice', missing: null });
+    });
+});
+
+describe(`${Inline.name} > PathQuery > bracket notation (parity)`, () => {
+    it('resolves a bracket numeric index [0]', () => {
+        const accessor = Inline.fromArray({ items: ['a', 'b', 'c'] });
+        expect(accessor.get('items[0]')).toBe('a');
+    });
+
+    it("resolves a bracket quoted string key ['key']", () => {
+        const accessor = Inline.fromArray({ key: 'value' });
+        expect(accessor.get("['key']")).toBe('value');
+    });
+});
+
+describe(`${Inline.name} > PathQuery > combined queries (parity)`, () => {
+    it('chains filter with wildcard', () => {
+        const accessor = Inline.fromArray({
+            items: [{ tags: ['a', 'b'] }, { tags: ['c'] }],
+        });
+        expect(accessor.get('items.*.tags[0]')).toEqual(['a', 'c']);
+    });
+
+    it('uses default value when path does not exist', () => {
+        const accessor = Inline.fromArray({ a: 1 });
+        expect(accessor.get('missing.path', 'fallback')).toBe('fallback');
+    });
+
+    it('resolves deeply nested path through multiple levels', () => {
+        const accessor = Inline.fromArray({
+            level1: { level2: { level3: { value: 'deep' } } },
+        });
+        expect(accessor.get('level1.level2.level3.value')).toBe('deep');
     });
 });

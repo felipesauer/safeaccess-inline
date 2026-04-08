@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { JsonAccessor } from '../../src/accessors/formats/json-accessor.js';
-import { DotNotationParser } from '../../src/core/dot-notation-parser.js';
-import { InvalidFormatException } from '../../src/exceptions/invalid-format-exception.js';
-import { PathNotFoundException } from '../../src/exceptions/path-not-found-exception.js';
-import { ReadonlyViolationException } from '../../src/exceptions/readonly-violation-exception.js';
+import { JsonAccessor } from '../../../src/accessors/formats/json-accessor.js';
+import { DotNotationParser } from '../../../src/core/dot-notation-parser.js';
+import { InvalidFormatException } from '../../../src/exceptions/invalid-format-exception.js';
+import { PathNotFoundException } from '../../../src/exceptions/path-not-found-exception.js';
+import { ReadonlyViolationException } from '../../../src/exceptions/readonly-violation-exception.js';
 
 function makeAccessor(): JsonAccessor {
     return new JsonAccessor(new DotNotationParser());
@@ -142,7 +142,7 @@ describe(`${JsonAccessor.name} > getRaw`, () => {
 });
 
 describe(`${JsonAccessor.name} > parse non-object JSON`, () => {
-    // Kills line 51:13/44/62 — `typeof decoded !== 'object' || decoded === null` check
+    // Kills line 51:13/44/62 - `typeof decoded !== 'object' || decoded === null` check
     // JSON.parse('null') returns null → should return {}
     it('returns empty object when JSON decodes to null', () => {
         const accessor = makeAccessor().from('null');
