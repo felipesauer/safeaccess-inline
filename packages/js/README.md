@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://private-user-images.githubusercontent.com/120697114/574203880-28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9.svg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzU1NzIwMTYsIm5iZiI6MTc3NTU3MTcxNiwicGF0aCI6Ii8xMjA2OTcxMTQvNTc0MjAzODgwLTI4MjAyZjhiLThlZjEtNGI5NC1iNmQxLWVjMTZmMTZjOWNmOS5zdmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwNDA3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDQwN1QxNDIxNTZaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xYzM1NGVkOWQ4MWI1ZDg4ZDhjYzcyY2Q5YjQ2YzIzNTA5ZWU4ZGM1N2Y1YWEwZjc1ZjNiMGI5YmVhYjQ1MmJlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.XIKyiRzsc2OsXp3W9BzQWZRrkF8FFlbXc6WfBeETNSw" width="80" alt="safeaccess-inline logo">
+  <img src="https://github.com/user-attachments/assets/28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9" width="80" alt="safeaccess-inline logo">
 </p>
 
 <h1 align="center">Safe Access Inline - TypeScript</h1>
