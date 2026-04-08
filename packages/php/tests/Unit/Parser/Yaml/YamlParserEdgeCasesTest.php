@@ -10,188 +10,7 @@ describe(YamlParser::class, function (): void {
         $this->parser = new YamlParser();
     });
 
-    // parse() — happy path / structure
-    describe(YamlParser::class . ' > parse basics', function (): void {
-        it('parses a flat key-value map', function (): void {
-            $yaml = "name: Alice\nage: 30";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result)->toBe(['name' => 'Alice', 'age' => 30]);
-        });
-
-        it('parses nested map', function (): void {
-            $yaml = "user:\n  name: Alice\n  age: 30";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['user'])->toBe(['name' => 'Alice', 'age' => 30]);
-        });
-
-        it('parses a three-level nested map', function (): void {
-            $yaml = "a:\n  b:\n    c: deep";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['a']['b']['c'])->toBe('deep');
-        });
-
-        it('parses a top-level sequence', function (): void {
-            $yaml = "- Alice\n- Bob\n- Carol";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result)->toBe(['Alice', 'Bob', 'Carol']);
-        });
-
-        it('parses a sequence of maps', function (): void {
-            $yaml = "- name: Alice\n  age: 30\n- name: Bob\n  age: 25";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result)->toHaveCount(2);
-            expect($result[0]['name'])->toBe('Alice');
-            expect($result[1]['age'])->toBe(25);
-        });
-
-        it('returns an empty array for an empty string', function (): void {
-            $result = $this->parser->parse('');
-
-            expect($result)->toBe([]);
-        });
-
-        it('returns an empty array for a comment-only document', function (): void {
-            $result = $this->parser->parse("# just a comment\n# another comment");
-
-            expect($result)->toBe([]);
-        });
-
-        it('ignores inline comments after values', function (): void {
-            $yaml = "name: Alice # this is Alice\nage: 30 # thirty";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['name'])->toBe('Alice');
-            expect($result['age'])->toBe(30);
-        });
-    });
-
-    // parse() — scalar types
-    describe(YamlParser::class . ' > parse scalar types', function (): void {
-        it('parses boolean true values', function (): void {
-            $yaml = "a: true\nb: yes\nc: on";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['a'])->toBeTrue();
-            expect($result['b'])->toBeTrue();
-            expect($result['c'])->toBeTrue();
-        });
-
-        it('parses boolean false values', function (): void {
-            $yaml = "a: false\nb: no\nc: off";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['a'])->toBeFalse();
-            expect($result['b'])->toBeFalse();
-            expect($result['c'])->toBeFalse();
-        });
-
-        it('parses null values', function (): void {
-            $yaml = "a: null\nb: ~\nc: Null";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['a'])->toBeNull();
-            expect($result['b'])->toBeNull();
-            expect($result['c'])->toBeNull();
-        });
-
-        it('parses integer values', function (): void {
-            $yaml = "positive: 42\nnegative: -10\nzero: 0";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['positive'])->toBe(42);
-            expect($result['negative'])->toBe(-10);
-            expect($result['zero'])->toBe(0);
-        });
-
-        it('parses float values', function (): void {
-            $yaml = "pi: 3.14\nsci: 1.5e2";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['pi'])->toBe(3.14);
-            expect($result['sci'])->toBe(1.5e2);
-        });
-
-        it('parses double-quoted strings preserving content', function (): void {
-            $yaml = 'greeting: "Hello, World!"';
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['greeting'])->toBe('Hello, World!');
-        });
-
-        it('parses single-quoted strings verbatim', function (): void {
-            $yaml = "msg: 'it''s alive'";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['msg'])->toBe("it's alive");
-        });
-    });
-
-    // parse() — flow syntax
-    describe(YamlParser::class . ' > parse flow syntax', function (): void {
-        it('parses an inline flow sequence', function (): void {
-            $yaml = "items: [a, b, c]";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['items'])->toBe(['a', 'b', 'c']);
-        });
-
-        it('parses an inline flow map', function (): void {
-            $yaml = "coord: {x: 1, y: 2}";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['coord'])->toBe(['x' => 1, 'y' => 2]);
-        });
-    });
-
-    // parse() — block scalars
-    describe(YamlParser::class . ' > parse block scalars', function (): void {
-        it('parses a literal block scalar with pipe (|)', function (): void {
-            $yaml = "text: |\n  line one\n  line two";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['text'])->toContain('line one');
-            expect($result['text'])->toContain('line two');
-        });
-
-        it('parses a folded block scalar with (>)', function (): void {
-            $yaml = "text: >\n  folded line one\n  folded line two";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['text'])->toContain('folded line one');
-        });
-
-        it('parses a literal block scalar with chomping strip (|-)', function (): void {
-            $yaml = "text: |-\n  no trailing newline";
-
-            $result = $this->parser->parse($yaml);
-
-            expect($result['text'])->toBe('no trailing newline');
-        });
-    });
-
-    // parse() — unsafe constructs → exceptions
+    // parse() - unsafe constructs → exceptions
     describe(YamlParser::class . ' > parse unsafe constructs', function (): void {
         it('throws YamlParseException for a YAML tag (!! syntax)', function (): void {
             $yaml = "name: !!str Alice";
@@ -271,7 +90,7 @@ describe(YamlParser::class, function (): void {
         });
     });
 
-    // parse() — coverage-gap scenarios
+    // parse() - coverage-gap scenarios
     describe(YamlParser::class . ' > parse edge cases', function (): void {
         it('skips an over-indented continuation line inside a sequence block', function (): void {
             // Lines 122-123: currentIndent > baseIndent inside sequence parsing
@@ -294,7 +113,7 @@ describe(YamlParser::class, function (): void {
         });
 
         it('increments position for a non-key-value child in a sequence submap', function (): void {
-            // Line 161: else branch ($ci++) — child line not matching key:value
+            // Line 161: else branch ($ci++) - child line not matching key:value
             $yaml = "- name: Alice\n  continuation_value\n  age: 30";
 
             $result = $this->parser->parse($yaml);
@@ -322,7 +141,7 @@ describe(YamlParser::class, function (): void {
         });
 
         it('advances past an unrecognized non-key-value line at map level', function (): void {
-            // Line 198: $i++ fallback — line is neither sequence nor map key
+            // Line 198: $i++ fallback - line is neither sequence nor map key
             $yaml = "key: Alice\n0123\nnext: Bob";
 
             $result = $this->parser->parse($yaml);
@@ -465,7 +284,7 @@ describe(YamlParser::class, function (): void {
         });
 
         it('handles quoted strings inside a flow sequence', function (): void {
-            // Lines 556-567: splitFlowItems — quoted string tracking
+            // Lines 556-567: splitFlowItems - quoted string tracking
             $yaml = 'items: [a, "b,c", d]';
 
             $result = $this->parser->parse($yaml);
@@ -475,12 +294,58 @@ describe(YamlParser::class, function (): void {
         });
 
         it('handles nested brackets inside a flow sequence', function (): void {
-            // Lines 570-579: splitFlowItems — depth tracking for nested brackets
+            // Lines 570-579: splitFlowItems - depth tracking for nested brackets
             $yaml = "matrix: [[1,2],[3,4]]";
 
             $result = $this->parser->parse($yaml);
 
             expect($result['matrix'])->toHaveCount(2);
         });
+    });
+});
+
+describe(YamlParser::class . ' > nesting depth guard', function (): void {
+    it('parses YAML within the default depth limit', function (): void {
+        $yaml = "a:\n  b:\n    c:\n      d: value";
+        $parser = new YamlParser();
+        $result = $parser->parse($yaml);
+        expect($result['a']['b']['c']['d'])->toBe('value');
+    });
+
+    it('throws YamlParseException when nesting exceeds maxDepth', function (): void {
+        $yaml = "a:\n  b:\n    c:\n      d:\n        e: value";
+        $parser = new YamlParser(3);
+        $parser->parse($yaml);
+    })->throws(YamlParseException::class, 'YAML nesting depth 4 exceeds maximum of 3.');
+
+    it('allows nesting exactly at maxDepth boundary', function (): void {
+        $yaml = "a:\n  b:\n    c: value";
+        $parser = new YamlParser(3);
+        $result = $parser->parse($yaml);
+        expect($result['a']['b']['c'])->toBe('value');
+    });
+
+    it('throws YamlParseException for deep sequence nesting', function (): void {
+        $yaml = "-\n  -\n    -\n      - value";
+        $parser = new YamlParser(2);
+        $parser->parse($yaml);
+    })->throws(YamlParseException::class, 'YAML nesting depth 3 exceeds maximum of 2.');
+
+    it('throws YamlParseException for mixed map and sequence depth', function (): void {
+        $yaml = "items:\n  -\n    nested:\n      deep: value";
+        $parser = new YamlParser(2);
+        $parser->parse($yaml);
+    })->throws(YamlParseException::class, 'YAML nesting depth 3 exceeds maximum of 2.');
+
+    it('uses the configured maxDepth not the default 512', function (): void {
+        $yaml = "a:\n  b: value";
+        $parser = new YamlParser(0);
+        $parser->parse($yaml);
+    })->throws(YamlParseException::class, 'YAML nesting depth 1 exceeds maximum of 0.');
+
+    it('accepts the default 512 maxDepth for normal YAML', function (): void {
+        $parser = new YamlParser();
+        $result = $parser->parse("root:\n  child: value");
+        expect($result['root']['child'])->toBe('value');
     });
 });

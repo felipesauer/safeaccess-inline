@@ -35,7 +35,7 @@ describe(SimplePathCache::class, function (): void {
             // Access 'a' to promote it to MRU
             $cache->get('a');
 
-            // Now add a 4th entry — 'b' (oldest) should be evicted, not 'a'
+            // Now add a 4th entry - 'b' (oldest) should be evicted, not 'a'
             $cache->set('d', [['type' => 'key', 'value' => 'd']]);
 
             expect($cache->has('a'))->toBeTrue();

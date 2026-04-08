@@ -22,7 +22,7 @@ describe(ArrayAccessor::class, function (): void {
         $this->accessor = makeArrayAccessor(['name' => 'Alice', 'age' => 30]);
     });
 
-    // ArrayAccessor::from() — format validation
+    // ArrayAccessor::from() - format validation
     describe(ArrayAccessor::class . ' > from', function (): void {
         it('accepts a plain PHP array', function (): void {
             $accessor = makeArrayAccessor(['key' => 'val']);
