@@ -1,6 +1,6 @@
 {
     "name": "safeaccess/inline",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Safe nested data access with dot notation for PHP.",
     "type": "library",
     "license": "MIT",
