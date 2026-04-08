@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/mutation.sh — Run Infection mutation tests with Pest coverage.
+# scripts/mutation.sh - Run Infection mutation tests with Pest coverage.
 #
 # Pest uses an internal P\ namespace for test class FQCNs in coverage XML,
 # but JUnit XML reports use the file-based Tests\ namespace.
@@ -31,7 +31,7 @@ echo "==> Running Infection…"
 exec php vendor/bin/infection \
     --min-msi=100 \
     --min-covered-msi=100 \
-    --threads=4 \
+    --threads=max \
     --show-mutations \
     --coverage="$COVERAGE_DIR" \
     --skip-initial-tests \
