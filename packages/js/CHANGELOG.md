@@ -2,6 +2,13 @@
 
 All notable changes to the `@safeaccess/inline` JavaScript/TypeScript package are documented in this file.
 
+## [0.1.2](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.1...js-v0.1.2) (2026-04-08)
+
+
+### Bug Fixes
+
+* **js:** fix logo image URL in README ([16f4fc5](https://github.com/felipesauer/safeaccess-inline/commit/16f4fc5d69fa7ce86e3017bbbfc9f393925a5c37))
+
 ## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.0...js-v0.1.1) (2026-04-07)
 
 ### Features
