@@ -4,13 +4,13 @@ on:
     push:
         branches: [main]
         paths:
-            - "packages/js/**"
-            - ".github/workflows/js-ci.yml"
+            - 'packages/js/**'
+            - '.github/workflows/js-ci.yml'
     pull_request:
         branches: [main]
         paths:
-            - "packages/js/**"
-            - ".github/workflows/js-ci.yml"
+            - 'packages/js/**'
+            - '.github/workflows/js-ci.yml'
     workflow_dispatch:
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                node: ["22", "24"]
+                node: ['22', '24']
 
         defaults:
             run:
@@ -74,8 +74,6 @@ jobs:
               if: matrix.node == '24'
               run: npm run lint
 
-            # Benchmark is a report, not a quality gate — never fails the build
-            - name: Benchmark (report only)
+            - name: Mutation tests (MSI = 85%)
               if: matrix.node == '24'
-              continue-on-error: true
-              run: npm run bench
+              run: npm run test:mutation

@@ -3,6 +3,8 @@
  *
  * Used by {@link Inline.from} to select the appropriate accessor.
  *
+ * @api
+ *
  * @example
  * const accessor = Inline.from(TypeFormat.Json, '{"key":"value"}');
  */

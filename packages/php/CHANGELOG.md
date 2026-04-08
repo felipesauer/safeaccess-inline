@@ -4,10 +4,9 @@ All notable changes to the `safeaccess/inline` PHP package are documented in thi
 
 ## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.0...php-v0.1.1) (2026-04-07)
 
-
 ### Miscellaneous Chores
 
-* rebrand from safe-access to safeaccess ([#20](https://github.com/felipesauer/safeaccess-inline/issues/20)) ([fa14257](https://github.com/felipesauer/safeaccess-inline/commit/fa14257fb3099802695c7fc93385d35095a085db))
+- rebrand from safe-access to safeaccess ([#20](https://github.com/felipesauer/safeaccess-inline/issues/20)) ([fa14257](https://github.com/felipesauer/safeaccess-inline/commit/fa14257fb3099802695c7fc93385d35095a085db))
 
 ## 0.1.0 (2026-04-07)
 
@@ -15,7 +14,7 @@ All notable changes to the `safeaccess/inline` PHP package are documented in thi
 
 - **php:** bootstrap initial release tracking ([8990f1e](https://github.com/felipesauer/safeaccess-inline/commit/8990f1ef30efc2fba2f178721a6b20818ce5b9d5))
 
-## [0.1.0] — 2026-04-06
+## [0.1.0] - 2026-04-06
 
 ### Features
 

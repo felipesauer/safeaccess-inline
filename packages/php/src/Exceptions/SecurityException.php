@@ -15,6 +15,9 @@ namespace SafeAccess\Inline\Exceptions;
  * @see AccessorException                             Parent exception class.
  * @see \SafeAccess\Inline\Security\SecurityGuard     Validates keys against the forbidden list.
  * @see \SafeAccess\Inline\Security\SecurityParser    Enforces payload, depth, and key-count limits.
+ *
+ * @example
+ * throw new SecurityException("Forbidden key '__proto__' detected.");
  */
 class SecurityException extends AccessorException
 {

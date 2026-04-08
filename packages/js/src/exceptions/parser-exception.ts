@@ -3,6 +3,10 @@ import { AccessorException } from './accessor-exception.js';
 /**
  * Thrown when an underlying parser encounters a structural error.
  *
+ * @api
+ *
+ * @see AccessorException  Parent exception class.
+ *
  * @example
  * throw new ParserException('Parser failed to process input.');
  */

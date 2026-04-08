@@ -18,6 +18,8 @@ import { DEFAULT_FORBIDDEN_KEYS, STREAM_WRAPPER_PREFIXES } from './forbidden-key
  * Stream wrapper URIs are matched by prefix so that fully-formed URIs such as
  * `javascript:alert(1)` are also blocked, not only the bare scheme string.
  *
+ * @api
+ *
  * @example
  * const guard = new SecurityGuard();
  * guard.assertSafeKey('name'); // OK
@@ -34,7 +36,10 @@ export class SecurityGuard implements SecurityGuardInterface {
      * @param maxDepth - Maximum recursion depth for recursive key scanning.
      * @param extraForbiddenKeys - Additional keys to forbid beyond defaults.
      */
-    constructor(maxDepth: number = 512, /* Stryker disable next-line ArrayDeclaration -- equivalent: default [] produces identical behavior; no extra keys added to Set */ extraForbiddenKeys: string[] = []) {
+    constructor(
+        maxDepth: number = 512,
+        /* Stryker disable next-line ArrayDeclaration -- equivalent: default [] produces identical behavior; no extra keys added to Set */ extraForbiddenKeys: string[] = [],
+    ) {
         this.maxDepth = Number.isFinite(maxDepth) ? maxDepth : 512;
 
         /* Stryker disable next-line ConditionalExpression -- equivalent: if (false) still produces the same forbiddenKeysMap for empty arrays since Set(DEFAULT)=DEFAULT */
@@ -64,7 +69,7 @@ export class SecurityGuard implements SecurityGuardInterface {
      * guard.isForbiddenKey('name');      // false
      */
     isForbiddenKey(key: string): boolean {
-        // Normalise __* keys to lowercase — catches case variants such as __PROTO__.
+        // Normalise __* keys to lowercase - catches case variants such as __PROTO__.
         const lookupKey = key.startsWith('__') ? key.toLowerCase() : key;
 
         if (this.forbiddenKeysMap.has(lookupKey)) {

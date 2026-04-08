@@ -16,6 +16,10 @@ use SafeAccess\Inline\Exceptions\SecurityException;
  * @api
  *
  * @see \SafeAccess\Inline\Core\DotNotationParser      Delegates validation to this class.
+ *
+ * @example
+ * $parser = new SecurityParser(maxDepth: 10, maxKeys: 100);
+ * $parser->assertPayloadSize('{"key":"value"}');
  */
 final class SecurityParser implements SecurityParserInterface
 {

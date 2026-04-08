@@ -14,6 +14,9 @@ namespace SafeAccess\Inline\Exceptions;
  *
  * @see AccessorException       Parent exception class.
  * @see YamlParseException      Specialized subclass for YAML parsing errors.
+ *
+ * @example
+ * throw new InvalidFormatException('Expected JSON string, got number.');
  */
 class InvalidFormatException extends AccessorException
 {

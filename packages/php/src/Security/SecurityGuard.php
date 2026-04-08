@@ -25,6 +25,11 @@ use SafeAccess\Inline\Exceptions\SecurityException;
  * @api
  *
  * @see SecurityGuardInterface  Contract this class implements.
+ *
+ * @example
+ * $guard = new SecurityGuard();
+ * $guard->assertSafeKey('name'); // OK
+ * $guard->assertSafeKey('__proto__'); // throws SecurityException
  */
 final class SecurityGuard implements SecurityGuardInterface
 {
@@ -138,7 +143,7 @@ final class SecurityGuard implements SecurityGuardInterface
      */
     public function isForbiddenKey(string $key): bool
     {
-        // Normalise magic-method candidates — PHP resolves them case-insensitively.
+        // Normalise magic-method candidates - PHP resolves them case-insensitively.
         $lookupKey = str_starts_with($key, '__') ? strtolower($key) : $key;
 
         if (isset($this->forbiddenKeysMap[$lookupKey])) {
@@ -202,14 +207,34 @@ final class SecurityGuard implements SecurityGuardInterface
     /**
      * Remove all forbidden keys from a data structure recursively.
      *
-     * @param array<mixed> $data  Data to sanitize.
-     * @param int          $depth Current recursion depth.
+     * @param array<string, mixed> $data  Data to sanitize.
+     * @param int                  $depth Current recursion depth.
      *
-     * @return array<mixed> Sanitized data without forbidden keys.
+     * @return array<string, mixed> Sanitized data without forbidden keys.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When recursion depth exceeds the limit.
      */
     public function sanitize(array $data, int $depth = 0): array
+    {
+        return $this->sanitizeRecursive($data, $depth);
+    }
+
+    /**
+     * Internal recursive implementation of {@see sanitize()}.
+     *
+     * Accepts integer-keyed sub-arrays that may appear as list values inside
+     * an otherwise string-keyed payload (e.g. `{"items": [{...}, {...}]}`).
+     *
+     * @param array<array-key, mixed> $data  Data to sanitize.
+     * @param int                     $depth Current recursion depth.
+     *
+     * @return array<array-key, mixed> Sanitized data without forbidden keys.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException When recursion depth exceeds the limit.
+     *
+     * @internal
+     */
+    private function sanitizeRecursive(array $data, int $depth): array
     {
         if ($depth > $this->maxDepth) {
             throw new SecurityException("Recursion depth {$depth} exceeds maximum of {$this->maxDepth}.");
@@ -222,7 +247,7 @@ final class SecurityGuard implements SecurityGuardInterface
             }
 
             $cleaned[$key] = is_array($value)
-                ? $this->sanitize($value, $depth + 1)
+                ? $this->sanitizeRecursive($value, $depth + 1)
                 : $value;
         }
 

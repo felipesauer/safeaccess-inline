@@ -3,6 +3,11 @@
  *
  * Defines methods for retrieving, checking existence, counting,
  * and inspecting keys within the accessor's internal data store.
+ *
+ * @api
+ *
+ * @see AbstractAccessor    Base implementation.
+ * @see AccessorsInterface  Composite interface extending this contract.
  */
 export interface ReadableAccessorsInterface {
     /**
@@ -71,18 +76,18 @@ export interface ReadableAccessorsInterface {
     all(): Record<string, unknown>;
 
     /**
-     * Count elements at a path, or the root if undefined.
+     * Count elements at a path, or the root if null/undefined.
      *
-     * @param path - Dot-notation path, or undefined for root.
+     * @param path - Dot-notation path, or null/undefined for root.
      * @returns Number of elements.
      */
-    count(path?: string): number;
+    count(path?: string | null): number;
 
     /**
-     * Retrieve array keys at a path, or root keys if undefined.
+     * Retrieve array keys at a path, or root keys if null/undefined.
      *
-     * @param path - Dot-notation path, or undefined for root.
+     * @param path - Dot-notation path, or null/undefined for root.
      * @returns List of keys.
      */
-    keys(path?: string): string[];
+    keys(path?: string | null): string[];
 }

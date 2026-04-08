@@ -4,6 +4,8 @@
  * Enables the {@link AnyAccessor} to accept arbitrary input by delegating
  * format validation and parsing to a user-provided implementation.
  *
+ * @api
+ *
  * @example
  * class CsvIntegration implements ParseIntegrationInterface {
  *   assertFormat(raw: unknown): boolean { return typeof raw === 'string' && raw.includes(','); }

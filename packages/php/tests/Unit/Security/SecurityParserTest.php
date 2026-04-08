@@ -164,7 +164,7 @@ describe(SecurityParser::class, function (): void {
         });
     });
 
-    // assertMaxKeys() — maxCountRecursiveDepth limit
+    // assertMaxKeys() - maxCountRecursiveDepth limit
     describe(SecurityParser::class . ' > assertMaxKeys depth limit', function (): void {
         it('ceases counting keys once recursion exceeds the maxCountRecursiveDepth', function (): void {
             $parser = new SecurityParser(maxKeys: 10_000);

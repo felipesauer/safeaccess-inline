@@ -8,6 +8,8 @@ import { SecurityException } from '../../exceptions/security-exception.js';
  * Handles nested objects and arrays of objects without JSON roundtrip.
  * Respects the configured max depth to prevent DoS from deeply nested structures.
  *
+ * @api
+ *
  * @example
  * const obj = { user: { name: 'Alice' } };
  * const accessor = new ObjectAccessor(parser).from(obj);

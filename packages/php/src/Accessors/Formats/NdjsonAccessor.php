@@ -14,6 +14,11 @@ use SafeAccess\Inline\Exceptions\InvalidFormatException;
  * producing an indexed array of parsed records.
  *
  * @api
+ *
+ * @example
+ * $ndjson = "{\"id\":1}\n{\"id\":2}";
+ * $accessor = Inline::fromNdjson($ndjson);
+ * $accessor->get('0.id'); // 1
  */
 final class NdjsonAccessor extends AbstractAccessor
 {
@@ -26,6 +31,9 @@ final class NdjsonAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is not a string.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = (new NdjsonAccessor($parser))->from("{\"name\":\"Alice\"}\n{\"name\":\"Bob\"}");
      */
     public function from(mixed $data): static
     {

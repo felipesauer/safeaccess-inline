@@ -14,6 +14,9 @@ namespace SafeAccess\Inline\Exceptions;
  *
  * @see \SafeAccess\Inline\Parser\Yaml\YamlParser   Internal parser that throws this exception.
  * @see InvalidFormatException  Parent exception class.
+ *
+ * @example
+ * throw new YamlParseException('YAML anchors are not supported (line 3).');
  */
 class YamlParseException extends InvalidFormatException
 {

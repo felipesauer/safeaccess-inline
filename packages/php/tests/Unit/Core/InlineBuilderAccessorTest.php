@@ -111,7 +111,7 @@ describe(InlineBuilderAccessor::class, function (): void {
         });
     });
 
-    // __callStatic() — dispatches to instance methods via new static()
+    // __callStatic() - dispatches to instance methods via new static()
     describe(InlineBuilderAccessor::class . ' > __callStatic', function (): void {
         it('is invoked for undefined static method calls and delegates to the instance', function (): void {
             // Create a subclass that exposes __callStatic for testable undefined-method case
@@ -122,7 +122,7 @@ describe(InlineBuilderAccessor::class, function (): void {
                 }
             };
 
-            // builder() is a defined instance method — __callStatic is NOT invoked for it.
+            // builder() is a defined instance method - __callStatic is NOT invoked for it.
             // But calling it via the explicit trampoline works the same way:
             $factory = $sub::testCallStatic('builder', []);
 

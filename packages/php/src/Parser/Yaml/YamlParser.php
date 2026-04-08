@@ -23,6 +23,17 @@ use SafeAccess\Inline\Exceptions\YamlParseException;
  */
 final class YamlParser
 {
+    /** @var int Maximum allowed nesting depth during parsing. */
+    private readonly int $maxDepth;
+
+    /**
+     * @param int $maxDepth Maximum allowed nesting depth during parsing.
+     */
+    public function __construct(int $maxDepth = 512)
+    {
+        $this->maxDepth = $maxDepth;
+    }
+
     /**
      * Parse a YAML string into a PHP array.
      *
@@ -30,13 +41,13 @@ final class YamlParser
      *
      * @return array<mixed> Parsed data structure.
      *
-     * @throws \SafeAccess\Inline\Exceptions\YamlParseException When unsafe constructs or syntax errors are found.
+     * @throws \SafeAccess\Inline\Exceptions\YamlParseException When unsafe constructs, syntax errors, or nesting depth exceeded.
      */
     public function parse(string $yaml): array
     {
         $lines = explode("\n", str_replace("\r\n", "\n", $yaml));
         $this->assertNoUnsafeConstructs($lines);
-        $result = $this->parseLines($lines, 0, 0, count($lines));
+        $result = $this->parseLines($lines, 0, 0, count($lines), 0);
 
         return is_array($result) ? $result : [];
     }
@@ -94,11 +105,19 @@ final class YamlParser
      * @param int                $baseIndent Expected indentation level.
      * @param int                $start      Start line index (inclusive).
      * @param int                $end        End line index (exclusive).
+     * @param int                $depth      Current nesting depth.
      *
      * @return mixed Parsed value (array, scalar, or null).
+     *
+     * @throws \SafeAccess\Inline\Exceptions\YamlParseException When nesting depth exceeds the configured maximum.
      */
-    private function parseLines(array $lines, int $baseIndent, int $start, int $end): mixed
+    private function parseLines(array $lines, int $baseIndent, int $start, int $end, int $depth = 0): mixed
     {
+        if ($depth > $this->maxDepth) {
+            throw new YamlParseException(
+                "YAML nesting depth {$depth} exceeds maximum of {$this->maxDepth}."
+            );
+        }
         $result = [];
         $isSequence = false;
         $isMap = false;
@@ -139,7 +158,7 @@ final class YamlParser
                     $childIndent = $currentIndent + 2;
                     $childEnd = $this->findBlockEnd($lines, $childIndent, $i + 1, $end);
                     $subMap = [];
-                    $subMap[$m[1]] = $this->resolveValue($m[2], $lines, $i, $childIndent, $childEnd);
+                    $subMap[$m[1]] = $this->resolveValue($m[2], $lines, $i, $childIndent, $childEnd, $depth);
 
                     // Parse remaining child lines as part of this map
                     $ci = $i + 1;
@@ -159,7 +178,7 @@ final class YamlParser
                         }
                         if ($childCurrentIndent === $childIndent && preg_match('/^([^\s:][^:]*?)\s*:\s*(.*)$/', $childTrimmed, $cm)) {
                             $nextChildEnd = $this->findBlockEnd($lines, $childCurrentIndent + 2, $ci + 1, $childEnd);
-                            $subMap[$cm[1]] = $this->resolveValue($cm[2], $lines, $ci, $childCurrentIndent + 2, $nextChildEnd);
+                            $subMap[$cm[1]] = $this->resolveValue($cm[2], $lines, $ci, $childCurrentIndent + 2, $nextChildEnd, $depth);
                             $ci = $nextChildEnd;
                         } else {
                             $ci++;
@@ -172,7 +191,7 @@ final class YamlParser
                     $childIndent = $currentIndent + 2;
                     $childEnd = $this->findBlockEnd($lines, $childIndent, $i + 1, $end);
                     if ($childEnd > $i + 1) {
-                        $result[] = $this->parseLines($lines, $childIndent, $i + 1, $childEnd);
+                        $result[] = $this->parseLines($lines, $childIndent, $i + 1, $childEnd, $depth + 1);
                         $i = $childEnd;
                     } else {
                         $result[] = null;
@@ -194,7 +213,7 @@ final class YamlParser
                 $childIndent = $currentIndent + 2;
                 $childEnd = $this->findBlockEnd($lines, $childIndent, $i + 1, $end);
 
-                $result[$key] = $this->resolveValue($rawValue, $lines, $i, $childIndent, $childEnd);
+                $result[$key] = $this->resolveValue($rawValue, $lines, $i, $childIndent, $childEnd, $depth);
                 $i = $childEnd;
                 continue;
             }
@@ -221,10 +240,13 @@ final class YamlParser
      * @param int                $currentLine Current line index.
      * @param int                $childIndent Expected child indentation.
      * @param int                $childEnd    End boundary for child lines.
+     * @param int                $depth       Current nesting depth.
      *
      * @return mixed Resolved PHP value.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\YamlParseException When child block nesting exceeds the configured maximum.
      */
-    private function resolveValue(string $rawValue, array $lines, int $currentLine, int $childIndent, int $childEnd): mixed
+    private function resolveValue(string $rawValue, array $lines, int $currentLine, int $childIndent, int $childEnd, int $depth = 0): mixed
     {
         $rawValue = $this->stripInlineComment($rawValue);
 
@@ -239,7 +261,7 @@ final class YamlParser
         // If rawValue is empty, parse child block
         if ($rawValue === '') {
             if ($childEnd > $currentLine + 1) {
-                return $this->parseLines($lines, $childIndent, $currentLine + 1, $childEnd);
+                return $this->parseLines($lines, $childIndent, $currentLine + 1, $childEnd, $depth + 1);
             }
             return null;
         }

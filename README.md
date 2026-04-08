@@ -17,17 +17,17 @@
 
 ---
 
-Navigate deeply nested structures in JSON, YAML, XML, INI, ENV, NDJSON, arrays, and objects — with built-in security validation, immutable writes, and identical behavior in both PHP and TypeScript.
+Navigate deeply nested structures in JSON, YAML, XML, INI, ENV, NDJSON, arrays, and objects - with built-in security validation, immutable writes, and identical behavior in both PHP and TypeScript.
 
 ## Why Safe Access Inline?
 
 Accessing nested data from untrusted sources (API responses, config files, user uploads) is error-prone and risky. Safe Access Inline solves this with:
 
-- **Dot-notation paths** — `user.address.city` instead of chained null checks
-- **Multi-format support** — JSON, YAML, XML, INI, ENV, NDJSON, arrays, objects
-- **Security by default** — blocks prototype pollution, PHP magic methods, superglobals, stream wrapper injection, XML external entities, and oversized payloads
-- **Immutable writes** — `set()`, `remove()`, and `merge()` return new instances
-- **Cross-language parity** — same input → same output in PHP and TypeScript
+- **Dot-notation paths** - `user.address.city` instead of chained null checks
+- **Multi-format support** - JSON, YAML, XML, INI, ENV, NDJSON, arrays, objects
+- **Security by default** - blocks prototype pollution, PHP magic methods, superglobals, stream wrapper injection, XML external entities, and oversized payloads
+- **Immutable writes** - `set()`, `remove()`, and `merge()` return new instances
+- **Cross-language parity** - same input → same output in PHP and TypeScript
 
 ## Packages
 
@@ -70,7 +70,7 @@ $accessor->get('user.email', 'N/A');   // 'N/A' (default when missing)
 $accessor->has('user.age');            // true
 $accessor->getOrFail('user.name');     // 'Alice' (throws if missing)
 
-// Immutable writes — original is never modified
+// Immutable writes - original is never modified
 $updated = $accessor->set('user.email', 'alice@example.com');
 $updated->get('user.email');           // 'alice@example.com'
 $accessor->has('user.email');          // false (original unchanged)
@@ -88,7 +88,7 @@ accessor.get('user.email', 'N/A'); // 'N/A' (default when missing)
 accessor.has('user.age'); // true
 accessor.getOrFail('user.name'); // 'Alice' (throws if missing)
 
-// Immutable writes — original is never modified
+// Immutable writes - original is never modified
 const updated = accessor.set('user.email', 'alice@example.com');
 updated.get('user.email'); // 'alice@example.com'
 accessor.has('user.email'); // false (original unchanged)
@@ -105,28 +105,29 @@ accessor.has('user.email'); // false (original unchanged)
 | `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names           |
 | `$` or `$.path`   | `$.user.name`      | Optional `$` root prefix (stripped) |
 
-### Advanced PathQuery (PHP only)
+### Advanced PathQuery
 
-The PHP package includes a full PathQuery engine:
+Both packages include a full PathQuery engine:
 
 | Syntax          | Example             | Description                               |
 | --------------- | ------------------- | ----------------------------------------- |
 | `[0]`           | `users[0]`          | Bracket index access                      |
-| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
-| `..key`         | `..name`            | Recursive descent — find key at any depth |
+| `*` or `[*]`    | `users.*`           | Wildcard - expand all children            |
+| `..key`         | `..name`            | Recursive descent - find key at any depth |
 | `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
-| `[0,1,2]`       | `users[0,1,2]`      | Multi-index — select multiple indices     |
-| `['a','b']`     | `['name','age']`    | Multi-key — select multiple keys          |
-| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
-| `[::2]`         | `items[::2]`        | Slice with step — every 2nd item          |
+| `[0,1,2]`       | `users[0,1,2]`      | Multi-index - select multiple indices     |
+| `['a','b']`     | `['name','age']`    | Multi-key - select multiple keys          |
+| `[0:5]`         | `items[0:5]`        | Slice - indices 0 through 4               |
+| `[::2]`         | `items[::2]`        | Slice with step - every 2nd item          |
 | `[::-1]`        | `items[::-1]`       | Reverse slice                             |
 | `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
-| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
+| `.{fields}`     | `.{name, age}`      | Projection - select fields                |
 | `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
-#### Filter Expressions (PHP only)
+#### Filter Expressions
 
 ```php
+// PHP
 $data = Inline::fromJson('[
     {"name": "Alice", "age": 25, "role": "admin"},
     {"name": "Bob",   "age": 17, "role": "user"},
@@ -146,6 +147,29 @@ $data->get('[?contains(@.name, \'ob\')]');          // Bob
 // Arithmetic in predicates: +, -, *, /
 $orders = Inline::fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}]');
 $orders->get('[?@.price * @.qty > 20]');           // first order only
+```
+
+```typescript
+// TypeScript
+const data = Inline.fromJson(`[
+    {"name": "Alice", "age": 25, "role": "admin"},
+    {"name": "Bob",   "age": 17, "role": "user"},
+    {"name": "Carol", "age": 30, "role": "admin"}
+]`);
+
+// Comparison: ==, !=, >, <, >=, <=
+data.get('[?age>18]'); // Alice and Carol
+
+// Logical: && and ||
+data.get('[?age>18 && role=="admin"]'); // Alice and Carol
+
+// Built-in functions: starts_with, contains, values
+data.get('[?starts_with(@.name, "A")]'); // Alice
+data.get('[?contains(@.name, "ob")]'); // Bob
+
+// Arithmetic in predicates: +, -, *, /
+const orders = Inline.fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}]');
+orders.get('[?@.price * @.qty > 20]'); // first order only
 ```
 
 ## Supported Formats
@@ -302,13 +326,13 @@ objAccessor.get('name'); // 'Alice'
 <summary><strong>Any (custom format via integration)</strong></summary>
 
 ```php
-// PHP — requires implementing ParseIntegrationInterface
+// PHP - requires implementing ParseIntegrationInterface
 $accessor = Inline::withParserIntegration(new MyCsvIntegration())->fromAny($csvString);
 $accessor->get('0.column_name');
 ```
 
 ```typescript
-// TypeScript — requires implementing ParseIntegrationInterface
+// TypeScript - requires implementing ParseIntegrationInterface
 const accessor = Inline.withParserIntegration(new MyCsvIntegration()).fromAny(csvString);
 accessor.get('0.column_name');
 ```
@@ -359,14 +383,14 @@ $accessor->getMany([
 ]);                                     // ['a.b' => 1, 'a.x' => 'fallback']
 $accessor->getRaw();                    // original JSON string
 
-// Write (immutable — every write returns a new instance)
+// Write (immutable - every write returns a new instance)
 $updated = $accessor->set('a.d', 3);
 $updated = $updated->remove('a.c');
 $updated = $updated->merge('a', ['e' => 4]);
 $updated = $updated->mergeAll(['f' => 5]);
 $updated->all();                        // ['a' => ['b' => 1, 'd' => 3, 'e' => 4], 'f' => 5]
 
-// Readonly mode — block all writes
+// Readonly mode - block all writes
 $readonly = $accessor->readonly();
 $readonly->get('a.b');                  // 1 (reads work)
 $readonly->set('a.b', 99);             // throws ReadonlyViolationException
@@ -498,13 +522,13 @@ const accessor = Inline.withSecurityGuard(guard).fromJson(data);
 
 | Format | Protection                                                              |
 | ------ | ----------------------------------------------------------------------- |
-| XML    | Rejects `<!DOCTYPE` — prevents XXE (XML External Entity) attacks        |
+| XML    | Rejects `<!DOCTYPE` - prevents XXE (XML External Entity) attacks        |
 | YAML   | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
 | All    | Forbidden key validation on every parsed key                            |
 
 Disable for fully trusted input: `Inline::withStrictMode(false)` / `Inline.withStrictMode(false)`.
 
-> **Warning:** Disabling strict mode skips **all** validation — forbidden keys, payload size, depth and key-count limits. Only use with application-controlled input.
+> **Warning:** Disabling strict mode skips **all** validation - forbidden keys, payload size, depth and key-count limits. Only use with application-controlled input.
 
 For vulnerability reports, see [SECURITY.md](SECURITY.md).
 
@@ -576,7 +600,7 @@ try {
 
 | Exception                    | Extends                      | When                                                                                   |
 | ---------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
-| `AccessorException`          | `RuntimeException` / `Error` | Root — catch-all for any library error                                                 |
+| `AccessorException`          | `RuntimeException` / `Error` | Root - catch-all for any library error                                                 |
 | `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded                           |
 | `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                                                       |
 | `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                                               |
@@ -606,15 +630,16 @@ const accessor = Inline.withStrictMode(false).fromJson(trustedPayload);
 Cache parsed path segments for repeated lookups:
 
 ```php
-// PHP — implement PathCacheInterface
+// PHP - implement PathCacheInterface
 $cache = new MyPathCache();
 $accessor = Inline::withPathCache($cache)->fromJson($data);
 $accessor->get('deeply.nested.path'); // parses path
-$accessor->get('deeply.nested.path'); // cache hit — skips parsing
+$accessor->get('deeply.nested.path'); // cache hit - skips parsing
 ```
 
 ```typescript
-// TypeScript — implement PathCacheInterface
+// TypeScript - implement PathCacheInterface
+const cacheMap = new Map();
 const cache: PathCacheInterface = {
     get: (path) => cacheMap.get(path) ?? null,
     set: (path, segments) => {
@@ -736,15 +761,15 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | YAML / XML / INI / ENV    | Yes                | No           | No                 | No          |
 | Multiple formats          | 9 formats          | Object only  | Array only         | Object only |
 | Custom format integration | Yes                | No           | No                 | No          |
-| Wildcard / Filter (PHP)   | Yes                | No           | Partial (`*`)      | Yes         |
+| Wildcard / Filter         | Yes                | No           | Partial (`*`)      | Yes         |
 | Type-safe (TypeScript)    | Strict mode        | `any`        | N/A                | `any`       |
 | Zero prod dependencies    | Yes                | lodash       | Laravel            | jmespath    |
 
 ## Project Structure
 
 ```
-packages/php/   — PHP package (PSR-4, Pest, PHPStan, Infection)
-packages/js/    — TypeScript package (ESM, Vitest, Stryker)
+packages/php/   - PHP package (PSR-4, Pest, PHPStan, Infection)
+packages/js/    - TypeScript package (ESM, Vitest, Stryker)
 ```
 
 ## Contributing

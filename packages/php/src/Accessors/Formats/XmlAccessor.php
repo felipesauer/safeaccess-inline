@@ -16,6 +16,10 @@ use SafeAccess\Inline\Exceptions\SecurityException;
  * external entity loading. Converts to array via JSON roundtrip.
  *
  * @api
+ *
+ * @example
+ * $accessor = Inline::fromXml('<root><key>value</key></root>');
+ * $accessor->get('key'); // 'value'
  */
 final class XmlAccessor extends AbstractAccessor
 {
@@ -28,6 +32,9 @@ final class XmlAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is neither string nor SimpleXMLElement.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException          When payload size exceeds limit or DOCTYPE is present.
+     *
+     * @example
+     * $accessor = (new XmlAccessor($parser))->from('<root><name>Alice</name></root>');
      */
     public function from(mixed $data): static
     {

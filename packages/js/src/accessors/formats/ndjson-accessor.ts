@@ -7,6 +7,8 @@ import { InvalidFormatException } from '../../exceptions/invalid-format-exceptio
  * Parses each non-empty line as a standalone JSON object,
  * producing an indexed record of parsed entries.
  *
+ * @api
+ *
  * @example
  * const ndjson = '{"id":1}\n{"id":2}';
  * const accessor = new NdjsonAccessor(parser).from(ndjson);

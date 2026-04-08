@@ -14,6 +14,11 @@ use SafeAccess\Inline\Exceptions\InvalidFormatException;
  * Validates string payloads against security constraints before parsing.
  *
  * @api
+ *
+ * @example
+ * $integration = new MyCsvIntegration();
+ * $accessor = Inline::withParserIntegration($integration)->fromAny($csvString);
+ * $accessor->get('0.name'); // first row, name column
  */
 final class AnyAccessor extends AbstractIntegrationAccessor
 {
@@ -26,6 +31,9 @@ final class AnyAccessor extends AbstractIntegrationAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When the integration rejects the format.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = (new AnyAccessor($parser, $integration))->from($rawData);
      */
     public function from(mixed $data): static
     {

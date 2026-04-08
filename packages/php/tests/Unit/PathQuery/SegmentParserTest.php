@@ -211,7 +211,7 @@ describe(SegmentParser::class, function (): void {
         });
     });
 
-    // parseSegments() — coverage-gap scenarios
+    // parseSegments() - coverage-gap scenarios
     describe(SegmentParser::class . ' > parseSegments edge cases', function (): void {
         it('parses an unquoted bracket descent key as a plain Descent segment', function (): void {
             // Line 130: parseDescent bracket branch, inner not quoted → return Descent key=$inner
@@ -237,7 +237,7 @@ describe(SegmentParser::class, function (): void {
         });
 
         it('falls through to Key type for an unquoted non-numeric comma-separated bracket', function (): void {
-            // Lines 250-251: allNumeric = false; break — parts not numeric, not quoted
+            // Lines 250-251: allNumeric = false; break - parts not numeric, not quoted
             $result = $this->parser->parseSegments('data[a,b]');
 
             expect($result[1]['type'])->toBe(SegmentType::Key);

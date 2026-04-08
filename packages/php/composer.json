@@ -35,11 +35,10 @@
         "pestphp/pest": "^3.0",
         "phpstan/phpstan": "^2.0",
         "friendsofphp/php-cs-fixer": "^3.0",
-        "infection/infection": "^0.32.6",
-        "phpbench/phpbench": "^1.6"
+        "infection/infection": "^0.32.6"
     },
     "suggest": {
-        "ext-yaml": "For improved YAML parsing performance (optional — a built-in minimal parser is used by default)"
+        "ext-yaml": "For improved YAML parsing performance (optional - a built-in minimal parser is used by default)"
     },
     "autoload": {
         "psr-4": {

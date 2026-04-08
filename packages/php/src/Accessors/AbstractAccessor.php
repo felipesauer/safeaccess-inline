@@ -56,6 +56,9 @@ abstract class AbstractAccessor implements AccessorsInterface
      */
     abstract protected function parse(mixed $raw): array;
 
+    /** {@inheritDoc} */
+    abstract public function from(mixed $data): static;
+
     /**
      * Ingest raw data, optionally validating via strict mode.
      *
@@ -117,7 +120,7 @@ abstract class AbstractAccessor implements AccessorsInterface
      *           external data to an accessor with strict mode disabled.
      *
      * @example
-     * // Trust the input — skip all security checks
+     * // Trust the input - skip all security checks
      * $accessor = (new JsonAccessor($parser))->strict(false)->from($trustedPayload);
      */
     public function strict(bool $strict = true): static

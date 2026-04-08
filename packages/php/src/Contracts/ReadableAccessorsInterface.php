@@ -85,7 +85,7 @@ interface ReadableAccessorsInterface
     /**
      * Return all parsed data as a flat or nested array.
      *
-     * @return array<mixed> Complete internal data.
+     * @return array<string, mixed> Complete internal data.
      */
     public function all(): array;
 

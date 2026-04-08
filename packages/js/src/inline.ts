@@ -1,12 +1,10 @@
 import { TypeFormat } from './type-format.js';
-import { DotNotationParser } from './core/dot-notation-parser.js';
-import { SecurityGuard } from './security/security-guard.js';
-import { SecurityParser } from './security/security-parser.js';
 import type { SecurityGuardInterface } from './contracts/security-guard-interface.js';
 import type { SecurityParserInterface } from './contracts/security-parser-interface.js';
 import type { AccessorsInterface } from './contracts/accessors-interface.js';
 import type { ParseIntegrationInterface } from './contracts/parse-integration-interface.js';
 import type { PathCacheInterface } from './contracts/path-cache-interface.js';
+import type { ValidatableParserInterface } from './contracts/validatable-parser-interface.js';
 import { AbstractAccessor } from './accessors/abstract-accessor.js';
 import { ArrayAccessor } from './accessors/formats/array-accessor.js';
 import { ObjectAccessor } from './accessors/formats/object-accessor.js';
@@ -18,7 +16,7 @@ import { EnvAccessor } from './accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from './accessors/formats/ndjson-accessor.js';
 import { AnyAccessor } from './accessors/formats/any-accessor.js';
 import { UnsupportedTypeException } from './exceptions/unsupported-type-exception.js';
-import { InvalidFormatException } from './exceptions/invalid-format-exception.js';
+import { InlineBuilderAccessor } from './core/inline-builder-accessor.js';
 
 /**
  * Facade for creating typed data accessors fluently.
@@ -26,6 +24,8 @@ import { InvalidFormatException } from './exceptions/invalid-format-exception.js
  * All static factory methods return a strongly-typed accessor instance.
  * Use the builder methods (`withSecurityGuard`, `withSecurityParser`) to
  * customize the security configuration before creating an accessor.
+ *
+ * @api
  *
  * @example
  * const accessor = Inline.fromJson('{"name":"Alice"}');
@@ -35,100 +35,12 @@ import { InvalidFormatException } from './exceptions/invalid-format-exception.js
  * const accessor = Inline.from(TypeFormat.Yaml, 'name: Alice');
  * accessor.get('name'); // 'Alice'
  */
-export class Inline {
-    private readonly guard: SecurityGuardInterface;
-    private readonly secParser: SecurityParserInterface;
-    private readonly pathCache: PathCacheInterface | null;
-    private readonly integration: ParseIntegrationInterface | null;
-    private readonly strictMode: boolean | null;
-
-    private constructor(
-        guard: SecurityGuardInterface,
-        secParser: SecurityParserInterface,
-        pathCache: PathCacheInterface | null = null,
-        integration: ParseIntegrationInterface | null = null,
-        strictMode: boolean | null = null,
-    ) {
-        this.guard = guard;
-        this.secParser = secParser;
-        this.pathCache = pathCache;
-        this.integration = integration;
-        this.strictMode = strictMode;
-    }
-
+export class Inline extends InlineBuilderAccessor {
     private static defaultInstance(): Inline {
-        return new Inline(new SecurityGuard(), new SecurityParser());
+        return new Inline();
     }
 
-    private makeParser(): DotNotationParser {
-        return new DotNotationParser(this.guard, this.secParser, this.pathCache ?? undefined);
-    }
-
-    /**
-     * Apply configured strict mode to a new accessor before hydration.
-     *
-     * @param accessor - Unhydrated accessor instance.
-     * @returns Same accessor with strict mode applied if configured.
-     */
-    private prepare<T extends AbstractAccessor>(accessor: T): T {
-        if (this.strictMode !== null) {
-            return accessor.strict(this.strictMode) as T;
-        }
-        return accessor;
-    }
-
-    /**
-     * Return a new Inline instance with a custom SecurityGuard, preserving other settings.
-     *
-     * @param guard - Custom security guard implementation.
-     * @returns New Inline builder instance.
-     */
-    withSecurityGuard(guard: SecurityGuardInterface): Inline {
-        return new Inline(guard, this.secParser, this.pathCache, this.integration, this.strictMode);
-    }
-
-    /**
-     * Return a new Inline instance with a custom SecurityParser, preserving other settings.
-     *
-     * @param parser - Custom security parser implementation.
-     * @returns New Inline builder instance.
-     */
-    withSecurityParser(parser: SecurityParserInterface): Inline {
-        return new Inline(this.guard, parser, this.pathCache, this.integration, this.strictMode);
-    }
-
-    /**
-     * Return a new Inline instance with a custom path cache, preserving other settings.
-     *
-     * @param cache - Custom path cache implementation.
-     * @returns New Inline builder instance.
-     */
-    withPathCache(cache: PathCacheInterface): Inline {
-        return new Inline(this.guard, this.secParser, cache, this.integration, this.strictMode);
-    }
-
-    /**
-     * Return a new Inline instance with a custom parser integration, preserving other settings.
-     *
-     * @param integration - Custom format integration implementation.
-     * @returns New Inline builder instance.
-     */
-    withParserIntegration(integration: ParseIntegrationInterface): Inline {
-        return new Inline(this.guard, this.secParser, this.pathCache, integration, this.strictMode);
-    }
-
-    /**
-     * Return a new Inline instance with the given strict mode, preserving other settings.
-     *
-     * @param strict - Whether to enable strict security validation.
-     * @returns New Inline builder instance.
-     *
-     * @security Passing `false` disables all SecurityGuard and SecurityParser
-     * validation. Only use with fully trusted, application-controlled input.
-     */
-    withStrictMode(strict: boolean): Inline {
-        return new Inline(this.guard, this.secParser, this.pathCache, this.integration, strict);
-    }
+    // ── Instance factory methods ──────────────────────────────────────
 
     /**
      * Return a new Inline instance with a custom SecurityGuard.
@@ -140,7 +52,7 @@ export class Inline {
      * Inline.withSecurityGuard(new SecurityGuard(10, ['extraKey'])).fromJson('{}');
      */
     static withSecurityGuard(guard: SecurityGuardInterface): Inline {
-        return new Inline(guard, new SecurityParser());
+        return new Inline(guard);
     }
 
     /**
@@ -153,7 +65,7 @@ export class Inline {
      * Inline.withSecurityParser(new SecurityParser({ maxDepth: 10 })).fromJson('{}');
      */
     static withSecurityParser(parser: SecurityParserInterface): Inline {
-        return new Inline(new SecurityGuard(), parser);
+        return new Inline(undefined, parser);
     }
 
     /**
@@ -167,7 +79,7 @@ export class Inline {
      * Inline.withPathCache(cache).fromJson('{"key":"value"}');
      */
     static withPathCache(cache: PathCacheInterface): Inline {
-        return new Inline(new SecurityGuard(), new SecurityParser(), cache);
+        return new Inline(undefined, undefined, cache);
     }
 
     /**
@@ -180,7 +92,7 @@ export class Inline {
      * Inline.withParserIntegration(new MyCsvIntegration()).fromAny(csvString);
      */
     static withParserIntegration(integration: ParseIntegrationInterface): Inline {
-        return new Inline(new SecurityGuard(), new SecurityParser(), null, integration);
+        return new Inline(undefined, undefined, null, integration);
     }
 
     /**
@@ -196,7 +108,7 @@ export class Inline {
      * Inline.withStrictMode(false).fromJson(hugePayload).get('key');
      */
     static withStrictMode(strict: boolean): Inline {
-        return new Inline(new SecurityGuard(), new SecurityParser(), null, null, strict);
+        return new Inline(undefined, undefined, null, null, strict);
     }
 
     /**
@@ -210,7 +122,7 @@ export class Inline {
      * inline.fromArray({ name: 'Alice' }).get('name'); // 'Alice'
      */
     fromArray(data: Record<string, unknown> | unknown[]): ArrayAccessor {
-        return this.prepare(new ArrayAccessor(this.makeParser())).from(data);
+        return this.builder().array(data);
     }
 
     /**
@@ -224,7 +136,7 @@ export class Inline {
      * inline.fromObject({ user: { name: 'Alice' } }).get('user.name');
      */
     fromObject(data: object): ObjectAccessor {
-        return this.prepare(new ObjectAccessor(this.makeParser())).from(data);
+        return this.builder().object(data);
     }
 
     /**
@@ -239,11 +151,14 @@ export class Inline {
      * inline.fromJson('{"key":"value"}').get('key'); // 'value'
      */
     fromJson(data: string): JsonAccessor {
-        return this.prepare(new JsonAccessor(this.makeParser())).from(data);
+        return this.builder().json(data);
     }
 
     /**
      * Create an XmlAccessor from an XML string.
+     *
+     * Note: The PHP equivalent also accepts `\SimpleXMLElement`; JS only
+     * accepts raw XML strings (no pre-parsed equivalent exists in JS).
      *
      * @param data - Raw XML string.
      * @returns Populated XmlAccessor instance.
@@ -254,7 +169,7 @@ export class Inline {
      * inline.fromXml('<root><key>value</key></root>').get('key');
      */
     fromXml(data: string): XmlAccessor {
-        return this.prepare(new XmlAccessor(this.makeParser())).from(data);
+        return this.builder().xml(data);
     }
 
     /**
@@ -269,7 +184,7 @@ export class Inline {
      * inline.fromYaml('name: Alice').get('name'); // 'Alice'
      */
     fromYaml(data: string): YamlAccessor {
-        return this.prepare(new YamlAccessor(this.makeParser())).from(data);
+        return this.builder().yaml(data);
     }
 
     /**
@@ -284,7 +199,7 @@ export class Inline {
      * inline.fromIni('[section]\nkey=value').get('section.key'); // 'value'
      */
     fromIni(data: string): IniAccessor {
-        return this.prepare(new IniAccessor(this.makeParser())).from(data);
+        return this.builder().ini(data);
     }
 
     /**
@@ -298,7 +213,7 @@ export class Inline {
      * inline.fromEnv('APP_NAME=MyApp').get('APP_NAME'); // 'MyApp'
      */
     fromEnv(data: string): EnvAccessor {
-        return this.prepare(new EnvAccessor(this.makeParser())).from(data);
+        return this.builder().env(data);
     }
 
     /**
@@ -313,7 +228,7 @@ export class Inline {
      * inline.fromNdjson('{"id":1}\n{"id":2}').get('0.id'); // 1
      */
     fromNdjson(data: string): NdjsonAccessor {
-        return this.prepare(new NdjsonAccessor(this.makeParser())).from(data);
+        return this.builder().ndjson(data);
     }
 
     /**
@@ -332,17 +247,14 @@ export class Inline {
      * Inline.withParserIntegration(new CsvIntegration()).fromAny(csvString);
      */
     fromAny(data: unknown, integration?: ParseIntegrationInterface): AnyAccessor {
-        const resolved = integration ?? this.integration;
-        if (resolved === null) {
-            throw new InvalidFormatException(
-                'AnyAccessor requires a ParseIntegrationInterface — use Inline.withParserIntegration(integration).fromAny(data).',
-            );
-        }
-        return this.prepare(new AnyAccessor(this.makeParser(), resolved)).from(data);
+        return this.builder().any(data, integration);
     }
 
     /**
      * Create a typed accessor by its constructor.
+     *
+     * Note: The PHP equivalent accepts a class-string (FQCN) instead of a
+     * constructor reference, e.g. `Inline::make(JsonAccessor::class, $data)`.
      *
      * @param AccessorConstructor - The accessor class to instantiate.
      * @param data                - Raw data to hydrate the accessor with.
@@ -352,12 +264,13 @@ export class Inline {
      * Inline.make(JsonAccessor, '{"key":"value"}').get('key'); // 'value'
      */
     make<T extends AccessorsInterface>(
-        AccessorConstructor: new (parser: DotNotationParser) => T,
+        AccessorConstructor: new (parser: ValidatableParserInterface) => T,
         data: unknown,
     ): T {
-        const accessor = new AccessorConstructor(this.makeParser());
-        if (this.strictMode !== null && accessor instanceof AbstractAccessor) {
-            return (accessor.strict(this.strictMode) as T).from(data);
+        const factory = this.builder();
+        const accessor = new AccessorConstructor(factory.getParser());
+        if (this._strictMode !== null && accessor instanceof AbstractAccessor) {
+            return (accessor.strict(this._strictMode) as T).from(data);
         }
         return accessor.from(data);
     }
@@ -371,6 +284,9 @@ export class Inline {
      * @throws {InvalidFormatException} When the data is malformed for the target format.
      * @throws {SecurityException} When security constraints are violated.
      * @throws {UnsupportedTypeException} When the TypeFormat is not supported.
+     *
+     * @example
+     * Inline.from(TypeFormat.Json, '{"key":"value"}').get('key'); // 'value'
      */
     from(typeFormat: TypeFormat, data: unknown): AccessorsInterface {
         switch (typeFormat) {
@@ -446,6 +362,9 @@ export class Inline {
 
     /**
      * Create an XmlAccessor from an XML string.
+     *
+     * Note: The PHP equivalent also accepts `\SimpleXMLElement`; JS only
+     * accepts raw XML strings (no pre-parsed equivalent exists in JS).
      *
      * @param data - Raw XML string.
      * @returns Populated XmlAccessor instance.
@@ -554,6 +473,9 @@ export class Inline {
     /**
      * Create a typed accessor by its constructor.
      *
+     * Note: The PHP equivalent accepts a class-string (FQCN) instead of a
+     * constructor reference, e.g. `Inline::make(JsonAccessor::class, $data)`.
+     *
      * @param AccessorConstructor - The accessor class to instantiate.
      * @param data                - Raw data to hydrate the accessor with.
      * @returns Populated accessor instance.
@@ -562,7 +484,7 @@ export class Inline {
      * Inline.make(JsonAccessor, '{"key":"value"}').get('key'); // 'value'
      */
     static make<T extends AccessorsInterface>(
-        AccessorConstructor: new (parser: DotNotationParser) => T,
+        AccessorConstructor: new (parser: ValidatableParserInterface) => T,
         data: unknown,
     ): T {
         return Inline.defaultInstance().make(AccessorConstructor, data);

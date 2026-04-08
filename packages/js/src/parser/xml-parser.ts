@@ -23,9 +23,7 @@ export class XmlParser {
      */
     constructor(maxDepth: number, maxElements: number = 10_000) {
         this.maxDepth = maxDepth;
-        this.maxElements = Number.isFinite(maxElements) && maxElements >= 1
-            ? maxElements
-            : 10_000;
+        this.maxElements = Number.isFinite(maxElements) && maxElements >= 1 ? maxElements : 10_000;
     }
 
     /**
@@ -114,7 +112,7 @@ export class XmlParser {
         const stripped = xml.replace(/<\?xml[^?]*\?>/i, '').trim();
 
         // Bound parser complexity before the linear inner-content scan: count opening
-        // tags as a document-complexity proxy. This is a defence-in-depth limit —
+        // tags as a document-complexity proxy. This is a defence-in-depth limit -
         // the linear scanner below is already O(n), but bounding element count also
         // caps the total number of recursive parseXmlChildren calls.
         // Browser environments (DOMParser) are unaffected.
@@ -168,9 +166,12 @@ export class XmlParser {
         }
 
         // Walk backward from the final '>' to locate the closing tag for this root element.
-        // This is O(tagNameLen) — the tag name is typically short and always bounded.
+        // This is O(tagNameLen) - the tag name is typically short and always bounded.
         let pos = doc.length - 2;
-        while (pos >= 0 && (doc[pos] === ' ' || doc[pos] === '\t' || doc[pos] === '\n' || doc[pos] === '\r')) {
+        while (
+            pos >= 0 &&
+            (doc[pos] === ' ' || doc[pos] === '\t' || doc[pos] === '\n' || doc[pos] === '\r')
+        ) {
             pos--;
         }
 
@@ -258,7 +259,14 @@ export class XmlParser {
 
                 if (content.startsWith(closeTag, nextLt)) {
                     const c = content[nextLt + closeTag.length];
-                    if (c === '>' || c === ' ' || c === '\t' || c === '\n' || c === '\r' || c === undefined) {
+                    if (
+                        c === '>' ||
+                        c === ' ' ||
+                        c === '\t' ||
+                        c === '\n' ||
+                        c === '\r' ||
+                        c === undefined
+                    ) {
                         nestDepth--;
                         if (nestDepth === 0) {
                             innerEnd = nextLt;
@@ -273,9 +281,22 @@ export class XmlParser {
 
                 if (content.startsWith(openPrefix, nextLt)) {
                     const c = content[nextLt + openPrefix.length];
-                    if (c === '>' || c === ' ' || c === '\t' || c === '\n' || c === '\r' || c === '/') {
+                    if (
+                        c === '>' ||
+                        c === ' ' ||
+                        c === '\t' ||
+                        c === '\n' ||
+                        c === '\r' ||
+                        c === '/'
+                    ) {
                         const ogt = content.indexOf('>', nextLt + openPrefix.length);
-                        if (ogt !== -1 && !content.slice(nextLt + openPrefix.length, ogt).trimEnd().endsWith('/')) {
+                        if (
+                            ogt !== -1 &&
+                            !content
+                                .slice(nextLt + openPrefix.length, ogt)
+                                .trimEnd()
+                                .endsWith('/')
+                        ) {
                             nestDepth++;
                         }
                     }
@@ -285,7 +306,7 @@ export class XmlParser {
             }
 
             if (innerEnd === -1) {
-                // Unclosed or malformed tag — skip past the opening tag
+                // Unclosed or malformed tag - skip past the opening tag
                 i = gt + 1;
                 continue;
             }

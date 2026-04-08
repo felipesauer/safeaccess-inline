@@ -14,6 +14,10 @@ use SafeAccess\Inline\Exceptions\InvalidFormatException;
  * Validates payload size before parsing.
  *
  * @api
+ *
+ * @example
+ * $accessor = Inline::fromJson('{"name":"Alice"}');
+ * $accessor->get('name'); // 'Alice'
  */
 final class JsonAccessor extends AbstractAccessor
 {
@@ -26,6 +30,9 @@ final class JsonAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is not a string.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = (new JsonAccessor($parser))->from('{"key":"value"}');
      */
     public function from(mixed $data): static
     {

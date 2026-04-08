@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="../../public/logo.svg" width="80" alt="safeaccess-inline logo">
+  <img src="https://private-user-images.githubusercontent.com/120697114/574203880-28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9.svg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzU1NzIwMTYsIm5iZiI6MTc3NTU3MTcxNiwicGF0aCI6Ii8xMjA2OTcxMTQvNTc0MjAzODgwLTI4MjAyZjhiLThlZjEtNGI5NC1iNmQxLWVjMTZmMTZjOWNmOS5zdmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwNDA3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDQwN1QxNDIxNTZaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xYzM1NGVkOWQ4MWI1ZDg4ZDhjYzcyY2Q5YjQ2YzIzNTA5ZWU4ZGM1N2Y1YWEwZjc1ZjNiMGI5YmVhYjQ1MmJlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.XIKyiRzsc2OsXp3W9BzQWZRrkF8FFlbXc6WfBeETNSw" width="80" alt="safeaccess-inline logo">
 </p>
 
-<h1 align="center">Safe Access Inline — TypeScript</h1>
+<h1 align="center">Safe Access Inline - TypeScript</h1>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@safeaccess/inline"><img src="https://img.shields.io/npm/v/@safeaccess/inline?label=npm" alt="npm"></a>
@@ -11,7 +11,7 @@
 
 ---
 
-Safe nested data access with dot notation for JavaScript and TypeScript. Navigate deeply nested objects, JSON, YAML, XML, INI, ENV, and NDJSON structures — with built-in security validation, immutable writes, and a fluent builder API.
+Safe nested data access with dot notation for JavaScript and TypeScript. Navigate deeply nested objects, JSON, YAML, XML, INI, ENV, and NDJSON structures - with built-in security validation, immutable writes, and a fluent builder API.
 
 ## Installation
 
@@ -33,7 +33,7 @@ accessor.get('user.email', 'N/A'); // 'N/A' (default when missing)
 accessor.has('user.age'); // true
 accessor.getOrFail('user.name'); // 'Alice' (throws if missing)
 
-// Immutable writes — original is never modified
+// Immutable writes - original is never modified
 const updated = accessor.set('user.email', 'alice@example.com');
 updated.get('user.email'); // 'alice@example.com'
 accessor.has('user.email'); // false (original unchanged)
@@ -41,12 +41,14 @@ accessor.has('user.email'); // false (original unchanged)
 
 ## Dot Notation Syntax
 
-The TypeScript package supports dot-separated key access:
+### Basic Syntax
 
-| Syntax      | Example        | Description               |
-| ----------- | -------------- | ------------------------- |
-| `key.key`   | `user.name`    | Nested key access         |
-| `key.0.key` | `users.0.name` | Numeric key (array index) |
+| Syntax            | Example            | Description                     |
+| ----------------- | ------------------ | ------------------------------- |
+| `key.key`         | `user.name`        | Nested key access               |
+| `key.0.key`       | `users.0.name`     | Numeric key (array index)       |
+| `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names       |
+| `$` or `$.path`   | `$.user.name`      | Optional root prefix (stripped) |
 
 ```typescript
 const data = Inline.fromJson('{"users": [{"name": "Alice"}, {"name": "Bob"}]}');
@@ -54,7 +56,46 @@ data.get('users.0.name'); // 'Alice'
 data.get('users.1.name'); // 'Bob'
 ```
 
-> **Note:** Advanced PathQuery features (wildcards, filters, slices, recursive descent, projections) are available in the PHP package only. See the [PHP README](../php/README.md#advanced-pathquery) for details.
+### Advanced PathQuery
+
+| Syntax          | Example             | Description                               |
+| --------------- | ------------------- | ----------------------------------------- |
+| `[0]`           | `users[0]`          | Bracket index access                      |
+| `*` or `[*]`    | `users.*`           | Wildcard - expand all children            |
+| `..key`         | `..name`            | Recursive descent - find key at any depth |
+| `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
+| `[0,1,2]`       | `users[0,1,2]`      | Multi-index selection                     |
+| `['a','b']`     | `['name','age']`    | Multi-key selection                       |
+| `[0:5]`         | `items[0:5]`        | Slice - indices 0 through 4               |
+| `[::2]`         | `items[::2]`        | Slice with step                           |
+| `[::-1]`        | `items[::-1]`       | Reverse slice                             |
+| `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
+| `.{fields}`     | `.{name, age}`      | Projection - select fields                |
+| `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
+
+### Filter Expressions
+
+```typescript
+const data = Inline.fromJson(`[
+    {"name": "Alice", "age": 25, "role": "admin"},
+    {"name": "Bob",   "age": 17, "role": "user"},
+    {"name": "Carol", "age": 30, "role": "admin"}
+]`);
+
+// Comparison: ==, !=, >, <, >=, <=
+data.get('[?age>18]'); // Alice and Carol
+
+// Logical: && and ||
+data.get('[?age>18 && role=="admin"]'); // Alice and Carol
+
+// Built-in functions: starts_with, contains, values
+data.get('[?starts_with(@.name, "A")]'); // Alice
+data.get('[?contains(@.name, "ob")]'); // Bob
+
+// Arithmetic in predicates: +, -, *, /
+const orders = Inline.fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}]');
+orders.get('[?@.price * @.qty > 20]'); // first order only
+```
 
 ## Supported Formats
 
@@ -173,13 +214,13 @@ accessor.getMany({
 }); // { 'a.b': 1, 'a.x': 'fallback' }
 accessor.getRaw(); // original JSON string
 
-// Write (immutable — every write returns a new instance)
+// Write (immutable - every write returns a new instance)
 const updated = accessor.set('a.d', 3);
 const cleaned = updated.remove('a.c');
 const merged = cleaned.merge('a', { e: 4 });
 const full = merged.mergeAll({ f: 5 });
 
-// Readonly mode — block all writes
+// Readonly mode - block all writes
 const readonly = accessor.readonly();
 readonly.get('a.b'); // 1 (reads work)
 readonly.set('a.b', 99); // throws ReadonlyViolationException
@@ -243,7 +284,7 @@ const accessor = Inline.withSecurityGuard(guard).fromJson(data);
 
 | Format | Protection                                       |
 | ------ | ------------------------------------------------ |
-| XML    | Rejects `<!DOCTYPE` — prevents XXE attacks       |
+| XML    | Rejects `<!DOCTYPE` - prevents XXE attacks       |
 | YAML   | Blocks unsafe tags, anchors, aliases, merge keys |
 | All    | Forbidden key validation on every parsed key     |
 
@@ -291,7 +332,7 @@ try {
 
 | Exception                    | Extends                  | When                                      |
 | ---------------------------- | ------------------------ | ----------------------------------------- |
-| `AccessorException`          | `Error`                  | Root — catch-all                          |
+| `AccessorException`          | `Error`                  | Root - catch-all                          |
 | `SecurityException`          | `AccessorException`      | Forbidden key, payload, structural limits |
 | `InvalidFormatException`     | `AccessorException`      | Malformed JSON, XML, INI, NDJSON          |
 | `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |
@@ -315,6 +356,7 @@ const accessor = Inline.withStrictMode(false).fromJson(trustedPayload);
 
 ```typescript
 // Implement PathCacheInterface for repeated lookups
+const cacheMap = new Map();
 const cache: PathCacheInterface = {
     get: (path) => cacheMap.get(path) ?? null,
     set: (path, segments) => {

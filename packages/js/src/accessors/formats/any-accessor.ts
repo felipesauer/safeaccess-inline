@@ -1,6 +1,6 @@
-import { AbstractAccessor } from '../abstract-accessor.js';
+import { AbstractIntegrationAccessor } from '../abstract-integration-accessor.js';
 import type { ParseIntegrationInterface } from '../../contracts/parse-integration-interface.js';
-import type { DotNotationParser } from '../../core/dot-notation-parser.js';
+import type { ValidatableParserInterface } from '../../contracts/validatable-parser-interface.js';
 import { InvalidFormatException } from '../../exceptions/invalid-format-exception.js';
 
 /**
@@ -9,21 +9,20 @@ import { InvalidFormatException } from '../../exceptions/invalid-format-exceptio
  * Delegates format detection and parsing to a user-provided integration.
  * Validates string payloads against security constraints before parsing.
  *
+ * @api
+ *
  * @example
  * const integration = new MyCsvIntegration();
  * const accessor = Inline.withParserIntegration(integration).fromAny(csvString);
  * accessor.get('0.name'); // first row, name column
  */
-export class AnyAccessor extends AbstractAccessor {
-    private readonly integration: ParseIntegrationInterface;
-
+export class AnyAccessor extends AbstractIntegrationAccessor {
     /**
      * @param parser      - Dot-notation parser with security configuration.
      * @param integration - Custom format parser for detecting and parsing input.
      */
-    constructor(parser: DotNotationParser, integration: ParseIntegrationInterface) {
-        super(parser);
-        this.integration = integration;
+    constructor(parser: ValidatableParserInterface, integration: ParseIntegrationInterface) {
+        super(parser, integration);
     }
 
     /**
@@ -33,6 +32,9 @@ export class AnyAccessor extends AbstractAccessor {
      * @returns Populated accessor instance.
      * @throws {InvalidFormatException} When the integration rejects the format.
      * @throws {SecurityException} When string input violates payload-size limits.
+     *
+     * @example
+     * const accessor = new AnyAccessor(parser, integration).from(rawData);
      */
     from(data: unknown): this {
         if (!this.integration.assertFormat(data)) {
@@ -42,9 +44,7 @@ export class AnyAccessor extends AbstractAccessor {
         return this.ingest(data);
     }
 
-    /**
-     * @internal
-     */
+    /** {@inheritDoc} */
     protected parse(raw: unknown): Record<string, unknown> {
         return this.integration.parse(raw);
     }

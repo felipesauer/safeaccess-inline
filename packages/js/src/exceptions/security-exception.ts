@@ -7,6 +7,12 @@ import { AccessorException } from './accessor-exception.js';
  * methods, stream wrapper / protocol URI schemes, Node.js globals),
  * payload size violations, key-count limits, and depth limit violations.
  *
+ * @api
+ *
+ * @see AccessorException   Parent exception class.
+ * @see SecurityGuard       Validates keys against the forbidden list.
+ * @see SecurityParser      Enforces payload, depth, and key-count limits.
+ *
  * @example
  * throw new SecurityException("Forbidden key '__proto__' detected.");
  */

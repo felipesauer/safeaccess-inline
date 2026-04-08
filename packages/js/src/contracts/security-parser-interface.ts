@@ -4,6 +4,8 @@
  * Defines methods for asserting payload size, maximum key counts,
  * and recursion depth limits to prevent resource exhaustion and
  * injection attacks during data access operations.
+ *
+ * @api
  */
 export interface SecurityParserInterface {
     /**

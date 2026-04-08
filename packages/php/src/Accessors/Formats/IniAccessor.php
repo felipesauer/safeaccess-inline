@@ -14,6 +14,10 @@ use SafeAccess\Inline\Exceptions\InvalidFormatException;
  * inference. Converts "none" values to `false` for consistency.
  *
  * @api
+ *
+ * @example
+ * $accessor = Inline::fromIni("[db]\nhost=localhost\nport=5432");
+ * $accessor->get('db.host'); // 'localhost'
  */
 final class IniAccessor extends AbstractAccessor
 {
@@ -26,6 +30,9 @@ final class IniAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is not a string.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = (new IniAccessor($parser))->from("key=value\n[section]\nname=Alice");
      */
     public function from(mixed $data): static
     {
@@ -52,7 +59,7 @@ final class IniAccessor extends AbstractAccessor
         }
 
         // INI_SCANNER_TYPED already converts "none"/"off"/"no" to false,
-        // including values inside sections — no extra processing needed.
+        // including values inside sections - no extra processing needed.
         return $parsed;
     }
 }

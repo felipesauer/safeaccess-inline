@@ -16,6 +16,9 @@ namespace SafeAccess\Inline\Exceptions;
  *
  * @see AccessorException                              Parent exception class.
  * @see \SafeAccess\Inline\Core\DotNotationParser      Built-in parser (uses SecurityException for limits).
+ *
+ * @example
+ * throw new ParserException('Parser failed to process input.');
  */
 class ParserException extends AccessorException
 {

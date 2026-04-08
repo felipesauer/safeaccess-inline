@@ -21,7 +21,7 @@ describe(SegmentPathResolver::class, function (): void {
         };
     });
 
-    // resolve() — basic traversal
+    // resolve() - basic traversal
     describe(SegmentPathResolver::class . ' > resolve basics', function (): void {
         it('returns the value for an existing key', function (): void {
             $data = ['name' => 'Alice'];
@@ -63,7 +63,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — wildcard
+    // resolve() - wildcard
     describe(SegmentPathResolver::class . ' > resolve wildcard', function (): void {
         it('expands all children with a wildcard', function (): void {
             $data = ['users' => ['Alice', 'Bob', 'Carol']];
@@ -84,7 +84,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — recursive descent
+    // resolve() - recursive descent
     describe(SegmentPathResolver::class . ' > resolve descent', function (): void {
         it('collects all values for a recursive descent key', function (): void {
             $data = [
@@ -122,7 +122,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — filter
+    // resolve() - filter
     describe(SegmentPathResolver::class . ' > resolve filter', function (): void {
         it('filters array items that satisfy a condition', function (): void {
             $data = ['users' => [
@@ -166,7 +166,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — multi-key / multi-index
+    // resolve() - multi-key / multi-index
     describe(SegmentPathResolver::class . ' > resolve multi-key and multi-index', function (): void {
         it("selects multiple keys with ['a','b']", function (): void {
             $data = ['data' => ['a' => 1, 'b' => 2, 'c' => 3]];
@@ -233,7 +233,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — slice
+    // resolve() - slice
     describe(SegmentPathResolver::class . ' > resolve slice', function (): void {
         it('slices an array [1:3]', function (): void {
             $data = ['items' => ['a', 'b', 'c', 'd', 'e']];
@@ -268,7 +268,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — projection
+    // resolve() - projection
     describe(SegmentPathResolver::class . ' > resolve projection', function (): void {
         it('projects specific fields from a map', function (): void {
             $data = ['user' => ['name' => 'Alice', 'age' => 30, 'password' => 'secret']];
@@ -316,7 +316,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
     });
 
-    // resolve() — coverage-gap scenarios
+    // resolve() - coverage-gap scenarios
     describe(SegmentPathResolver::class . ' > resolve edge cases', function (): void {
         it('resolves further segments after a multi-key selection', function (): void {
             // Line 260: segmentMultiKey resolve branch ($nextIndex < $segmentCount)
@@ -395,7 +395,7 @@ describe(SegmentPathResolver::class, function (): void {
         });
 
         it('projects null fields for non-array items in a list', function (): void {
-            // Lines 386-390: $projectItem closure — item is not an array
+            // Lines 386-390: $projectItem closure - item is not an array
             $data = ['items' => ['scalar1', 'scalar2']];
 
             $result = ($this->r)($data, 'items.{name}');

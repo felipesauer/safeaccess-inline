@@ -1,7 +1,5 @@
 includes:
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
-    - phpstan-baseline.neon
-    - phpstan-extension.neon
 
 parameters:
     level: 9

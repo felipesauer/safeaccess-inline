@@ -32,13 +32,13 @@ describe(SecurityParser.name, () => {
         expect(parser.maxDepth).toBe(512);
     });
 
-    it('uses 0 when option is explicitly 0 (nullish coalescing — not falsy)', () => {
+    it('uses 0 when option is explicitly 0 (nullish coalescing - not falsy)', () => {
         const parser = new SecurityParser({ maxDepth: 0 });
         expect(parser.maxDepth).toBe(0);
     });
 });
 
-describe(`${SecurityParser.name} > constructor — NaN/Infinity clamping (SEC-020)`, () => {
+describe(`${SecurityParser.name} > constructor - NaN/Infinity clamping (SEC-020)`, () => {
     it('clamps NaN maxDepth to default 512', () => {
         const parser = new SecurityParser({ maxDepth: NaN });
         expect(parser.maxDepth).toBe(512);
@@ -251,10 +251,10 @@ describe(`${SecurityParser.name} > assertMaxKeys`, () => {
         expect(() => parser.assertMaxKeys({ a: 1, b: 'hello', c: true })).not.toThrow();
     });
 
-    // Kills line 164 `depth > maxDepth` — distinguishes `>` from `>=`:
+    // Kills line 164 `depth > maxDepth` - distinguishes `>` from `>=`:
     // with maxCountRecursiveDepth=1, depth=1 should still recurse (1 > 1 is false),
     // so the child object's key gets counted.
-    it('counts keys at exactly maxCountRecursiveDepth level (boundary — > not >=)', () => {
+    it('counts keys at exactly maxCountRecursiveDepth level (boundary - > not >=)', () => {
         // maxCountRecursiveDepth=1: at depth 0, recurse into 'a' (depth becomes 1).
         // At depth 1 (= maxDepth), guard is 1 > 1 = false → still counts keys.
         // At depth 2 (> maxDepth), guard is 2 > 1 = true → stops.
@@ -355,7 +355,7 @@ describe(`${SecurityParser.name} > assertMaxStructuralDepth`, () => {
         expect(() => parser.assertMaxStructuralDepth({ a: { b: 1 } }, 2)).not.toThrow();
     });
 
-    // Kills line 183 `current >= maxDepth` in measureDepth — distinguishes `>=` from `>`:
+    // Kills line 183 `current >= maxDepth` in measureDepth - distinguishes `>=` from `>`:
     // measureDepth is called with maxDepth = policy_limit + 1 (early termination ceiling).
     // At current == maxDepth-1 (still below ceiling), we must still recurse measuring children.
     it('measures depth correctly at ceiling - 1 (>= vs > boundary)', () => {
@@ -363,29 +363,33 @@ describe(`${SecurityParser.name} > assertMaxStructuralDepth`, () => {
         // Policy maxDepth=3. measureDepth passes maxDepth+1=4 as ceiling.
         // { a: { b: { c: { d: 1 } } } } is depth 4.
         // If `>=` mutated to `>`, current=4 would NOT trigger early return at ceiling 4 → wrong depth.
-        expect(() => parser.assertMaxStructuralDepth({ a: { b: { c: { d: 1 } } } }, 3)).toThrow(SecurityException);
+        expect(() => parser.assertMaxStructuralDepth({ a: { b: { c: { d: 1 } } } }, 3)).toThrow(
+            SecurityException,
+        );
     });
 
-    // Kills line 191 `d > max` in measureDepth — distinguishes `>` from `>=`:
-    // sibling branches: one shallower, one equal depth — max must NOT be updated on equal (no regression).
+    // Kills line 191 `d > max` in measureDepth - distinguishes `>` from `>=`:
+    // sibling branches: one shallower, one equal depth - max must NOT be updated on equal (no regression).
     it('does not update max when sibling branch depth equals current max (> not >=)', () => {
         const parser = new SecurityParser();
-        // { a: 1, b: 1 } — both branches have same depth (1). Result should be 1, not 2.
+        // { a: 1, b: 1 } - both branches have same depth (1). Result should be 1, not 2.
         expect(() => parser.assertMaxStructuralDepth({ a: 1, b: 1 }, 1)).not.toThrow();
     });
 
-    // Deep tree — ensures the deepest branch wins
+    // Deep tree - ensures the deepest branch wins
     it('picks the deepest branch in an asymmetric tree', () => {
         const parser = new SecurityParser();
-        // { a: 1, b: { c: { d: 1 } } } — branch b is deepest (depth 3).
+        // { a: 1, b: { c: { d: 1 } } } - branch b is deepest (depth 3).
         // maxDepth=2 → depth 3 > 2 → throws.
-        expect(() => parser.assertMaxStructuralDepth({ a: 1, b: { c: { d: 1 } } }, 2)).toThrow(SecurityException);
+        expect(() => parser.assertMaxStructuralDepth({ a: 1, b: { c: { d: 1 } } }, 2)).toThrow(
+            SecurityException,
+        );
     });
 
-    // Shallow sibling — the max is NOT increased by a shallower second branch
+    // Shallow sibling - the max is NOT increased by a shallower second branch
     it('does not throw when the deepest branch exactly meets maxDepth', () => {
         const parser = new SecurityParser();
-        // { a: 1, b: { c: 1 } } — deepest is b.c at depth 2. maxDepth=2 → OK.
+        // { a: 1, b: { c: 1 } } - deepest is b.c at depth 2. maxDepth=2 → OK.
         expect(() => parser.assertMaxStructuralDepth({ a: 1, b: { c: 1 } }, 2)).not.toThrow();
     });
 });

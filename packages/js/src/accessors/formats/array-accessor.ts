@@ -6,6 +6,8 @@ import { InvalidFormatException } from '../../exceptions/invalid-format-exceptio
  *
  * Accepts a plain object or array directly. No string parsing is involved.
  *
+ * @api
+ *
  * @example
  * const accessor = new ArrayAccessor(parser).from({ key: 'value' });
  * accessor.get('key'); // 'value'

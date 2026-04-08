@@ -1,0 +1,19 @@
+{
+    "source": {
+        "directories": ["src"],
+        "excludes": ["Contracts", "Exceptions"]
+    },
+    "phpUnit": {
+        "customPath": "vendor/bin/pest"
+    },
+    "testFramework": "phpunit",
+    "minMsi": 100,
+    "minCoveredMsi": 100,
+    "threads": "max",
+    "mutators": {
+        "@default": true
+    },
+    "logs": {
+        "json": "build/infection/infection.json"
+    }
+}

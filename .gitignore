@@ -57,3 +57,5 @@ tmp/
 .github/skills/
 .github/copilot-instructions.md
 .stryker-tmp/
+reports/
+memories/

@@ -9,6 +9,8 @@ import { YamlParser } from '../../parser/yaml-parser.js';
  * depending on external YAML libraries. Tags, anchors, aliases, and
  * merge keys are blocked as unsafe constructs.
  *
+ * @api
+ *
  * @example
  * const accessor = new YamlAccessor(parser).from('key: value\nnested:\n  a: 1');
  * accessor.get('nested.a'); // 1
@@ -24,7 +26,7 @@ export class YamlAccessor extends AbstractAccessor {
      * @throws {SecurityException} When payload size exceeds limit.
      *
      * @example
-     * accessor.from('name: Alice\nage: 30');
+     * accessor.from('name: Alice\nage: 30'); // { name: 'Alice', age: 30 }
      */
     from(data: unknown): this {
         if (typeof data !== 'string') {
@@ -47,6 +49,6 @@ export class YamlAccessor extends AbstractAccessor {
         }
         /* c8 ignore stop */
 
-        return new YamlParser().parse(raw);
+        return new YamlParser(this.parser.getMaxDepth()).parse(raw);
     }
 }

@@ -3,6 +3,10 @@ import { AccessorException } from './accessor-exception.js';
 /**
  * Thrown when a dot-notation path does not exist in the data.
  *
+ * @api
+ *
+ * @see AccessorException  Parent exception class.
+ *
  * @example
  * throw new PathNotFoundException("Path 'user.address.zip' not found.");
  */

@@ -23,7 +23,7 @@ cd packages/php
 composer install
 ```
 
-Run tests (once they exist — being added in a subsequent milestone):
+Run the full test suite with [Pest](https://pestphp.com/):
 
 ```bash
 composer test
@@ -43,7 +43,7 @@ Work in the `packages/js` workspace:
 cd packages/js
 ```
 
-Available scripts (currently no-ops — source and tests are being built in subsequent milestones):
+Available scripts:
 
 | Script              | Purpose                 |
 | ------------------- | ----------------------- |
@@ -51,7 +51,6 @@ Available scripts (currently no-ops — source and tests are being built in subs
 | `npm test`          | Run tests               |
 | `npm run typecheck` | Type-check without emit |
 | `npm run lint`      | Run ESLint              |
-| `npm run bench`     | Run benchmarks          |
 
 ## Commit Messages
 
@@ -78,7 +77,7 @@ deps: bump eslint to v10
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feat/my-feature`
 3. Make your changes
-4. Ensure all tests pass (once they exist)
+4. Ensure all tests pass
 5. Open a Pull Request against `main`
 
 ## Security

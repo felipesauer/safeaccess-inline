@@ -15,11 +15,15 @@ use SafeAccess\Inline\PathQuery\SegmentPathResolver;
 /**
  * Core dot-notation parser for reading, writing, and removing nested values.
  *
- * Implement {@see ValidatableParserInterface} to provide path-based access
+ * Implements {@see ValidatableParserInterface} to provide path-based access
  * to associative arrays using dot-separated keys with support for wildcard,
  * recursive-descent, and filter segments.
  *
  * @internal
+ *
+ * @example
+ * $parser = new DotNotationParser($guard, $securityParser, $cache, $segmentParser, $resolver);
+ * $parser->get(['user' => ['name' => 'Alice']], 'user.name'); // 'Alice'
  */
 final class DotNotationParser implements ValidatableParserInterface
 {

@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
     # ──────────────────────────────────────────────────────────
-    # Step 1: Release Please — creates/updates release PRs
+    # Step 1: Release Please - creates/updates release PRs
     # ──────────────────────────────────────────────────────────
     release-please:
         name: Release Please

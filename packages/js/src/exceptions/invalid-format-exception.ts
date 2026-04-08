@@ -3,6 +3,11 @@ import { AccessorException } from './accessor-exception.js';
 /**
  * Thrown when the input data cannot be parsed as the expected format.
  *
+ * @api
+ *
+ * @see AccessorException       Parent exception class.
+ * @see YamlParseException      Specialized subclass for YAML parsing errors.
+ *
  * @example
  * throw new InvalidFormatException('Expected JSON string, got number.');
  */

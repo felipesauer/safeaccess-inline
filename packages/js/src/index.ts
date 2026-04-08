@@ -19,7 +19,9 @@ export { NdjsonAccessor } from './accessors/formats/ndjson-accessor.js';
 export { AnyAccessor } from './accessors/formats/any-accessor.js';
 
 // Core
-// NOTE: DotNotationParser is intentionally not exported — it is an internal component.
+// NOTE: DotNotationParser is intentionally not exported - it is an internal component.
+
+// Cache - SimplePathCache is @internal; consumers must use PathCacheInterface
 
 // Security
 export { SecurityGuard } from './security/security-guard.js';

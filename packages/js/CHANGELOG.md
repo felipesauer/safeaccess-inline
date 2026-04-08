@@ -4,15 +4,13 @@ All notable changes to the `@safeaccess/inline` JavaScript/TypeScript package ar
 
 ## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.0...js-v0.1.1) (2026-04-07)
 
-
 ### Features
 
-* **js:** bootstrap release tracking for rebranded package ([5fc07d7](https://github.com/felipesauer/safeaccess-inline/commit/5fc07d7126870d72145bbfc80609370c9d1509c7))
-
+- **js:** bootstrap release tracking for rebranded package ([5fc07d7](https://github.com/felipesauer/safeaccess-inline/commit/5fc07d7126870d72145bbfc80609370c9d1509c7))
 
 ### Bug Fixes
 
-* **js:** add repository field for npm provenance validation ([b34cdef](https://github.com/felipesauer/safeaccess-inline/commit/b34cdeff01e7e7566921f04b11f33fbd391aa8d2))
+- **js:** add repository field for npm provenance validation ([b34cdef](https://github.com/felipesauer/safeaccess-inline/commit/b34cdeff01e7e7566921f04b11f33fbd391aa8d2))
 
 ## 0.1.0 (2026-04-07)
 
@@ -20,7 +18,7 @@ All notable changes to the `@safeaccess/inline` JavaScript/TypeScript package ar
 
 - **ci:** achieve 100% branch coverage on Vitest 4.x and fix docs-ci workflow ([#14](https://github.com/felipesauer/safeaccess-inline/issues/14)) ([11daf5a](https://github.com/felipesauer/safeaccess-inline/commit/11daf5aaa1ff1b901c8297921533485f1584a330))
 
-## [0.1.0] — 2026-04-06
+## [0.1.0] - 2026-04-06
 
 ### Features
 

@@ -14,6 +14,10 @@ namespace SafeAccess\Inline\Exceptions;
  * @api
  *
  * @see AccessorException  Parent exception class.
+ *
+ * @example
+ * $accessor = Inline::fromJson('{}')->readonly(true);
+ * $accessor->set('key', 'value'); // throws ReadonlyViolationException
  */
 class ReadonlyViolationException extends AccessorException
 {

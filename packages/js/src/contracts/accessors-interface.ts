@@ -7,6 +7,8 @@ import type { FactoryAccessorsInterface } from './factory-accessors-interface.js
  *
  * Marker interface that aggregates all accessor responsibilities into
  * a single type, used as the base contract for AbstractAccessor.
+ *
+ * @api
  */
 export interface AccessorsInterface
     extends ReadableAccessorsInterface, WritableAccessorsInterface, FactoryAccessorsInterface {}

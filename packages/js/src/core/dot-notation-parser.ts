@@ -1,8 +1,14 @@
 import type { SecurityGuardInterface } from '../contracts/security-guard-interface.js';
 import type { SecurityParserInterface } from '../contracts/security-parser-interface.js';
 import type { PathCacheInterface } from '../contracts/path-cache-interface.js';
+import type { ValidatableParserInterface } from '../contracts/validatable-parser-interface.js';
 import { SecurityGuard } from '../security/security-guard.js';
 import { SecurityParser } from '../security/security-parser.js';
+import { PathNotFoundException } from '../exceptions/path-not-found-exception.js';
+import { SegmentFilterParser } from '../path-query/segment-filter-parser.js';
+import { SegmentParser } from '../path-query/segment-parser.js';
+import { SegmentPathResolver } from '../path-query/segment-path-resolver.js';
+import type { Segment } from '../path-query/segment-type.js';
 
 /**
  * Core dot-notation parser for reading, writing, and removing nested values.
@@ -10,28 +16,40 @@ import { SecurityParser } from '../security/security-parser.js';
  * Provides path-based access to plain objects using dot-separated keys.
  * Delegates security validation to SecurityGuard and SecurityParser.
  *
+ * @internal
+ *
  * @example
  * const parser = new DotNotationParser();
  * parser.get({ user: { name: 'Alice' } }, 'user.name'); // 'Alice'
  */
-export class DotNotationParser {
+export class DotNotationParser implements ValidatableParserInterface {
     private readonly securityGuard: SecurityGuardInterface;
     private readonly securityParser: SecurityParserInterface;
     private readonly pathCache: PathCacheInterface | null;
+    private readonly segmentParser: SegmentParser;
+    private readonly segmentPathResolver: SegmentPathResolver;
 
     /**
      * @param securityGuard - Key-safety guard. Defaults to a new SecurityGuard instance.
      * @param securityParser - Parser depth and size limits. Defaults to a new SecurityParser instance.
      * @param pathCache - Optional path segment cache for repeated lookups.
+     * @param segmentParser - Path-string → segment converter.
+     * @param segmentPathResolver - Segment → value resolver.
      */
     constructor(
         securityGuard?: SecurityGuardInterface,
         securityParser?: SecurityParserInterface,
         pathCache?: PathCacheInterface,
+        segmentParser?: SegmentParser,
+        segmentPathResolver?: SegmentPathResolver,
     ) {
         this.securityGuard = securityGuard ?? new SecurityGuard();
         this.securityParser = securityParser ?? new SecurityParser();
         this.pathCache = pathCache ?? null;
+
+        const filterParser = new SegmentFilterParser(this.securityGuard);
+        this.segmentParser = segmentParser ?? new SegmentParser(filterParser);
+        this.segmentPathResolver = segmentPathResolver ?? new SegmentPathResolver(filterParser);
     }
 
     /**
@@ -52,8 +70,50 @@ export class DotNotationParser {
             return defaultValue;
         }
 
-        const segments = this.parsePath(path);
-        return this.getAt(data, segments, defaultValue);
+        const segments = this.segmentPathCache(path);
+        return this.resolve(data, segments, defaultValue);
+    }
+
+    /**
+     * Resolve a pre-parsed segment array against data, returning the matched value.
+     *
+     * @param data - Source data object.
+     * @param segments - Typed segments from {@link SegmentParser}.
+     * @param defaultValue - Fallback returned when the path does not exist.
+     * @returns Resolved value or the default.
+     */
+    resolve(
+        data: Record<string, unknown>,
+        segments: Segment[],
+        defaultValue: unknown = null,
+    ): unknown {
+        return this.segmentPathResolver.resolve(
+            data,
+            segments,
+            0,
+            defaultValue,
+            this.securityParser.getMaxResolveDepth(),
+        );
+    }
+
+    /**
+     * Retrieve a value at the given path, throwing when not found.
+     *
+     * @param data - Source data object.
+     * @param path - Dot-notation path string.
+     * @returns Resolved value.
+     *
+     * @throws {PathNotFoundException} When the path does not exist.
+     */
+    getStrict(data: Record<string, unknown>, path: string): unknown {
+        const sentinel = Object.create(null) as Record<string, never>;
+        const result = this.get(data, path, sentinel);
+
+        if (result === sentinel) {
+            throw new PathNotFoundException(`Path '${path}' not found.`);
+        }
+
+        return result;
     }
 
     /**
@@ -68,7 +128,7 @@ export class DotNotationParser {
      * parser.set({}, 'user.name', 'Alice'); // { user: { name: 'Alice' } }
      */
     set(data: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
-        const segments = this.parsePath(path);
+        const segments = this.segmentParser.parseKeys(path);
         return this.setAt(data, segments, value);
     }
 
@@ -103,7 +163,7 @@ export class DotNotationParser {
      * parser.remove({ a: { b: 1 } }, 'a.b'); // { a: {} }
      */
     remove(data: Record<string, unknown>, path: string): Record<string, unknown> {
-        const segments = this.parsePath(path);
+        const segments = this.segmentParser.parseKeys(path);
         return this.removeAt(data, segments);
     }
 
@@ -188,7 +248,10 @@ export class DotNotationParser {
      * @example
      * parser.removeAt({ a: { b: 1 } }, ['a', 'b']); // { a: {} }
      */
-    removeAt(data: Record<string, unknown>, segments: Array<string | number>): Record<string, unknown> {
+    removeAt(
+        data: Record<string, unknown>,
+        segments: Array<string | number>,
+    ): Record<string, unknown> {
         /* Stryker disable next-line ConditionalExpression,BlockStatement -- equivalent: empty segments → eraseAt hits undefined key → hasOwnProperty false → returns data anyway */
         if (segments.length === 0) {
             return data;
@@ -273,22 +336,22 @@ export class DotNotationParser {
     }
 
     /**
-     * Parse a dot-notation path into segments, using cache when available.
+     * Retrieve parsed segments from cache or parse and cache the path.
      *
      * @param path - Dot-notation path string.
-     * @returns Array of path segments.
+     * @returns Cached or freshly parsed typed segments.
      */
-    private parsePath(path: string): string[] {
+    private segmentPathCache(path: string): Segment[] {
         if (this.pathCache !== null) {
             const cached = this.pathCache.get(path);
             if (cached !== null) {
                 return cached;
             }
-            const segments = path.split('.');
+            const segments = this.segmentParser.parseSegments(path);
             this.pathCache.set(path, segments);
             return segments;
         }
-        return path.split('.');
+        return this.segmentParser.parseSegments(path);
     }
 
     /**

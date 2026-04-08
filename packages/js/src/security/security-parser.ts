@@ -7,6 +7,8 @@ import { SecurityException } from '../exceptions/security-exception.js';
  * Validates payload size, maximum key count, recursion depth, and
  * structural depth limits.
  *
+ * @api
+ *
  * @example
  * const parser = new SecurityParser({ maxDepth: 10, maxKeys: 100 });
  * parser.assertPayloadSize('{"key":"value"}');
@@ -27,7 +29,7 @@ export class SecurityParser implements SecurityParserInterface {
      * @param options.maxKeys - Maximum total number of keys across the entire structure. Default: 10000.
      *   This value is also passed to `XmlParser` as the element-count cap for the Node.js manual XML
      *   parser path. Setting it below a document's element count will cause `fromXml()` to throw
-     *   `SecurityException`. Non-positive or non-finite values disable that guard — prefer the default.
+     *   `SecurityException`. Non-positive or non-finite values disable that guard - prefer the default.
      * @param options.maxCountRecursiveDepth - Maximum recursion depth when counting keys. Default: 100.
      * @param options.maxResolveDepth - Maximum recursion depth for path resolution. Default: 100.
      */
@@ -41,9 +43,15 @@ export class SecurityParser implements SecurityParserInterface {
         } = {},
     ) {
         this.maxDepth = SecurityParser.clampOption(options.maxDepth, 512);
-        this.maxPayloadBytes = SecurityParser.clampOption(options.maxPayloadBytes, 10 * 1024 * 1024);
+        this.maxPayloadBytes = SecurityParser.clampOption(
+            options.maxPayloadBytes,
+            10 * 1024 * 1024,
+        );
         this.maxKeys = SecurityParser.clampOption(options.maxKeys, 10_000);
-        this.maxCountRecursiveDepth = SecurityParser.clampOption(options.maxCountRecursiveDepth, 100);
+        this.maxCountRecursiveDepth = SecurityParser.clampOption(
+            options.maxCountRecursiveDepth,
+            100,
+        );
         this.maxResolveDepth = SecurityParser.clampOption(options.maxResolveDepth, 100);
     }
 
@@ -226,6 +234,13 @@ export class SecurityParser implements SecurityParserInterface {
         return max;
     }
 
+    /**
+     * Clamp an optional numeric option to its default when not finite.
+     *
+     * @param value - User-provided option value.
+     * @param defaultValue - Fallback when value is undefined or non-finite.
+     * @returns Clamped numeric value.
+     */
     private static clampOption(value: number | undefined, defaultValue: number): number {
         /* Stryker disable next-line ConditionalExpression -- equivalent: Number.isFinite covers undefined (isFinite(undefined)===false); simplest safe form */
         return Number.isFinite(value) ? (value as number) : defaultValue;

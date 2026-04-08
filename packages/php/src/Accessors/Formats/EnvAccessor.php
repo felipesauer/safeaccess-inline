@@ -14,6 +14,10 @@ use SafeAccess\Inline\Exceptions\InvalidFormatException;
  * Strips surrounding quotes from values.
  *
  * @api
+ *
+ * @example
+ * $accessor = Inline::fromEnv("DB_HOST=localhost\nDEBUG=true");
+ * $accessor->get('DB_HOST'); // 'localhost'
  */
 final class EnvAccessor extends AbstractAccessor
 {
@@ -26,6 +30,9 @@ final class EnvAccessor extends AbstractAccessor
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When input is not a string.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException      When security constraints are violated.
+     *
+     * @example
+     * $accessor = (new EnvAccessor($parser))->from("APP_ENV=production\nPORT=3000");
      */
     public function from(mixed $data): static
     {
