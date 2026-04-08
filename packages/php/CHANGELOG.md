@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.1.2](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.1...php-v0.1.2) (2026-04-08)
+
+
+### Bug Fixes
+
+* **php:** fix logo image URL and add fromAny format section in README ([8bc377f](https://github.com/felipesauer/safeaccess-inline/commit/8bc377f9344882ad31e9c22366c06d306997a0cf))
+
 ## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.0...php-v0.1.1) (2026-04-07)
 
 ### Miscellaneous Chores
