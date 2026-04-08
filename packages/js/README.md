@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9" width="80" alt="safeaccess-inline logo">
+  <img src="https://raw.githubusercontent.com/felipesauer/safeaccess-inline/main/.github/assets/logo.svg" width="80" alt="safeaccess-inline logo">
 </p>
 
 <h1 align="center">Safe Access Inline - TypeScript</h1>
