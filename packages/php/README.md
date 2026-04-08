@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="../../public/logo.svg" width="80" alt="safeaccess-inline logo">
+  <img src="https://private-user-images.githubusercontent.com/120697114/574203880-28202f8b-8ef1-4b94-b6d1-ec16f16c9cf9.svg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzU1NzIwMTYsIm5iZiI6MTc3NTU3MTcxNiwicGF0aCI6Ii8xMjA2OTcxMTQvNTc0MjAzODgwLTI4MjAyZjhiLThlZjEtNGI5NC1iNmQxLWVjMTZmMTZjOWNmOS5zdmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwNDA3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDQwN1QxNDIxNTZaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xYzM1NGVkOWQ4MWI1ZDg4ZDhjYzcyY2Q5YjQ2YzIzNTA5ZWU4ZGM1N2Y1YWEwZjc1ZjNiMGI5YmVhYjQ1MmJlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.XIKyiRzsc2OsXp3W9BzQWZRrkF8FFlbXc6WfBeETNSw" width="80" alt="safeaccess-inline logo">
 </p>
 
-<h1 align="center">Safe Access Inline — PHP</h1>
+<h1 align="center">Safe Access Inline - PHP</h1>
 
 <p align="center">
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
@@ -11,7 +11,7 @@
 
 ---
 
-Safe nested data access with dot notation for PHP. Navigate deeply nested arrays, objects, JSON, YAML, XML, INI, ENV, and NDJSON structures — with built-in security validation, immutable writes, and a fluent builder API.
+Safe nested data access with dot notation for PHP. Navigate deeply nested arrays, objects, JSON, YAML, XML, INI, ENV, and NDJSON structures - with built-in security validation, immutable writes, and a fluent builder API.
 
 ## Installation
 
@@ -35,7 +35,7 @@ $accessor->get('user.email', 'N/A');   // 'N/A' (default when missing)
 $accessor->has('user.age');            // true
 $accessor->getOrFail('user.name');     // 'Alice' (throws if missing)
 
-// Immutable writes — original is never modified
+// Immutable writes - original is never modified
 $updated = $accessor->set('user.email', 'alice@example.com');
 $updated->get('user.email');           // 'alice@example.com'
 $accessor->has('user.email');          // false (original unchanged)
@@ -57,16 +57,16 @@ $accessor->has('user.email');          // false (original unchanged)
 | Syntax          | Example             | Description                               |
 | --------------- | ------------------- | ----------------------------------------- |
 | `[0]`           | `users[0]`          | Bracket index access                      |
-| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
-| `..key`         | `..name`            | Recursive descent — find key at any depth |
+| `*` or `[*]`    | `users.*`           | Wildcard - expand all children            |
+| `..key`         | `..name`            | Recursive descent - find key at any depth |
 | `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
 | `[0,1,2]`       | `users[0,1,2]`      | Multi-index selection                     |
 | `['a','b']`     | `['name','age']`    | Multi-key selection                       |
-| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
+| `[0:5]`         | `items[0:5]`        | Slice - indices 0 through 4               |
 | `[::2]`         | `items[::2]`        | Slice with step                           |
 | `[::-1]`        | `items[::-1]`       | Reverse slice                             |
 | `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
-| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
+| `.{fields}`     | `.{name, age}`      | Projection - select fields                |
 | `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
 ### Filter Expressions
@@ -211,13 +211,13 @@ $accessor->getMany([
 ]);                                     // ['a.b' => 1, 'a.x' => 'fallback']
 $accessor->getRaw();                    // original JSON string
 
-// Write (immutable — every write returns a new instance)
+// Write (immutable - every write returns a new instance)
 $updated = $accessor->set('a.d', 3);
 $updated = $updated->remove('a.c');
 $updated = $updated->merge('a', ['e' => 4]);
 $updated = $updated->mergeAll(['f' => 5]);
 
-// Readonly mode — block all writes
+// Readonly mode - block all writes
 $readonly = $accessor->readonly();
 $readonly->get('a.b');                  // 1 (reads work)
 $readonly->set('a.b', 99);             // throws ReadonlyViolationException
@@ -282,7 +282,7 @@ $accessor = Inline::withSecurityGuard($guard)->fromJson($data);
 
 | Format | Protection                                       |
 | ------ | ------------------------------------------------ |
-| XML    | Rejects `<!DOCTYPE` — prevents XXE attacks       |
+| XML    | Rejects `<!DOCTYPE` - prevents XXE attacks       |
 | YAML   | Blocks unsafe tags, anchors, aliases, merge keys |
 | All    | Forbidden key validation on every parsed key     |
 
@@ -321,7 +321,7 @@ try {
 
 | Exception                    | Extends                  | When                                      |
 | ---------------------------- | ------------------------ | ----------------------------------------- |
-| `AccessorException`          | `RuntimeException`       | Root — catch-all                          |
+| `AccessorException`          | `RuntimeException`       | Root - catch-all                          |
 | `SecurityException`          | `AccessorException`      | Forbidden key, payload, structural limits |
 | `InvalidFormatException`     | `AccessorException`      | Malformed JSON, XML, INI, NDJSON          |
 | `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |

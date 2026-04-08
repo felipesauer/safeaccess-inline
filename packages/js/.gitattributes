@@ -1,4 +1,4 @@
-# Distribution archive ignore — files excluded from npm/archive downloads
+# Distribution archive ignore - files excluded from npm/archive downloads
 # Note: npm uses the `files` field in package.json for publish filtering.
 # These export-ignore rules apply to git archive and the split repo.
 
