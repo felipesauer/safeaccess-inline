@@ -6,6 +6,10 @@ import { InvalidFormatException } from './invalid-format-exception.js';
  * Unsafe constructs include: tags (!! and !), anchors (&), aliases (*),
  * and merge keys (<<).
  *
+ * @api
+ *
+ * @see InvalidFormatException  Parent exception class.
+ *
  * @example
  * throw new YamlParseException('YAML anchors are not supported (line 3).');
  */

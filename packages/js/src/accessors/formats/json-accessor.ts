@@ -6,6 +6,8 @@ import { InvalidFormatException } from '../../exceptions/invalid-format-exceptio
  *
  * Decodes JSON via `JSON.parse()`. Validates payload size before parsing.
  *
+ * @api
+ *
  * @example
  * const accessor = new JsonAccessor(parser).from('{"key":"value"}');
  * accessor.get('key'); // 'value'

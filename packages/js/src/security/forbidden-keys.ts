@@ -5,7 +5,7 @@
  * the same word prefix (e.g. `node_modules`) are not blocked.
  *
  * PHP-specific wrappers (`phar://`, `php://`, `expect://`, `glob://`, `zlib://`,
- * `ogg://`, `rar://`, `zip://`, `ssh2.tunnel://`) are intentionally absent — they
+ * `ogg://`, `rar://`, `zip://`, `ssh2.tunnel://`) are intentionally absent - they
  * have no meaning in a JavaScript/Node.js runtime.
  *
  * `data:` uses a single-colon delimiter (matching the browser RFC 2397 format
@@ -38,7 +38,7 @@ export const STREAM_WRAPPER_PREFIXES: readonly string[] = [
  * – `hasOwnProperty` shadow (overriding it can bypass guard checks)
  * – JS-relevant stream wrapper / protocol scheme strings as exact-match defence-in-depth
  *
- * PHP magic methods and PHP superglobals are deliberately absent — they are not
+ * PHP magic methods and PHP superglobals are deliberately absent - they are not
  * meaningful in a JavaScript runtime and belong in the PHP package's SecurityGuard only.
  *
  * @internal
@@ -53,13 +53,13 @@ export const DEFAULT_FORBIDDEN_KEYS: ReadonlySet<string> = new Set([
     '__definesetter__',
     '__lookupgetter__',
     '__lookupsetter__',
-    // Object.prototype shadow key — overriding it can break hasOwnProperty-based guards
+    // Object.prototype shadow key - overriding it can break hasOwnProperty-based guards
     'hasOwnProperty',
-    // Node.js module-scope path globals — should never appear as data keys to
+    // Node.js module-scope path globals - should never appear as data keys to
     // prevent path-injection risks in code that reads them via dynamic property access
     '__dirname',
     '__filename',
-    // Stream wrapper and protocol exact entries — also caught by STREAM_WRAPPER_PREFIXES prefix matching.
+    // Stream wrapper and protocol exact entries - also caught by STREAM_WRAPPER_PREFIXES prefix matching.
     // The Set entries below are intentional defence-in-depth: they allow O(1) exact-key
     // lookup before the O(n) prefix loop runs.
     'file://',

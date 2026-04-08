@@ -1,7 +1,15 @@
 import type { AccessorsInterface } from '../contracts/accessors-interface.js';
-import { DotNotationParser } from '../core/dot-notation-parser.js';
+import type { ValidatableParserInterface } from '../contracts/validatable-parser-interface.js';
 import { PathNotFoundException } from '../exceptions/path-not-found-exception.js';
 import { ReadonlyViolationException } from '../exceptions/readonly-violation-exception.js';
+
+/** @internal Mutable state grouped to allow O(1) shallow clone in mutations. */
+interface AccessorState {
+    data: Record<string, unknown>;
+    isReadonly: boolean;
+    isStrict: boolean;
+    rawInput: unknown;
+}
 
 /**
  * Base accessor providing read, write, and lifecycle operations.
@@ -12,14 +20,9 @@ import { ReadonlyViolationException } from '../exceptions/readonly-violation-exc
  *
  * Subclasses must implement `parse()` to convert raw input into
  * a normalized plain object.
+ *
+ * @api
  */
-interface AccessorState {
-    data: Record<string, unknown>;
-    isReadonly: boolean;
-    isStrict: boolean;
-    rawInput: unknown;
-}
-
 export abstract class AbstractAccessor implements AccessorsInterface {
     /** @internal Mutable state grouped to allow O(1) shallow clone in mutations. */
     private _state: AccessorState = {
@@ -32,7 +35,7 @@ export abstract class AbstractAccessor implements AccessorsInterface {
     /**
      * @param parser - Dot-notation parser for path operations.
      */
-    constructor(protected readonly parser: DotNotationParser) {}
+    constructor(protected readonly parser: ValidatableParserInterface) {}
 
     /**
      * Convert raw input data into a normalized plain object.
@@ -107,7 +110,7 @@ export abstract class AbstractAccessor implements AccessorsInterface {
      * Only use with fully trusted, application-controlled input.
      *
      * @example
-     * // Trust the input — skip all security checks
+     * // Trust the input - skip all security checks
      * const accessor = new JsonAccessor(parser).strict(false).from(trustedPayload);
      */
     strict(strict: boolean = true): this {
@@ -179,7 +182,8 @@ export abstract class AbstractAccessor implements AccessorsInterface {
      * @returns True if the path resolves to a value.
      */
     hasAt(segments: Array<string | number>): boolean {
-        return this.parser.hasAt(this._state.data, segments);
+        const sentinel = Object.create(null) as Record<string, never>;
+        return this.parser.getAt(this._state.data, segments, sentinel) !== sentinel;
     }
 
     /**
@@ -260,13 +264,13 @@ export abstract class AbstractAccessor implements AccessorsInterface {
     }
 
     /**
-     * Count elements at a path, or the root if undefined.
+     * Count elements at a path, or the root if null/undefined.
      *
-     * @param path - Dot-notation path, or undefined for root.
+     * @param path - Dot-notation path, or null/undefined for root.
      * @returns Number of elements.
      */
-    count(path?: string): number {
-        const target = path !== undefined ? this.get(path, {}) : this._state.data;
+    count(path?: string | null): number {
+        const target = path != null ? this.get(path, {}) : this._state.data;
         if (typeof target === 'object' && target !== null) {
             return Object.keys(target).length;
         }
@@ -274,13 +278,13 @@ export abstract class AbstractAccessor implements AccessorsInterface {
     }
 
     /**
-     * Retrieve array keys at a path, or root keys if undefined.
+     * Retrieve array keys at a path, or root keys if null/undefined.
      *
-     * @param path - Dot-notation path, or undefined for root.
+     * @param path - Dot-notation path, or null/undefined for root.
      * @returns List of keys.
      */
-    keys(path?: string): string[] {
-        const target = path !== undefined ? this.get(path, {}) : this._state.data;
+    keys(path?: string | null): string[] {
+        const target = path != null ? this.get(path, {}) : this._state.data;
         /* Stryker disable next-line ConditionalExpression -- equivalent: get() always returns an object-type value here; typeof check is a type guard only */
         if (typeof target === 'object' && target !== null) {
             return Object.keys(target);

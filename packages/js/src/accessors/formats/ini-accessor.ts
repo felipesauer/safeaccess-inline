@@ -7,6 +7,8 @@ import { InvalidFormatException } from '../../exceptions/invalid-format-exceptio
  * Parses sections (e.g. `[section]`) as nested keys.
  * Type inference: numeric strings become numbers, `true`/`false` become booleans.
  *
+ * @api
+ *
  * @example
  * const accessor = new IniAccessor(parser).from('[db]\nhost=localhost\nport=5432');
  * accessor.get('db.host'); // 'localhost'

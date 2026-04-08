@@ -3,6 +3,8 @@
  *
  * Note: this `from(data)` is the per-accessor hydrator, not
  * {@link Inline.from} which selects an accessor by TypeFormat.
+ *
+ * @api
  */
 export interface FactoryAccessorsInterface {
     /**

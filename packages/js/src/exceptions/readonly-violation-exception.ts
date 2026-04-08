@@ -3,6 +3,10 @@ import { AccessorException } from './accessor-exception.js';
 /**
  * Thrown when a write operation is attempted on a readonly accessor.
  *
+ * @api
+ *
+ * @see AccessorException  Parent exception class.
+ *
  * @example
  * const accessor = Inline.fromJson('{}').readonly(true);
  * accessor.set('key', 'value'); // throws ReadonlyViolationException

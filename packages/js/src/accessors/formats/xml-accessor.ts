@@ -9,6 +9,8 @@ import { XmlParser } from '../../parser/xml-parser.js';
  * Parses XML using the DOM parser available in the current environment.
  * Blocks DOCTYPE declarations to prevent XXE attacks.
  *
+ * @api
+ *
  * @example
  * const accessor = new XmlAccessor(parser).from('<root><key>value</key></root>');
  * accessor.get('key'); // 'value'

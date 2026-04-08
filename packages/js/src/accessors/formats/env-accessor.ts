@@ -7,6 +7,8 @@ import { InvalidFormatException } from '../../exceptions/invalid-format-exceptio
  * Parses KEY=VALUE lines, skipping comments (#) and blank lines.
  * Strips surrounding single and double quotes from values.
  *
+ * @api
+ *
  * @example
  * const accessor = new EnvAccessor(parser).from('DB_HOST=localhost\nDEBUG=true');
  * accessor.get('DB_HOST'); // 'localhost'

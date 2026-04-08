@@ -4,6 +4,8 @@
  * Prevents injection attacks by rejecting prototype pollution vectors,
  * legacy prototype manipulation methods, stream wrapper / protocol URI schemes,
  * and Node.js globals during data access and mutation operations.
+ *
+ * @api
  */
 export interface SecurityGuardInterface {
     /**

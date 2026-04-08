@@ -3,6 +3,10 @@ import { AccessorException } from './accessor-exception.js';
 /**
  * Thrown when the requested format or TypeFormat value is not supported.
  *
+ * @api
+ *
+ * @see AccessorException  Parent exception class.
+ *
  * @example
  * throw new UnsupportedTypeException('TypeFormat.Csv is not supported.');
  */

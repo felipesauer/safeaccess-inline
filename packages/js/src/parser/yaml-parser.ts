@@ -7,14 +7,26 @@ import { YamlParseException } from '../exceptions/yaml-parse-exception.js';
  * tags (!! and !), anchors (&), aliases (*), and merge keys (<<).
  *
  * Does not depend on external YAML libraries, making the package portable.
+ *
+ * @internal
  */
 export class YamlParser {
+    private readonly maxDepth: number;
+
+    /**
+     * @param maxDepth - Maximum allowed nesting depth during parsing.
+     *   Defaults to 512 to match SecurityParser.maxDepth.
+     */
+    constructor(maxDepth: number = 512) {
+        this.maxDepth = maxDepth;
+    }
+
     /**
      * Parse a YAML string into a plain object.
      *
      * @param yaml - Raw YAML content.
      * @returns Parsed data structure.
-     * @throws {YamlParseException} When unsafe constructs or syntax errors are found.
+     * @throws {YamlParseException} When unsafe constructs, syntax errors, or nesting depth exceeded.
      *
      * @example
      * new YamlParser().parse('key: value'); // { key: 'value' }
@@ -22,7 +34,7 @@ export class YamlParser {
     parse(yaml: string): Record<string, unknown> {
         const lines = yaml.replace(/\r\n/g, '\n').split('\n');
         this.assertNoUnsafeConstructs(lines);
-        const result = this.parseLines(lines, 0, 0, lines.length);
+        const result = this.parseLines(lines, 0, 0, lines.length, 0);
         if (Array.isArray(result)) {
             return {};
         }
@@ -73,9 +85,23 @@ export class YamlParser {
      * @param baseIndent - Indentation level for this block.
      * @param start - First line index (inclusive).
      * @param end - Last line index (exclusive).
+     * @param depth - Current nesting depth.
      * @returns Parsed value.
+     *
+     * @throws {YamlParseException} When nesting depth exceeds the configured maximum.
      */
-    private parseLines(lines: string[], baseIndent: number, start: number, end: number): unknown {
+    private parseLines(
+        lines: string[],
+        baseIndent: number,
+        start: number,
+        end: number,
+        depth: number = 0,
+    ): unknown {
+        if (depth > this.maxDepth) {
+            throw new YamlParseException(
+                `YAML nesting depth ${depth} exceeds maximum of ${this.maxDepth}.`,
+            );
+        }
         const mapResult: Record<string, unknown> = {};
         const arrResult: unknown[] = [];
         let isSequence = false;
@@ -120,15 +146,18 @@ export class YamlParser {
                         i,
                         childIndent,
                         childEnd,
+                        depth,
                     );
-                    this.mergeChildLines(lines, i + 1, childEnd, childIndent, subMap);
+                    this.mergeChildLines(lines, i + 1, childEnd, childIndent, subMap, depth);
                     arrResult.push(subMap);
                     i = childEnd;
                 } else if (itemContent === '') {
                     const childIndent = currentIndent + 2;
                     const childEnd = this.findBlockEnd(lines, childIndent, i + 1, end);
                     if (childEnd > i + 1) {
-                        arrResult.push(this.parseLines(lines, childIndent, i + 1, childEnd));
+                        arrResult.push(
+                            this.parseLines(lines, childIndent, i + 1, childEnd, depth + 1),
+                        );
                         i = childEnd;
                     } else {
                         arrResult.push(null);
@@ -148,7 +177,14 @@ export class YamlParser {
                 const rawValue = mapMatch[2] as string;
                 const childIndent = currentIndent + 2;
                 const childEnd = this.findBlockEnd(lines, childIndent, i + 1, end);
-                mapResult[key] = this.resolveValue(rawValue, lines, i, childIndent, childEnd);
+                mapResult[key] = this.resolveValue(
+                    rawValue,
+                    lines,
+                    i,
+                    childIndent,
+                    childEnd,
+                    depth,
+                );
                 i = childEnd;
                 continue;
             }
@@ -171,6 +207,8 @@ export class YamlParser {
      * @param end - Last child line index (exclusive).
      * @param childIndent - Expected indentation for child lines.
      * @param map - Map to merge values into.
+     * @param depth - Current nesting depth.
+     * @throws {YamlParseException} When resolved values exceed the configured nesting depth.
      */
     private mergeChildLines(
         lines: string[],
@@ -178,6 +216,7 @@ export class YamlParser {
         end: number,
         childIndent: number,
         map: Record<string, unknown>,
+        depth: number,
     ): void {
         let ci = start;
         while (ci < end) {
@@ -206,6 +245,7 @@ export class YamlParser {
                         ci,
                         childCurrentIndent + 2,
                         nextChildEnd,
+                        depth,
                     );
                     ci = nextChildEnd;
                     continue;
@@ -224,7 +264,9 @@ export class YamlParser {
      * @param lineIndex - Line where the value was found.
      * @param childIndent - Expected indentation for child block.
      * @param childEnd - End index of the child block.
+     * @param depth - Current nesting depth.
      * @returns Resolved typed value.
+     * @throws {YamlParseException} When child block nesting exceeds the configured maximum.
      */
     private resolveValue(
         rawValue: string,
@@ -232,41 +274,49 @@ export class YamlParser {
         lineIndex: number,
         childIndent: number,
         childEnd: number,
+        depth: number = 0,
     ): unknown {
-        const trimmed = rawValue.trim();
+        const trimmed = this.stripInlineComment(rawValue.trim());
 
-        // Block scalar literal (|) or folded (>)
-        if (trimmed === '|' || trimmed === '>') {
+        // Block scalar literal (|, |-,  |+) or folded (>, >-, >+)
+        if (/^\|[+-]?$/.test(trimmed) || /^>[+-]?$/.test(trimmed)) {
             return this.parseBlockScalar(
                 lines,
                 lineIndex + 1,
                 childEnd,
                 childIndent,
-                trimmed === '>',
+                trimmed.startsWith('>'),
+                trimmed,
             );
         }
 
-        // Inline flow (array or map) starting with [ or {
-        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
-            return this.parseInlineFlow(trimmed);
+        // Inline flow sequence [a, b, c]
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            return this.parseFlowSequence(trimmed);
+        }
+
+        // Inline flow map {a: b, c: d}
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            return this.parseFlowMap(trimmed);
         }
 
         // Nested block
         if (trimmed === '' && childEnd > lineIndex + 1) {
-            return this.parseLines(lines, childIndent, lineIndex + 1, childEnd);
+            return this.parseLines(lines, childIndent, lineIndex + 1, childEnd, depth + 1);
         }
 
         return this.castScalar(trimmed);
     }
 
     /**
-     * Parse a YAML block scalar (literal | or folded >).
+     * Parse a YAML block scalar (literal | or folded >) with chomping modifiers.
      *
      * @param lines - All lines of the YAML document.
      * @param start - First line of the scalar block (inclusive).
      * @param end - Last line of the scalar block (exclusive).
-     * @param indent - Minimum indentation for scalar lines.
+     * @param indent - Expected minimum indentation for scalar lines.
      * @param folded - Whether to fold lines (> style) or keep literal (| style).
+     * @param chomping - Chomping indicator (|, |-, |+, >, >-, >+).
      * @returns The assembled string.
      */
     private parseBlockScalar(
@@ -275,65 +325,280 @@ export class YamlParser {
         end: number,
         indent: number,
         folded: boolean,
+        chomping: string = '|',
     ): string {
-        const parts: string[] = [];
+        const blockLines: string[] = [];
+        let actualIndent: number | null = null;
+
         for (let i = start; i < end; i++) {
             const line = lines[i] as string;
-            const trimmed = line.trimStart();
-            const lineIndent = line.length - trimmed.length;
-            if (lineIndent >= indent || trimmed === '') {
-                parts.push(trimmed);
+
+            if (line.trim() === '') {
+                blockLines.push('');
+                continue;
+            }
+
+            const lineIndent = line.length - line.trimStart().length;
+            if (actualIndent === null) {
+                actualIndent = lineIndent;
+            }
+
+            if (lineIndent < actualIndent) {
+                break;
+            }
+
+            blockLines.push(line.substring(actualIndent));
+        }
+
+        // Remove trailing empty lines for clip (default) and strip (-) modes.
+        // Keep (+) mode preserves all trailing blank lines.
+        if (!chomping.endsWith('+')) {
+            while (blockLines.length > 0 && blockLines[blockLines.length - 1] === '') {
+                blockLines.pop();
             }
         }
 
+        let result: string;
         if (folded) {
-            return parts.join(' ').trim();
+            result = '';
+            let prevEmpty = false;
+            for (const bl of blockLines) {
+                if (bl === '') {
+                    result += '\n';
+                    prevEmpty = true;
+                } else {
+                    if (result !== '' && !prevEmpty && !result.endsWith('\n')) {
+                        result += ' ';
+                    }
+                    result += bl;
+                    prevEmpty = false;
+                }
+            }
+        } else {
+            result = blockLines.join('\n');
         }
 
-        return parts.join('\n').trimEnd();
+        // Default YAML chomping: add trailing newline unless strip (-)
+        if (!chomping.endsWith('-') && !result.endsWith('\n')) {
+            result += '\n';
+        }
+
+        return result;
     }
 
     /**
-     * Parse an inline flow collection (JSON-like array or object).
+     * Parse a YAML flow sequence ([a, b, c]) into an array.
      *
-     * @param raw - Raw inline flow string.
-     * @returns Parsed value or the raw string if parsing fails.
+     * @param value - Raw flow sequence string including brackets.
+     * @returns Parsed sequence values.
      */
-    private parseInlineFlow(raw: string): unknown {
-        try {
-            // Convert YAML flow to JSON by single-quoting to double-quoting
-            const jsonLike = raw.replace(/'/g, '"').replace(/(\w+)\s*:/g, '"$1":');
-            return JSON.parse(jsonLike);
-        } catch {
-            // Fallback: return raw string
-            return raw;
+    private parseFlowSequence(value: string): unknown[] {
+        const inner = value.slice(1, -1).trim();
+        if (inner === '') {
+            return [];
         }
+
+        const items = this.splitFlowItems(inner);
+        return items.map((item) => this.castScalar(item.trim()));
+    }
+
+    /**
+     * Parse a YAML flow map ({a: b, c: d}) into a record.
+     *
+     * @param value - Raw flow map string including braces.
+     * @returns Parsed key-value pairs.
+     */
+    private parseFlowMap(value: string): Record<string, unknown> {
+        const inner = value.slice(1, -1).trim();
+        if (inner === '') {
+            return {};
+        }
+
+        const result: Record<string, unknown> = {};
+        const items = this.splitFlowItems(inner);
+        for (const item of items) {
+            const trimmedItem = item.trim();
+            const colonPos = trimmedItem.indexOf(':');
+            if (colonPos === -1) {
+                continue;
+            }
+            const key = trimmedItem.substring(0, colonPos).trim();
+            const val = trimmedItem.substring(colonPos + 1).trim();
+            result[key] = this.castScalar(val);
+        }
+
+        return result;
+    }
+
+    /**
+     * Split flow-syntax items by comma, respecting nested brackets and quotes.
+     *
+     * @param inner - Content between outer brackets/braces.
+     * @returns Individual item strings.
+     */
+    private splitFlowItems(inner: string): string[] {
+        const items: string[] = [];
+        let depth = 0;
+        let current = '';
+        let inQuote = false;
+        let quoteChar = '';
+
+        for (let i = 0; i < inner.length; i++) {
+            const ch = inner[i] as string;
+
+            if (inQuote) {
+                current += ch;
+                if (ch === quoteChar) {
+                    inQuote = false;
+                }
+                continue;
+            }
+
+            if (ch === '"' || ch === "'") {
+                inQuote = true;
+                quoteChar = ch;
+                current += ch;
+                continue;
+            }
+
+            if (ch === '[' || ch === '{') {
+                depth++;
+                current += ch;
+                continue;
+            }
+
+            if (ch === ']' || ch === '}') {
+                depth--;
+                current += ch;
+                continue;
+            }
+
+            if (ch === ',' && depth === 0) {
+                items.push(current);
+                current = '';
+                continue;
+            }
+
+            current += ch;
+        }
+
+        if (current.trim() !== '') {
+            items.push(current);
+        }
+
+        return items;
     }
 
     /**
      * Cast a scalar string to its native type.
      *
+     * Handles quoted strings, null, boolean, integer (decimal/octal/hex),
+     * float, infinity, and NaN values.
+     *
      * @param value - Raw scalar string.
      * @returns Typed value (null, boolean, number, or string).
      */
     private castScalar(value: string): unknown {
-        if (value === '' || value === 'null' || value === '~') return null;
-        if (value === 'true') return true;
-        if (value === 'false') return false;
+        value = value.trim();
 
-        // Quoted string
-        if (
-            (value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'"))
-        ) {
-            return value.slice(1, -1);
+        // Quoted strings
+        if (value.length >= 2) {
+            if (value.startsWith('"') && value.endsWith('"')) {
+                return this.unescapeDoubleQuoted(value.slice(1, -1));
+            }
+            if (value.startsWith("'") && value.endsWith("'")) {
+                return value.slice(1, -1).replace(/''/g, "'");
+            }
         }
 
-        // Integer
-        if (/^-?\d+$/.test(value)) return parseInt(value, 10);
+        // Null
+        if (
+            value === '' ||
+            value === '~' ||
+            value === 'null' ||
+            value === 'Null' ||
+            value === 'NULL'
+        ) {
+            return null;
+        }
 
-        // Float
-        if (/^-?\d+\.\d+$/.test(value)) return parseFloat(value);
+        // Boolean
+        const lower = value.toLowerCase();
+        if (lower === 'true' || lower === 'yes' || lower === 'on') return true;
+        if (lower === 'false' || lower === 'no' || lower === 'off') return false;
+
+        // Integer patterns
+        if (/^-?(?:0|[1-9]\d*)$/.test(value)) return parseInt(value, 10);
+        if (/^0o[0-7]+$/i.test(value)) return parseInt(value.slice(2), 8);
+        if (/^0x[0-9a-fA-F]+$/.test(value)) return parseInt(value, 16);
+
+        // Float patterns
+        if (/^-?(?:0|[1-9]\d*)?(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) && value.includes('.')) {
+            return parseFloat(value);
+        }
+        if (lower === '.inf' || lower === '+.inf') return Infinity;
+        if (lower === '-.inf') return -Infinity;
+        if (lower === '.nan') return NaN;
+
+        return value;
+    }
+
+    /**
+     * Unescape YAML double-quoted string escape sequences.
+     *
+     * @param value - String content between double quotes.
+     * @returns Unescaped string.
+     */
+    private unescapeDoubleQuoted(value: string): string {
+        return value
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\r/g, '\r')
+            .replace(/\\\\/g, '\\')
+            .replace(/\\"/g, '"')
+            .replace(/\\0/g, '\0')
+            .replace(/\\a/g, '\x07')
+            .replace(/\\b/g, '\x08')
+            .replace(/\\f/g, '\x0C')
+            .replace(/\\v/g, '\x0B');
+    }
+
+    /**
+     * Strip inline comments from a value string, respecting quoted regions.
+     *
+     * @param value - Raw value potentially containing inline comments.
+     * @returns Value with inline comments removed.
+     */
+    private stripInlineComment(value: string): string {
+        value = value.trim();
+        if (value === '') {
+            return '';
+        }
+
+        // Don't strip from quoted strings
+        if (value[0] === '"' || value[0] === "'") {
+            const closePos = value.indexOf(value[0], 1);
+            if (closePos !== -1) {
+                const afterQuote = value.substring(closePos + 1).trim();
+                if (afterQuote === '' || afterQuote[0] === '#') {
+                    return value.substring(0, closePos + 1);
+                }
+            }
+        }
+
+        // Strip # comments (but not inside strings)
+        let inSingle = false;
+        let inDouble = false;
+        for (let i = 0; i < value.length; i++) {
+            const ch = value[i];
+            if (ch === "'" && !inDouble) {
+                inSingle = !inSingle;
+            } else if (ch === '"' && !inSingle) {
+                inDouble = !inDouble;
+            } else if (ch === '#' && !inSingle && !inDouble && i > 0 && value[i - 1] === ' ') {
+                return value.substring(0, i).trim();
+            }
+        }
 
         return value;
     }

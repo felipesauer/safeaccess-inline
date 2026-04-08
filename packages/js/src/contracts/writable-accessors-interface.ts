@@ -3,6 +3,11 @@
  *
  * All mutations return a new instance with the modification applied,
  * preserving the original accessor instance.
+ *
+ * @api
+ *
+ * @see AccessorsInterface  Composite interface extending this contract.
+ * @see AbstractAccessor    Base implementation enforcing readonly guards.
  */
 export interface WritableAccessorsInterface {
     /**
