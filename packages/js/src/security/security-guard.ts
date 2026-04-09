@@ -28,6 +28,8 @@ import { DEFAULT_FORBIDDEN_KEYS, STREAM_WRAPPER_PREFIXES } from './forbidden-key
 export class SecurityGuard implements SecurityGuardInterface {
     readonly maxDepth: number;
 
+    readonly extraForbiddenKeys: ReadonlyArray<string>;
+
     private readonly forbiddenKeysMap: ReadonlySet<string>;
 
     /**
@@ -41,6 +43,7 @@ export class SecurityGuard implements SecurityGuardInterface {
         /* Stryker disable next-line ArrayDeclaration -- equivalent: default [] produces identical behavior; no extra keys added to Set */ extraForbiddenKeys: string[] = [],
     ) {
         this.maxDepth = Number.isFinite(maxDepth) ? maxDepth : 512;
+        this.extraForbiddenKeys = [...extraForbiddenKeys];
 
         /* Stryker disable next-line ConditionalExpression -- equivalent: if (false) still produces the same forbiddenKeysMap for empty arrays since Set(DEFAULT)=DEFAULT */
         if (extraForbiddenKeys.length === 0) {

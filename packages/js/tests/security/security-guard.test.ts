@@ -162,4 +162,14 @@ describe(`${SecurityGuard.name} > extraForbiddenKeys`, () => {
         expect(guard.isForbiddenKey('__proto__')).toBe(true);
         expect(guard.isForbiddenKey('constructor')).toBe(true);
     });
+
+    it('exposes the extra forbidden keys as a readonly array', () => {
+        const guard = new SecurityGuard(512, ['custom_a', 'custom_b']);
+        expect(guard.extraForbiddenKeys).toEqual(['custom_a', 'custom_b']);
+    });
+
+    it('exposes an empty readonly array when no extra keys are provided', () => {
+        const guard = new SecurityGuard();
+        expect(guard.extraForbiddenKeys).toEqual([]);
+    });
 });
