@@ -7,11 +7,15 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@safeaccess/inline"><img src="https://img.shields.io/npm/v/@safeaccess/inline?label=npm" alt="npm"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/Node.js-22%2B-339933?logo=nodedotjs&logoColor=white" alt="Node.js 22+">
+  <img src="https://img.shields.io/badge/ESM-native-F7DF1E?logo=javascript&logoColor=black" alt="ESM native">
+  <img src="https://img.shields.io/badge/Tested%20with-Vitest-6E9F18" alt="Tested with Vitest">
+  <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ffelipesauer%2Fsafeaccess-inline%2Fmain" alt="Stryker MSI">
 </p>
 
 ---
 
-Safe nested data access with dot notation for JavaScript and TypeScript. Navigate deeply nested arrays, objects, JSON, YAML, XML, INI, ENV, and NDJSON structures - with built-in security validation, immutable writes, and a fluent builder API.
+TypeScript/JavaScript library for safe nested data access with dot notation — JSON, YAML, XML, INI, ENV, NDJSON with built-in security validation, immutable writes, and a fluent builder API (ESM).
 
 ## Installation
 

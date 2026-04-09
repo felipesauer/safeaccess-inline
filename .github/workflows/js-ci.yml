@@ -76,4 +76,6 @@ jobs:
 
             - name: Mutation tests (MSI = 85%)
               if: matrix.node == '24'
+              env:
+                  STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
               run: npm run test:mutation

@@ -5,7 +5,7 @@
 <h1 align="center">Safe Access Inline</h1>
 
 <p align="center">
-  A dual-language library for <strong>safe nested data access</strong> using dot notation.
+  Dual-language library for <strong>safe nested data access</strong> with dot notation in PHP &amp; TypeScript.
 </p>
 
 <p align="center">
@@ -13,6 +13,10 @@
   <a href="https://www.npmjs.com/package/@safeaccess/inline"><img src="https://img.shields.io/npm/v/@safeaccess/inline?label=npm" alt="npm"></a>
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
+  <img src="https://img.shields.io/badge/Node.js-22%2B-339933?logo=nodedotjs&logoColor=white" alt="Node.js 22+">
+  <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/felipesauer/80c602b17107f88fb17794d4d44c94fa/raw/infection-msi.json" alt="PHP Infection MSI">
+  <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ffelipesauer%2Fsafeaccess-inline%2Fmain" alt="JS Stryker MSI">
 </p>
 
 ---

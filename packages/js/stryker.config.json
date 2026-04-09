@@ -15,7 +15,11 @@
     },
     "timeoutMS": 30000,
     "coverageAnalysis": "perTest",
-    "reporters": ["json", "clear-text", "progress"],
+    "reporters": ["json", "clear-text", "progress", "dashboard"],
+    "dashboard": {
+        "project": "github.com/felipesauer/safeaccess-inline",
+        "version": "main"
+    },
     "jsonReporter": {
         "fileName": "reports/mutation/mutation.json"
     }

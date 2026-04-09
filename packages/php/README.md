@@ -7,11 +7,15 @@
 <p align="center">
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
+  <img src="https://img.shields.io/badge/PHPStan-max-0A6DAD" alt="PHPStan max">
+  <img src="https://img.shields.io/badge/Tested%20with-Pest-FF5733" alt="Tested with Pest">
+  <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/felipesauer/80c602b17107f88fb17794d4d44c94fa/raw/infection-msi.json" alt="Infection MSI">
 </p>
 
 ---
 
-Safe nested data access with dot notation for PHP. Navigate deeply nested arrays, objects, JSON, YAML, XML, INI, ENV, and NDJSON structures - with built-in security validation, immutable writes, and a fluent builder API.
+PHP library for safe nested data access with dot notation — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects with built-in security validation, immutable writes, and a fluent builder API.
 
 ## Installation
 
