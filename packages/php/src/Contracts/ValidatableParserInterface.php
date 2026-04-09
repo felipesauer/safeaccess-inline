@@ -17,8 +17,8 @@ interface ValidatableParserInterface extends ParserInterface
     /**
      * Retrieve a value at the given path, throwing when not found.
      *
-     * @param array<mixed> $data Source data array.
-     * @param string       $path Dot-notation path.
+     * @param array<string, mixed> $data Source data array.
+     * @param string               $path Dot-notation path.
      *
      * @return mixed Resolved value.
      *
@@ -32,7 +32,7 @@ interface ValidatableParserInterface extends ParserInterface
      * Assert key safety, maximum keys, and structural depth
      * using configured {@see \SafeAccess\Inline\Contracts\SecurityGuardInterface} and {@see \SafeAccess\Inline\Contracts\SecurityParserInterface}.
      *
-     * @param array<mixed> $data Data to validate.
+     * @param array<string, mixed> $data Data to validate.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When any constraint is violated.
      */

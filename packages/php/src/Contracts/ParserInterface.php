@@ -18,9 +18,9 @@ interface ParserInterface
     /**
      * Retrieve a value at the given dot-notation path.
      *
-     * @param array<mixed> $data    Source data array.
-     * @param string       $path    Dot-notation path (e.g. "user.address.city").
-     * @param mixed        $default Fallback value when the path does not exist.
+     * @param array<string, mixed> $data    Source data array.
+     * @param string               $path    Dot-notation path (e.g. "user.address.city").
+     * @param mixed                $default Fallback value when the path does not exist.
      *
      * @return mixed Resolved value or the default.
      */
@@ -29,8 +29,8 @@ interface ParserInterface
     /**
      * Check whether a dot-notation path exists in the data.
      *
-     * @param array<mixed> $data Source data array.
-     * @param string       $path Dot-notation path to check.
+     * @param array<string, mixed> $data Source data array.
+     * @param string               $path Dot-notation path to check.
      *
      * @return bool True if the path resolves to an existing value.
      */
@@ -39,11 +39,11 @@ interface ParserInterface
     /**
      * Set a value at the given dot-notation path.
      *
-     * @param array<mixed> $data  Source data array.
-     * @param string       $path  Dot-notation path for the target key.
-     * @param mixed        $value Value to assign.
+     * @param array<string, mixed> $data  Source data array.
+     * @param string               $path  Dot-notation path for the target key.
+     * @param mixed                $value Value to assign.
      *
-     * @return array<mixed> New array with the value set.
+     * @return array<string, mixed> New array with the value set.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When the path contains forbidden keys.
      */
@@ -52,10 +52,10 @@ interface ParserInterface
     /**
      * Remove a value at the given dot-notation path.
      *
-     * @param array<mixed> $data Source data array.
-     * @param string       $path Dot-notation path to remove.
+     * @param array<string, mixed> $data Source data array.
+     * @param string               $path Dot-notation path to remove.
      *
-     * @return array<mixed> New array with the key removed.
+     * @return array<string, mixed> New array with the key removed.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When the path contains forbidden keys.
      */
@@ -64,11 +64,11 @@ interface ParserInterface
     /**
      * Deep-merge an array into the value at the given path.
      *
-     * @param array<mixed> $data  Source data array.
-     * @param string       $path  Dot-notation path to the merge target.
-     * @param array<mixed> $value Array to merge into the existing value.
+     * @param array<string, mixed> $data  Source data array.
+     * @param string               $path  Dot-notation path to the merge target.
+     * @param array<string, mixed> $value Array to merge into the existing value.
      *
-     * @return array<mixed> New array with merged data.
+     * @return array<string, mixed> New array with merged data.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When merge depth exceeds the configured maximum.
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When keys contain forbidden values.
@@ -78,9 +78,9 @@ interface ParserInterface
     /**
      * Retrieve a value using pre-parsed key segments.
      *
-     * @param array<mixed>      $data     Source data array.
-     * @param array<int|string> $segments Ordered list of keys to traverse.
-     * @param mixed             $default  Fallback value when the path does not exist.
+     * @param array<string, mixed> $data     Source data array.
+     * @param array<int|string>    $segments Ordered list of keys to traverse.
+     * @param mixed                $default  Fallback value when the path does not exist.
      *
      * @return mixed Resolved value or the default.
      */
@@ -89,11 +89,11 @@ interface ParserInterface
     /**
      * Set a value using pre-parsed key segments.
      *
-     * @param array<mixed>      $data     Source data array.
-     * @param array<int|string> $segments Ordered list of keys to the target.
-     * @param mixed             $value    Value to assign.
+     * @param array<string, mixed> $data     Source data array.
+     * @param array<int|string>    $segments Ordered list of keys to the target.
+     * @param mixed                $value    Value to assign.
      *
-     * @return array<mixed> New array with the value set.
+     * @return array<string, mixed> New array with the value set.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When segments contain forbidden keys.
      */
@@ -102,10 +102,10 @@ interface ParserInterface
     /**
      * Remove a value using pre-parsed key segments.
      *
-     * @param array<mixed>      $data     Source data array.
-     * @param array<int|string> $segments Ordered list of keys to the target.
+     * @param array<string, mixed> $data     Source data array.
+     * @param array<int|string>    $segments Ordered list of keys to the target.
      *
-     * @return array<mixed> New array with the key removed.
+     * @return array<string, mixed> New array with the key removed.
      *
      * @throws \SafeAccess\Inline\Exceptions\SecurityException When segments contain forbidden keys.
      */

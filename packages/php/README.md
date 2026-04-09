@@ -52,6 +52,12 @@ $accessor->has('user.email');          // false (original unchanged)
 | `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names       |
 | `$` or `$.path`   | `$.user.name`      | Optional root prefix (stripped) |
 
+```php
+$data = Inline::fromJson('{"users": [{"name": "Alice"}, {"name": "Bob"}]}');
+$data->get('users.0.name'); // 'Alice'
+$data->get('users.1.name'); // 'Bob'
+```
+
 ### Advanced PathQuery
 
 | Syntax          | Example             | Description                               |
@@ -112,6 +118,7 @@ $accessor->get('users.0.name'); // 'Alice'
 $yaml = <<<YAML
 database:
   host: localhost
+  port: 5432
   credentials:
     user: admin
 YAML;
@@ -126,7 +133,8 @@ $accessor->get('database.credentials.user'); // 'admin'
 <summary><strong>XML</strong></summary>
 
 ```php
-$accessor = Inline::fromXml('<config><database><host>localhost</host></database></config>');
+$xml = '<config><database><host>localhost</host></database></config>';
+$accessor = Inline::fromXml($xml);
 $accessor->get('database.host'); // 'localhost'
 
 // Also accepts SimpleXMLElement
@@ -149,7 +157,7 @@ $accessor->get('database.host'); // 'localhost'
 <summary><strong>ENV (dotenv)</strong></summary>
 
 ```php
-$accessor = Inline::fromEnv("APP_NAME=MyApp\nDB_HOST=localhost");
+$accessor = Inline::fromEnv("APP_NAME=MyApp\nAPP_DEBUG=true\nDB_HOST=localhost");
 $accessor->get('DB_HOST'); // 'localhost'
 ```
 
@@ -162,6 +170,7 @@ $accessor->get('DB_HOST'); // 'localhost'
 $ndjson = '{"id":1,"name":"Alice"}' . "\n" . '{"id":2,"name":"Bob"}';
 $accessor = Inline::fromNdjson($ndjson);
 $accessor->get('0.name'); // 'Alice'
+$accessor->get('1.name'); // 'Bob'
 ```
 
 </details>
@@ -229,6 +238,7 @@ $updated = $accessor->set('a.d', 3);
 $updated = $updated->remove('a.c');
 $updated = $updated->merge('a', ['e' => 4]);
 $updated = $updated->mergeAll(['f' => 5]);
+$updated->all();                        // ['a' => ['b' => 1, 'd' => 3, 'e' => 4], 'f' => 5]
 
 // Readonly mode - block all writes
 $readonly = $accessor->readonly();
@@ -340,7 +350,7 @@ try {
 | `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |
 | `PathNotFoundException`      | `AccessorException`      | `getOrFail()` on missing path             |
 | `ReadonlyViolationException` | `AccessorException`      | Write on readonly accessor                |
-| `UnsupportedTypeException`   | `AccessorException`      | Unknown class in `make()`                 |
+| `UnsupportedTypeException`   | `AccessorException`      | Unknown accessor class in `make()`        |
 | `ParserException`            | `AccessorException`      | Internal parser errors                    |
 
 ## Advanced Usage
@@ -437,6 +447,10 @@ $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvStr
 | ------------------ | -------------------------- |
 | `readonly($flag?)` | Block all writes           |
 | `strict($flag?)`   | Toggle security validation |
+
+#### TypeFormat Enum
+
+`Array` · `Object` · `Json` · `Xml` · `Yaml` · `Ini` · `Env` · `Ndjson` · `Any`
 
 ## Contributing
 

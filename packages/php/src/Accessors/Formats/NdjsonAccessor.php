@@ -73,7 +73,7 @@ final class NdjsonAccessor extends AbstractAccessor
                     'NdjsonAccessor failed to parse line ' . $entry['originalLine'] . ': ' . $entry['line']
                 );
             }
-            $result[$i] = $decoded;
+            $result[(string) $i] = $decoded;
             $i++;
         }
 

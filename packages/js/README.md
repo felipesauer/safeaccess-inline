@@ -11,7 +11,7 @@
 
 ---
 
-Safe nested data access with dot notation for JavaScript and TypeScript. Navigate deeply nested objects, JSON, YAML, XML, INI, ENV, and NDJSON structures - with built-in security validation, immutable writes, and a fluent builder API.
+Safe nested data access with dot notation for JavaScript and TypeScript. Navigate deeply nested arrays, objects, JSON, YAML, XML, INI, ENV, and NDJSON structures - with built-in security validation, immutable writes, and a fluent builder API.
 
 ## Installation
 
@@ -151,7 +151,7 @@ accessor.get('database.host'); // 'localhost'
 <summary><strong>ENV (dotenv)</strong></summary>
 
 ```typescript
-const accessor = Inline.fromEnv('APP_NAME=MyApp\nDB_HOST=localhost');
+const accessor = Inline.fromEnv('APP_NAME=MyApp\nAPP_DEBUG=true\nDB_HOST=localhost');
 accessor.get('DB_HOST'); // 'localhost'
 ```
 
@@ -177,6 +177,20 @@ accessor.get('users.0.name'); // 'Alice'
 
 const objAccessor = Inline.fromObject({ name: 'Alice', age: 30 });
 objAccessor.get('name'); // 'Alice'
+```
+
+</details>
+
+<details>
+<summary><strong>Any (custom format via integration)</strong></summary>
+
+```typescript
+import { Inline } from '@safeaccess/inline';
+import type { ParseIntegrationInterface } from '@safeaccess/inline';
+
+// Requires implementing ParseIntegrationInterface
+const accessor = Inline.withParserIntegration(new MyCsvIntegration()).fromAny(csvString);
+accessor.get('0.column_name');
 ```
 
 </details>
@@ -215,10 +229,8 @@ accessor.getMany({
 accessor.getRaw(); // original JSON string
 
 // Write (immutable - every write returns a new instance)
-const updated = accessor.set('a.d', 3);
-const cleaned = updated.remove('a.c');
-const merged = cleaned.merge('a', { e: 4 });
-const full = merged.mergeAll({ f: 5 });
+const updated = accessor.set('a.d', 3).remove('a.c').merge('a', { e: 4 }).mergeAll({ f: 5 });
+updated.all(); // { a: { b: 1, d: 3, e: 4 }, f: 5 }
 
 // Readonly mode - block all writes
 const readonly = accessor.readonly();
@@ -245,7 +257,7 @@ const accessor = Inline.withSecurityGuard(new SecurityGuard(512, ['secret']))
 | ------------------------------------ | ------------------------------------------------ |
 | `withSecurityGuard(guard)`           | Custom forbidden-key rules and depth limits      |
 | `withSecurityParser(parser)`         | Custom payload size and structural limits        |
-| `withPathCache(cache)`               | Custom path segment cache for repeated lookups   |
+| `withPathCache(cache)`               | Path segment cache for repeated lookups          |
 | `withParserIntegration(integration)` | Custom format parser for `fromAny()`             |
 | `withStrictMode(false)`              | Disable security validation (trusted input only) |
 
@@ -391,7 +403,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 ## API Reference
 
-### Facade: `Inline`
+### `Inline` Facade
 
 #### Static Factory Methods
 
@@ -441,6 +453,10 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | ----------------- | -------------------------- |
 | `readonly(flag?)` | Block all writes           |
 | `strict(flag?)`   | Toggle security validation |
+
+#### TypeFormat Enum
+
+`Array` · `Object` · `Json` · `Xml` · `Yaml` · `Ini` · `Env` · `Ndjson` · `Any`
 
 ## Exports
 

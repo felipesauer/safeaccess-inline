@@ -33,6 +33,7 @@ final class IniAccessor extends AbstractAccessor
      *
      * @example
      * $accessor = (new IniAccessor($parser))->from("key=value\n[section]\nname=Alice");
+     * $accessor->get('section.name'); // 'Alice'
      */
     public function from(mixed $data): static
     {

@@ -291,4 +291,15 @@ describe(`${XmlParser.name} > manual parser edge cases`, () => {
         const result = makeParser().parse('<root><item>hello <world</item></root>');
         expect(result['item']).toBe('hello <world');
     });
+
+    it('parses elements preceded by plain text in child content', () => {
+        const result = makeParser().parse('<root><wrap>prefix<a>v</a></wrap></root>');
+        const wrap = result['wrap'] as Record<string, unknown>;
+        expect(wrap['a']).toBe('v');
+    });
+
+    it('preserves child object with multiple keys without #text flattening', () => {
+        const result = makeParser().parse('<root><w><x>1</x><y>2</y></w></root>');
+        expect(result['w']).toEqual({ x: '1', y: '2' });
+    });
 });

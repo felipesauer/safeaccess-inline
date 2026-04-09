@@ -36,6 +36,7 @@ final class ObjectAccessor extends AbstractAccessor
      *
      * @example
      * $accessor = (new ObjectAccessor($parser))->from((object) ['name' => 'Alice']);
+     * $accessor->get('name'); // 'Alice'
      */
     public function from(mixed $data): static
     {
