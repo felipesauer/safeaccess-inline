@@ -6,3 +6,8 @@ parameters:
     paths:
         - src
     tmpDir: .phpstan.cache
+    ignoreErrors:
+        -
+            message: '#NdjsonAccessor::parse\(\) should return array<string, mixed> but returns#'
+            path: src/Accessors/Formats/NdjsonAccessor.php
+            reportUnmatched: true

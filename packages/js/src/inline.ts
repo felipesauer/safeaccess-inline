@@ -259,6 +259,8 @@ export class Inline extends InlineBuilderAccessor {
      * @param AccessorConstructor - The accessor class to instantiate.
      * @param data                - Raw data to hydrate the accessor with.
      * @returns Populated accessor instance.
+     * @throws {InvalidFormatException} When the data does not match the accessor's expected format.
+     * @throws {SecurityException} When security constraints are violated.
      *
      * @example
      * Inline.make(JsonAccessor, '{"key":"value"}').get('key'); // 'value'
@@ -479,6 +481,8 @@ export class Inline extends InlineBuilderAccessor {
      * @param AccessorConstructor - The accessor class to instantiate.
      * @param data                - Raw data to hydrate the accessor with.
      * @returns Populated accessor instance.
+     * @throws {InvalidFormatException} When the data does not match the accessor's expected format.
+     * @throws {SecurityException} When security constraints are violated.
      *
      * @example
      * Inline.make(JsonAccessor, '{"key":"value"}').get('key'); // 'value'

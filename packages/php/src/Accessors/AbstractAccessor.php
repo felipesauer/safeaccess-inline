@@ -23,7 +23,7 @@ use SafeAccess\Inline\Exceptions\ReadonlyViolationException;
  */
 abstract class AbstractAccessor implements AccessorsInterface
 {
-    /** @var array<mixed> Parsed internal data store. */
+    /** @var array<string, mixed> Parsed internal data store. */
     private array $data = [];
 
     /** @var bool Whether mutation operations are blocked. */
@@ -50,7 +50,7 @@ abstract class AbstractAccessor implements AccessorsInterface
      *
      * @param mixed $raw Raw input in the format expected by the accessor.
      *
-     * @return array<mixed> Parsed data structure.
+     * @return array<string, mixed> Parsed data structure.
      *
      * @throws \SafeAccess\Inline\Exceptions\InvalidFormatException When the input is malformed.
      */
@@ -145,7 +145,7 @@ abstract class AbstractAccessor implements AccessorsInterface
     /**
      * Create a clone with new internal data.
      *
-     * @param array<mixed> $data New data for the clone.
+     * @param array<string, mixed> $data New data for the clone.
      *
      * @return static Cloned accessor with updated data.
      */

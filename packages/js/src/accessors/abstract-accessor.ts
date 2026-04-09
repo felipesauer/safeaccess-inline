@@ -75,6 +75,8 @@ export abstract class AbstractAccessor implements AccessorsInterface {
      *
      * @param data - Raw input in the format expected by the accessor.
      * @returns Populated accessor instance.
+     * @throws {InvalidFormatException} When the raw input cannot be parsed.
+     * @throws {SecurityException} When payload exceeds size limit, data contains forbidden keys, or violates structural limits.
      */
     abstract from(data: unknown): this;
 
