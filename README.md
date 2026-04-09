@@ -17,7 +17,7 @@
 
 ---
 
-Navigate deeply nested structures in JSON, YAML, XML, INI, ENV, NDJSON, arrays, and objects - with built-in security validation, immutable writes, and identical behavior in both PHP and TypeScript.
+Navigate deeply nested structures in JSON, YAML, XML, INI, ENV, NDJSON, arrays, and objects - with built-in security validation, immutable writes, a fluent builder API, and identical behavior in both PHP and TypeScript.
 
 ## Why Safe Access Inline?
 
@@ -47,6 +47,8 @@ composer require safeaccess/inline
 ```
 
 **Requirements:** PHP 8.2+, extensions: `json`, `simplexml`, `libxml`
+
+**Optional:** `ext-yaml` for improved YAML parsing performance (a built-in minimal parser is used by default).
 
 ### JavaScript / TypeScript
 
@@ -696,19 +698,19 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 #### Static Factory Methods
 
-| Method                        | Input                | Returns              |
-| ----------------------------- | -------------------- | -------------------- |
-| `fromArray(data)`             | Array / plain object | `ArrayAccessor`      |
-| `fromObject(data)`            | Object               | `ObjectAccessor`     |
-| `fromJson(data)`              | JSON `string`        | `JsonAccessor`       |
-| `fromXml(data)`               | XML `string`         | `XmlAccessor`        |
-| `fromYaml(data)`              | YAML `string`        | `YamlAccessor`       |
-| `fromIni(data)`               | INI `string`         | `IniAccessor`        |
-| `fromEnv(data)`               | dotenv `string`      | `EnvAccessor`        |
-| `fromNdjson(data)`            | NDJSON `string`      | `NdjsonAccessor`     |
-| `fromAny(data, integration?)` | Any format           | `AnyAccessor`        |
-| `from(typeFormat, data)`      | `TypeFormat` enum    | `AccessorsInterface` |
-| `make(accessorClass, data)`   | Accessor class       | `AbstractAccessor`   |
+| Method                        | Input                              | Returns              |
+| ----------------------------- | ---------------------------------- | -------------------- |
+| `fromArray(data)`             | Array / plain object               | `ArrayAccessor`      |
+| `fromObject(data)`            | Object                             | `ObjectAccessor`     |
+| `fromJson(data)`              | JSON `string`                      | `JsonAccessor`       |
+| `fromXml(data)`               | XML `string` or `SimpleXMLElement` | `XmlAccessor`        |
+| `fromYaml(data)`              | YAML `string`                      | `YamlAccessor`       |
+| `fromIni(data)`               | INI `string`                       | `IniAccessor`        |
+| `fromEnv(data)`               | dotenv `string`                    | `EnvAccessor`        |
+| `fromNdjson(data)`            | NDJSON `string`                    | `NdjsonAccessor`     |
+| `fromAny(data, integration?)` | Any format                         | `AnyAccessor`        |
+| `from(typeFormat, data)`      | `TypeFormat` enum                  | `AccessorsInterface` |
+| `make(accessorClass, data)`   | Accessor class                     | `AbstractAccessor`   |
 
 #### Accessor Read Methods
 
