@@ -253,6 +253,24 @@ describe(`${XmlParser.name} > linear scanner - nesting counter`, () => {
         const a = result['a'] as Record<string, unknown>;
         expect(a['a']).toBe('');
     });
+
+    it('increments nestDepth for same-name opening tag with tab after name', () => {
+        const result = makeParser().parse('<root><a><a\t>inner</a></a></root>');
+        const a = result['a'] as Record<string, unknown>;
+        expect(a).toEqual({ a: 'inner' });
+    });
+
+    it('increments nestDepth for same-name opening tag with newline after name', () => {
+        const result = makeParser().parse('<root><a><a\n>inner</a></a></root>');
+        const a = result['a'] as Record<string, unknown>;
+        expect(a).toEqual({ a: 'inner' });
+    });
+
+    it('increments nestDepth for same-name opening tag with carriage return after name', () => {
+        const result = makeParser().parse('<root><a><a\r>inner</a></a></root>');
+        const a = result['a'] as Record<string, unknown>;
+        expect(a).toEqual({ a: 'inner' });
+    });
 });
 
 describe(`${XmlParser.name} > linear scanner - self-closing detection`, () => {
@@ -264,6 +282,11 @@ describe(`${XmlParser.name} > linear scanner - self-closing detection`, () => {
     it('treats <tag attr="v" /> as self-closing (attribute + space + /)', () => {
         const result = makeParser().parse('<root><flag enabled="true" /></root>');
         expect(result['flag']).toBe('');
+    });
+
+    it('treats <tag / > (space after slash before >) as self-closing', () => {
+        const result = makeParser().parse('<root><empty / ></root>');
+        expect(result['empty']).toBe('');
     });
 });
 
@@ -298,6 +321,30 @@ describe(`${XmlParser.name} > linear scanner - skip non-element tokens`, () => {
         // and the content falls through as #text
         const result = makeParser().parse('<root><1tag>value</root>');
         expect(result['#text']).toBe('<1tag>value');
+    });
+
+    it('does not parse element-like tokens inside XML comments', () => {
+        const result = makeParser().parse('<root><!-- <fake>x</fake> --><name>Alice</name></root>');
+        expect(result['name']).toBe('Alice');
+        expect(Object.keys(result)).toEqual(['name']);
+    });
+
+    it('does not parse element-like tokens inside processing instructions', () => {
+        const result = makeParser().parse('<root><?pi <data>x</data> ?><name>Bob</name></root>');
+        expect(result['name']).toBe('Bob');
+        expect(Object.keys(result)).toEqual(['name']);
+    });
+
+    it('ignores digit-started tag even when it has a matching close tag', () => {
+        const result = makeParser().parse('<root><1>v</1><name>w</name></root>');
+        expect(result['name']).toBe('w');
+        expect(Object.keys(result)).toEqual(['name']);
+    });
+
+    it('does not parse elements embedded inside a stray closing tag prefix', () => {
+        const result = makeParser().parse('<root></a<b>text</b><name>v</name></root>');
+        expect(result['name']).toBe('v');
+        expect(Object.keys(result)).toEqual(['name']);
     });
 });
 
