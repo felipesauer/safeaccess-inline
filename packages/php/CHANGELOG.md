@@ -4,10 +4,14 @@ All notable changes to the `safeaccess/inline` PHP package are documented in thi
 
 ## [0.1.2](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.1...php-v0.1.2) (2026-04-08)
 
-
 ### Bug Fixes
 
-* **php:** fix logo image URL and add fromAny format section in README ([8bc377f](https://github.com/felipesauer/safeaccess-inline/commit/8bc377f9344882ad31e9c22366c06d306997a0cf))
+- **php:** fix logo image URL and add fromAny format section in README ([8bc377f](https://github.com/felipesauer/safeaccess-inline/commit/8bc377f9344882ad31e9c22366c06d306997a0cf))
+
+### Internal Changes
+
+- **php:** enforce `abstract from()` on `AbstractAccessor` — all concrete accessors now required to implement `from(mixed $data): static` (extending AbstractAccessor without `from()` is a compile-time error)
+- **php:** `SecurityGuard::sanitize()` delegates to new private `sanitizeRecursive()` to support integer-keyed sub-arrays inside string-keyed payloads (e.g. `{"items": [{...}]}`) without PHPStan errors
 
 ## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.0...php-v0.1.1) (2026-04-07)
 

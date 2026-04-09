@@ -182,6 +182,20 @@ objAccessor.get('name'); // 'Alice'
 </details>
 
 <details>
+<summary><strong>Any (custom format via integration)</strong></summary>
+
+```typescript
+import { Inline } from '@safeaccess/inline';
+import type { ParseIntegrationInterface } from '@safeaccess/inline';
+
+// Requires implementing ParseIntegrationInterface
+const accessor = Inline.withParserIntegration(new MyCsvIntegration()).fromAny(csvString);
+accessor.get('0.column_name');
+```
+
+</details>
+
+<details>
 <summary><strong>Dynamic (by TypeFormat enum)</strong></summary>
 
 ```typescript

@@ -4,10 +4,15 @@ All notable changes to the `@safeaccess/inline` JavaScript/TypeScript package ar
 
 ## [0.1.2](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.1...js-v0.1.2) (2026-04-08)
 
-
 ### Bug Fixes
 
-* **js:** fix logo image URL in README ([16f4fc5](https://github.com/felipesauer/safeaccess-inline/commit/16f4fc5d69fa7ce86e3017bbbfc9f393925a5c37))
+- **js:** fix logo image URL in README ([16f4fc5](https://github.com/felipesauer/safeaccess-inline/commit/16f4fc5d69fa7ce86e3017bbbfc9f393925a5c37))
+
+### Internal Changes
+
+- **js:** expose `readonly extraForbiddenKeys` on `SecurityGuard` for parity with PHP (`public readonly array $extraForbiddenKeys`)
+- **js:** extract `ValidatableParserInterface` from `DotNotationParser` — `AbstractAccessor` now types its parser dependency against this contract instead of the concrete class
+- **js:** `SecurityGuard.sanitize()` handles nested arrays via a dedicated `sanitizeArray()` private method, matching the PHP `sanitizeRecursive` pattern
 
 ## [0.1.1](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.0...js-v0.1.1) (2026-04-07)
 
