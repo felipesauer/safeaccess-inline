@@ -2,6 +2,14 @@
 
 All notable changes to the `@safeaccess/inline` JavaScript/TypeScript package are documented in this file.
 
+## [0.1.3](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.2...js-v0.1.3) (2026-04-09)
+
+
+### Bug Fixes
+
+* **js:** expose readonly extraForbiddenKeys on SecurityGuard for PHP parity ([2b428f6](https://github.com/felipesauer/safeaccess-inline/commit/2b428f6a1fef3607cb968ff18b52d8281158cc92))
+* **php:** correct array&lt;string,mixed&gt; type annotations and NdjsonAccessor integer key coercion ([7849f89](https://github.com/felipesauer/safeaccess-inline/commit/7849f89365bd5970738105ed3be9d2b58a15cd93))
+
 ## [0.1.2](https://github.com/felipesauer/safeaccess-inline/compare/js-v0.1.1...js-v0.1.2) (2026-04-08)
 
 ### Bug Fixes
