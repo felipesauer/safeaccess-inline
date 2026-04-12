@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.1.4](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.3...php-v0.1.4) (2026-04-12)
+
+
+### Bug Fixes
+
+* **docs:** update README files for TypeScript and PHP packages ([15b5451](https://github.com/felipesauer/safeaccess-inline/commit/15b5451ec9f23ea27aa8d5c59d9ad76e0c584f3e))
+
 ## [0.1.3](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.2...php-v0.1.3) (2026-04-09)
 
 
