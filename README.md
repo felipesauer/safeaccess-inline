@@ -5,7 +5,7 @@
 <h1 align="center">Safe Access Inline</h1>
 
 <p align="center">
-  Dual-language library for <strong>safe nested data access</strong> with dot notation in PHP &amp; TypeScript.
+  A query engine for untrusted external data — with security validation, advanced filtering, and immutable writes. PHP &amp; TypeScript, identical API, zero production dependencies.
 </p>
 
 <p align="center">
@@ -21,17 +21,50 @@
 
 ---
 
-Navigate deeply nested structures in JSON, YAML, XML, INI, ENV, NDJSON, arrays, and objects - with built-in security validation, immutable writes, a fluent builder API, and identical behavior in both PHP and TypeScript.
+## The problem
 
-## Why Safe Access Inline?
+Reading nested data from external sources — API responses, uploaded files, config from third parties — requires more than null-safe access. You also need to defend against XXE in XML, anchor bombs in YAML, prototype pollution in JSON, PHP stream wrapper injection, and payload size abuse. Without a dedicated tool, that's boilerplate you write manually for every format, every endpoint.
 
-Accessing nested data from untrusted sources (API responses, config files, user uploads) is error-prone and risky. Safe Access Inline solves this with:
+**Without this library (XML from an external API):**
 
-- **Dot-notation paths** - `user.address.city` instead of chained null checks
-- **Multi-format support** - JSON, YAML, XML, INI, ENV, NDJSON, arrays, objects
-- **Security by default** - blocks prototype pollution, PHP magic methods, superglobals, stream wrapper injection, XML external entities, and oversized payloads
-- **Immutable writes** - `set()`, `remove()`, and `merge()` return new instances
-- **Cross-language parity** - same input → same output in PHP and TypeScript
+```php
+// PHP
+libxml_disable_entity_loader(true);
+$xml = simplexml_load_string($input, 'SimpleXMLElement', LIBXML_NOENT);
+if ($xml === false) {
+    throw new RuntimeException('Invalid XML');
+}
+// validate keys against magic methods, superglobals, stream wrappers...
+// enforce depth and key count limits...
+$host = isset($xml->database->host) ? (string) $xml->database->host : null;
+```
+
+**With this library:**
+
+```php
+$host = Inline::fromXml($input)->get('database.host');
+// XXE blocked, forbidden keys validated, depth enforced — by default
+```
+
+The same applies to JSON, YAML, INI, ENV, and NDJSON. Every format is parsed with security validation enabled out of the box. No configuration required for safe defaults.
+
+## When to use this — and when not to
+
+**Use this library when your data comes from outside your application:** API responses, user-uploaded files, third-party webhooks, config files you don't control.
+
+**Use `??` or `data_get` when your data is already trusted and internal.** If you control the data source entirely and have no security concerns, native operators are simpler. This library is for the case where you don't.
+
+## What makes it different
+
+**Security by default.** Every public entry point validates input before it reaches your code. Forbidden key blocking, payload size limits, and depth enforcement are on by default — not something you opt into.
+
+**A real query engine, not just dot notation.** PathQuery supports wildcard expansion, recursive descent, slices, multi-index selection, projections, and filter expressions with comparisons, logical operators, string functions, and arithmetic — none of which exist natively in PHP or JavaScript.
+
+**Cross-language behavioral parity.** The PHP and TypeScript packages expose the same API and produce identical output for the same input. One mental model, two runtimes.
+
+**Immutable writes.** `set()`, `remove()`, and `merge()` return new instances. The original is never modified.
+
+**Zero production dependencies.** No transitive risk.
 
 ## Packages
 
@@ -54,7 +87,7 @@ composer require safeaccess/inline
 
 **Optional:** `ext-yaml` for improved YAML parsing performance (a built-in minimal parser is used by default).
 
-### JavaScript / TypeScript
+### TypeScript
 
 ```bash
 npm install @safeaccess/inline
@@ -62,7 +95,7 @@ npm install @safeaccess/inline
 
 **Requirements:** Node.js 22+
 
-## Quick Start
+## Quick start
 
 ### PHP
 
@@ -100,9 +133,86 @@ updated.get('user.email'); // 'alice@example.com'
 accessor.has('user.email'); // false (original unchanged)
 ```
 
-## Dot Notation Syntax
+## Security
 
-### Basic Syntax (PHP & TypeScript)
+Safe Access Inline applies security validation **by default** on every public entry point. All keys pass through `SecurityGuard` and `SecurityParser` before being accessible.
+
+### What gets blocked
+
+**PHP** (`packages/php`)
+
+| Category            | Examples                                                                                                      | Reason                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| PHP magic methods   | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, `__call`, `__get`, `__set`, `__invoke`, ... | Prevent triggering PHP magic behavior via data keys |
+| Prototype pollution | `__proto__`, `constructor`, `prototype`                                                                       | Prevent prototype pollution attacks                 |
+| PHP superglobals    | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_REQUEST`, `_SERVER`, `_ENV`, `_FILES`, `_SESSION`                    | Prevent superglobal variable access                 |
+| Stream wrapper URIs | `php://input`, `php://filter`, `phar://...`, `data://...`, `file://...`, ...                                  | Prevent stream wrapper injection                    |
+
+**TypeScript** (`packages/js`)
+
+| Category                      | Examples                                                                                                     | Reason                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Prototype pollution           | `__proto__`, `constructor`, `prototype`                                                                      | Prevent prototype pollution attacks                |
+| Legacy prototype manipulation | `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`                               | Prevent legacy prototype tampering                 |
+| Property shadow               | `hasOwnProperty`                                                                                             | Overriding it can bypass guard checks              |
+| Node.js globals               | `__dirname`, `__filename`                                                                                    | Prevent path-injection via dynamic property access |
+| Protocol / stream URIs        | `javascript:`, `blob:`, `ws://`, `wss://`, `node:`, `file://`, `http://`, `https://`, `ftp://`, `data:`, ... | Prevent URI injection and XSS vectors              |
+
+Keys starting with `__` are matched case-insensitively. Stream wrapper URIs and protocol schemes are matched by prefix.
+
+### Format-specific protections
+
+| Format | Protection                                                              |
+| ------ | ----------------------------------------------------------------------- |
+| XML    | Rejects `<!DOCTYPE` — prevents XXE (XML External Entity) attacks        |
+| YAML   | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
+| All    | Forbidden key validation on every parsed key                            |
+
+### Structural limits
+
+| Limit                    | Default            | Description                                          |
+| ------------------------ | ------------------ | ---------------------------------------------------- |
+| `maxPayloadBytes`        | 10 MB (10,485,760) | Maximum raw string input size                        |
+| `maxKeys`                | 10,000             | Maximum total key count across the entire structure  |
+| `maxDepth`               | 512                | Maximum structural nesting depth                     |
+| `maxResolveDepth`        | 100                | Maximum recursion for path resolution and deep merge |
+| `maxCountRecursiveDepth` | 100                | Maximum recursion when counting keys                 |
+
+### Custom forbidden keys
+
+```php
+// PHP
+$guard = new SecurityGuard(extraForbiddenKeys: ['secret', 'internal_token']);
+$accessor = Inline::withSecurityGuard($guard)->fromJson($data);
+```
+
+```typescript
+// TypeScript
+const guard = new SecurityGuard(512, ['secret', 'internal_token']);
+const accessor = Inline.withSecurityGuard(guard).fromJson(data);
+```
+
+### Disabling validation for trusted input
+
+```php
+// PHP
+$accessor = Inline::withStrictMode(false)->fromJson($trustedPayload);
+```
+
+```typescript
+// TypeScript
+const accessor = Inline.withStrictMode(false).fromJson(trustedPayload);
+```
+
+> **Warning:** Disabling strict mode skips **all** validation — forbidden keys, payload size, depth and key-count limits. Only use with application-controlled input.
+
+For vulnerability reports, see [SECURITY.md](SECURITY.md).
+
+## PathQuery — advanced querying
+
+PathQuery goes well beyond dot notation. It is the part of this library with no native equivalent in PHP or JavaScript.
+
+### Basic dot notation
 
 | Syntax            | Example            | Description                         |
 | ----------------- | ------------------ | ----------------------------------- |
@@ -111,26 +221,24 @@ accessor.has('user.email'); // false (original unchanged)
 | `key\.with\.dots` | `config\.db\.host` | Escaped dots in key names           |
 | `$` or `$.path`   | `$.user.name`      | Optional `$` root prefix (stripped) |
 
-### Advanced PathQuery
-
-Both packages include a full PathQuery engine:
+### Full PathQuery syntax
 
 | Syntax          | Example             | Description                               |
 | --------------- | ------------------- | ----------------------------------------- |
 | `[0]`           | `users[0]`          | Bracket index access                      |
-| `*` or `[*]`    | `users.*`           | Wildcard - expand all children            |
-| `..key`         | `..name`            | Recursive descent - find key at any depth |
+| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
+| `..key`         | `..name`            | Recursive descent — find key at any depth |
 | `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
-| `[0,1,2]`       | `users[0,1,2]`      | Multi-index - select multiple indices     |
-| `['a','b']`     | `['name','age']`    | Multi-key - select multiple keys          |
-| `[0:5]`         | `items[0:5]`        | Slice - indices 0 through 4               |
-| `[::2]`         | `items[::2]`        | Slice with step - every 2nd item          |
+| `[0,1,2]`       | `users[0,1,2]`      | Multi-index — select multiple indices     |
+| `['a','b']`     | `['name','age']`    | Multi-key — select multiple keys          |
+| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
+| `[::2]`         | `items[::2]`        | Slice with step — every 2nd item          |
 | `[::-1]`        | `items[::-1]`       | Reverse slice                             |
 | `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
-| `.{fields}`     | `.{name, age}`      | Projection - select fields                |
+| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
 | `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
-#### Filter Expressions
+### Filter expressions
 
 ```php
 // PHP
@@ -144,15 +252,15 @@ $data = Inline::fromJson('[
 $data->get('[?age>18]');                          // Alice and Carol
 
 // Logical: && and ||
-$data->get('[?age>18 && role==\'admin\']');         // Alice and Carol
+$data->get('[?age>18 && role==\'admin\']');       // Alice and Carol
 
 // Built-in functions: starts_with, contains, values
-$data->get('[?starts_with(@.name, \'A\')]');        // Alice
-$data->get('[?contains(@.name, \'ob\')]');          // Bob
+$data->get('[?starts_with(@.name, \'A\')]');      // Alice
+$data->get('[?contains(@.name, \'ob\')]');        // Bob
 
 // Arithmetic in predicates: +, -, *, /
 $orders = Inline::fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}]');
-$orders->get('[?@.price * @.qty > 20]');           // first order only
+$orders->get('[?@.price * @.qty > 20]');          // first order only
 ```
 
 ```typescript
@@ -178,9 +286,9 @@ const orders = Inline.fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}
 orders.get('[?@.price * @.qty > 20]'); // first order only
 ```
 
-## Supported Formats
+## Supported formats
 
-Each format has a dedicated accessor with automatic parsing and security validation.
+Each format has a dedicated accessor with automatic parsing and security validation applied on load.
 
 <details>
 <summary><strong>JSON</strong></summary>
@@ -364,7 +472,7 @@ accessor.get('key'); // 'value'
 
 </details>
 
-## Reading & Writing
+## Reading & writing
 
 All accessor methods are identical in PHP and TypeScript.
 
@@ -461,7 +569,7 @@ const accessor = Inline.withSecurityGuard(new SecurityGuard(512, ['secret']))
     .fromJson(untrustedInput);
 ```
 
-### Builder Methods
+### Builder methods
 
 | Method                               | Description                                      |
 | ------------------------------------ | ------------------------------------------------ |
@@ -471,74 +579,7 @@ const accessor = Inline.withSecurityGuard(new SecurityGuard(512, ['secret']))
 | `withParserIntegration(integration)` | Custom format parser for `fromAny()`             |
 | `withStrictMode(false)`              | Disable security validation (trusted input only) |
 
-## Security
-
-Safe Access Inline applies security validation **by default** on every public entry point. All keys pass through `SecurityGuard` and `SecurityParser` before being accessible.
-
-### Forbidden Keys
-
-The two packages block different key sets tailored to their runtime:
-
-**PHP** (`packages/php`)
-
-| Category            | Examples                                                                                                      | Reason                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| PHP magic methods   | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, `__call`, `__get`, `__set`, `__invoke`, ... | Prevent triggering PHP magic behavior via data keys |
-| Prototype pollution | `__proto__`, `constructor`, `prototype`                                                                       | Prevent prototype pollution attacks                 |
-| PHP superglobals    | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_REQUEST`, `_SERVER`, `_ENV`, `_FILES`, `_SESSION`                    | Prevent superglobal variable access                 |
-| Stream wrapper URIs | `php://input`, `php://filter`, `phar://...`, `data://...`, `file://...`, ...                                  | Prevent stream wrapper injection                    |
-
-**TypeScript** (`packages/js`)
-
-| Category                      | Examples                                                                                                     | Reason                                             |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| Prototype pollution           | `__proto__`, `constructor`, `prototype`                                                                      | Prevent prototype pollution attacks                |
-| Legacy prototype manipulation | `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`                               | Prevent legacy prototype tampering                 |
-| Property shadow               | `hasOwnProperty`                                                                                             | Overriding it can bypass guard checks              |
-| Node.js globals               | `__dirname`, `__filename`                                                                                    | Prevent path-injection via dynamic property access |
-| Protocol / stream URIs        | `javascript:`, `blob:`, `ws://`, `wss://`, `node:`, `file://`, `http://`, `https://`, `ftp://`, `data:`, ... | Prevent URI injection and XSS vectors              |
-
-Keys starting with `__` are matched **case-insensitively**. Stream wrapper URIs and protocol schemes are matched by **prefix**.
-
-Add custom forbidden keys:
-
-```php
-// PHP
-$guard = new SecurityGuard(extraForbiddenKeys: ['secret', 'internal_token']);
-$accessor = Inline::withSecurityGuard($guard)->fromJson($data);
-```
-
-```typescript
-// TypeScript
-const guard = new SecurityGuard(512, ['secret', 'internal_token']);
-const accessor = Inline.withSecurityGuard(guard).fromJson(data);
-```
-
-### Structural Limits
-
-| Limit                    | Default            | Description                                          |
-| ------------------------ | ------------------ | ---------------------------------------------------- |
-| `maxPayloadBytes`        | 10 MB (10,485,760) | Maximum raw string input size                        |
-| `maxKeys`                | 10,000             | Maximum total key count across the entire structure  |
-| `maxDepth`               | 512                | Maximum structural nesting depth                     |
-| `maxResolveDepth`        | 100                | Maximum recursion for path resolution and deep merge |
-| `maxCountRecursiveDepth` | 100                | Maximum recursion when counting keys                 |
-
-### Format-Specific Protections
-
-| Format | Protection                                                              |
-| ------ | ----------------------------------------------------------------------- |
-| XML    | Rejects `<!DOCTYPE` - prevents XXE (XML External Entity) attacks        |
-| YAML   | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
-| All    | Forbidden key validation on every parsed key                            |
-
-Disable for fully trusted input: `Inline::withStrictMode(false)` / `Inline.withStrictMode(false)`.
-
-> **Warning:** Disabling strict mode skips **all** validation - forbidden keys, payload size, depth and key-count limits. Only use with application-controlled input.
-
-For vulnerability reports, see [SECURITY.md](SECURITY.md).
-
-## Error Handling
+## Error handling
 
 All exceptions extend `AccessorException`, making it easy to catch every library error in a single block.
 
@@ -602,36 +643,22 @@ try {
 }
 ```
 
-### Exception Hierarchy
+### Exception hierarchy
 
-| Exception                    | Extends                      | When                                                                                   |
-| ---------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
-| `AccessorException`          | `RuntimeException` / `Error` | Root - catch-all for any library error                                                 |
-| `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded                           |
-| `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                                                       |
-| `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                                               |
-| `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                                                        |
-| `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                                           |
-| `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                                                     |
-| `ParserException`            | `AccessorException`          | Reserved for custom parser-level errors; built-in depth limits use `SecurityException` |
+| Exception                    | Extends                      | When                                                         |
+| ---------------------------- | ---------------------------- | ------------------------------------------------------------ |
+| `AccessorException`          | `RuntimeException` / `Error` | Root — catch-all for any library error                       |
+| `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded |
+| `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                             |
+| `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                     |
+| `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                              |
+| `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                 |
+| `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                           |
+| `ParserException`            | `AccessorException`          | Reserved for custom parser-level errors                      |
 
-## Advanced Usage
+## Advanced usage
 
-### Strict Mode
-
-By default, all input is validated. Disable for trusted data:
-
-```php
-// PHP
-$accessor = Inline::withStrictMode(false)->fromJson($trustedPayload);
-```
-
-```typescript
-// TypeScript
-const accessor = Inline.withStrictMode(false).fromJson(trustedPayload);
-```
-
-### Path Cache
+### Path cache
 
 Cache parsed path segments for repeated lookups:
 
@@ -660,7 +687,7 @@ const cache: PathCacheInterface = {
 const accessor = Inline.withPathCache(cache).fromJson(data);
 ```
 
-### Custom Format Integration
+### Custom format integration
 
 Add support for custom data formats by implementing `ParseIntegrationInterface`:
 
@@ -696,11 +723,11 @@ const csvIntegration: ParseIntegrationInterface = {
 const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString);
 ```
 
-## API Reference
+## API reference
 
-### `Inline` Facade
+### `Inline` facade
 
-#### Static Factory Methods
+#### Static factory methods
 
 | Method                        | Input                              | Returns              |
 | ----------------------------- | ---------------------------------- | -------------------- |
@@ -716,7 +743,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `from(typeFormat, data)`      | `TypeFormat` enum                  | `AccessorsInterface` |
 | `make(accessorClass, data)`   | Accessor class                     | `AbstractAccessor`   |
 
-#### Accessor Read Methods
+#### Accessor read methods
 
 | Method                      | Returns                                 |
 | --------------------------- | --------------------------------------- |
@@ -731,7 +758,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `keys(path?)`               | Key names                               |
 | `getRaw()`                  | Original input                          |
 
-#### Accessor Write Methods (immutable)
+#### Accessor write methods (immutable)
 
 | Method                   | Description            |
 | ------------------------ | ---------------------- |
@@ -742,36 +769,34 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `merge(path, value)`     | Deep-merge at path     |
 | `mergeAll(value)`        | Deep-merge at root     |
 
-#### Modifier Methods
+#### Modifier methods
 
 | Method            | Description                |
 | ----------------- | -------------------------- |
 | `readonly(flag?)` | Block all writes           |
 | `strict(flag?)`   | Toggle security validation |
 
-#### TypeFormat Enum
+#### TypeFormat enum
 
 `Array` · `Object` · `Json` · `Xml` · `Yaml` · `Ini` · `Env` · `Ndjson` · `Any`
 
 ## Comparison
 
-| Feature                   | Safe Access Inline | `lodash.get` | Laravel `data_get` | `jmespath`  |
-| ------------------------- | ------------------ | ------------ | ------------------ | ----------- |
-| Language                  | PHP + TypeScript   | JavaScript   | PHP                | Multi       |
-| Security validation       | Built-in           | None         | None               | None        |
-| Forbidden key blocking    | Yes                | No           | No                 | No          |
-| Payload size limits       | Yes                | No           | No                 | No          |
-| Immutable writes          | Yes                | No           | No                 | N/A         |
-| Readonly mode             | Yes                | No           | No                 | N/A         |
-| JSON support              | Yes                | Manual       | Manual             | Manual      |
-| YAML / XML / INI / ENV    | Yes                | No           | No                 | No          |
-| Multiple formats          | 9 formats          | Object only  | Array only         | Object only |
-| Custom format integration | Yes                | No           | No                 | No          |
-| Wildcard / Filter         | Yes                | No           | Partial (`*`)      | Yes         |
-| Type-safe (TypeScript)    | Strict mode        | `any`        | N/A                | `any`       |
-| Zero prod dependencies    | Yes                | lodash       | Laravel            | jmespath    |
+| Feature                   | Safe Access Inline      | `lodash.get`    | Laravel `data_get` | `jmespath`  |
+| ------------------------- | ----------------------- | --------------- | ------------------ | ----------- |
+| Language                  | PHP + TypeScript        | JavaScript      | PHP                | Multi       |
+| Security validation       | Built-in, on by default | None            | None               | None        |
+| Forbidden key blocking    | Yes                     | No              | No                 | No          |
+| Payload size limits       | Yes                     | No              | No                 | No          |
+| Immutable writes          | Yes                     | No              | No                 | N/A         |
+| Readonly mode             | Yes                     | No              | No                 | N/A         |
+| Multi-format support      | 9 formats               | Object only     | Array only         | Object only |
+| Custom format integration | Yes                     | No              | No                 | No          |
+| Wildcard / filter / slice | Yes                     | No              | Partial (`*`)      | Yes         |
+| Zero prod dependencies    | Yes                     | lodash          | Laravel            | jmespath    |
+| Cross-language parity     | PHP + TypeScript        | JavaScript only | PHP only           | Multi       |
 
-## Project Structure
+## Project structure
 
 ```
 packages/php/   - PHP package (PSR-4, Pest, PHPStan, Infection)

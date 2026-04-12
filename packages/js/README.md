@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/felipesauer/safeaccess-inline/main/.github/assets/logo.svg" width="80" alt="safeaccess-inline logo">
 </p>
 
-<h1 align="center">Safe Access Inline - TypeScript</h1>
+<h1 align="center">Safe Access Inline — TypeScript</h1>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@safeaccess/inline"><img src="https://img.shields.io/npm/v/@safeaccess/inline?label=npm" alt="npm"></a>
@@ -15,7 +15,28 @@
 
 ---
 
-TypeScript/JavaScript library for safe nested data access with dot notation — JSON, YAML, XML, INI, ENV, NDJSON with built-in security validation, immutable writes, and a fluent builder API (ESM).
+TypeScript/JavaScript library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. ESM, zero production dependencies.
+
+## The problem
+
+Reading nested data from external sources requires more than optional chaining. You also need to defend against prototype pollution in JSON, URI injection, Node.js global shadowing, and payload size attacks. Without a tool for this, that validation is boilerplate you write manually for every format and every endpoint.
+
+**Without this library (JSON from an external API):**
+
+```typescript
+const parsed = JSON.parse(input); // no depth limit, no key validation
+// check for __proto__, constructor, prototype manually...
+// enforce maxDepth, maxKeys...
+// check for javascript:, blob:, node: URIs...
+const host = parsed?.database?.host ?? null;
+```
+
+**With this library:**
+
+```typescript
+const host = Inline.fromJson(input).get('database.host');
+// prototype pollution blocked, forbidden keys validated, depth enforced — by default
+```
 
 ## Installation
 
@@ -25,7 +46,7 @@ npm install @safeaccess/inline
 
 **Requirements:** Node.js 22+
 
-## Quick Start
+## Quick start
 
 ```typescript
 import { Inline } from '@safeaccess/inline';
@@ -43,9 +64,58 @@ updated.get('user.email'); // 'alice@example.com'
 accessor.has('user.email'); // false (original unchanged)
 ```
 
-## Dot Notation Syntax
+## Security
 
-### Basic Syntax
+All public entry points validate input **by default**. Every key passes through `SecurityGuard` and `SecurityParser`.
+
+### What gets blocked
+
+| Category                      | Examples                                                                                                     | Reason                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| Prototype pollution           | `__proto__`, `constructor`, `prototype`                                                                      | Prevents prototype pollution attacks                |
+| Legacy prototype manipulation | `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`                               | Prevents legacy prototype tampering                 |
+| Property shadow               | `hasOwnProperty`                                                                                             | Overriding it can bypass guard checks               |
+| Node.js globals               | `__dirname`, `__filename`                                                                                    | Prevents path-injection via dynamic property access |
+| Protocol / stream URIs        | `javascript:`, `blob:`, `ws://`, `wss://`, `node:`, `file://`, `http://`, `https://`, `ftp://`, `data:`, ... | Prevents URI injection and XSS vectors              |
+
+### Format-specific protections
+
+| Format | Protection                                       |
+| ------ | ------------------------------------------------ |
+| XML    | Rejects `<!DOCTYPE` — prevents XXE attacks       |
+| YAML   | Blocks unsafe tags, anchors, aliases, merge keys |
+| All    | Forbidden key validation on every parsed key     |
+
+### Structural limits
+
+| Limit                    | Default | Description                           |
+| ------------------------ | ------- | ------------------------------------- |
+| `maxPayloadBytes`        | 10 MB   | Maximum raw string input size         |
+| `maxKeys`                | 10,000  | Maximum total key count               |
+| `maxDepth`               | 512     | Maximum structural nesting depth      |
+| `maxResolveDepth`        | 100     | Maximum recursion for path resolution |
+| `maxCountRecursiveDepth` | 100     | Maximum recursion when counting keys  |
+
+### Custom forbidden keys
+
+```typescript
+const guard = new SecurityGuard(512, ['secret', 'internal_token']);
+const accessor = Inline.withSecurityGuard(guard).fromJson(data);
+```
+
+### Disabling validation for trusted input
+
+```typescript
+const accessor = Inline.withStrictMode(false).fromJson(trustedInput);
+```
+
+> **Warning:** Disabling strict mode skips **all** validation. Only use with application-controlled input.
+
+For vulnerability reports, see [SECURITY.md](../../SECURITY.md).
+
+## Dot notation syntax
+
+### Basic syntax
 
 | Syntax            | Example            | Description                     |
 | ----------------- | ------------------ | ------------------------------- |
@@ -65,19 +135,19 @@ data.get('users.1.name'); // 'Bob'
 | Syntax          | Example             | Description                               |
 | --------------- | ------------------- | ----------------------------------------- |
 | `[0]`           | `users[0]`          | Bracket index access                      |
-| `*` or `[*]`    | `users.*`           | Wildcard - expand all children            |
-| `..key`         | `..name`            | Recursive descent - find key at any depth |
+| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
+| `..key`         | `..name`            | Recursive descent — find key at any depth |
 | `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
 | `[0,1,2]`       | `users[0,1,2]`      | Multi-index selection                     |
 | `['a','b']`     | `['name','age']`    | Multi-key selection                       |
-| `[0:5]`         | `items[0:5]`        | Slice - indices 0 through 4               |
+| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
 | `[::2]`         | `items[::2]`        | Slice with step                           |
 | `[::-1]`        | `items[::-1]`       | Reverse slice                             |
 | `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
-| `.{fields}`     | `.{name, age}`      | Projection - select fields                |
+| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
 | `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
-### Filter Expressions
+### Filter expressions
 
 ```typescript
 const data = Inline.fromJson(`[
@@ -96,14 +166,12 @@ data.get('[?age>18 && role=="admin"]'); // Alice and Carol
 data.get('[?starts_with(@.name, "A")]'); // Alice
 data.get('[?contains(@.name, "ob")]'); // Bob
 
-// Arithmetic in predicates: +, -, *, /
+// Arithmetic: +, -, *, /
 const orders = Inline.fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}]');
 orders.get('[?@.price * @.qty > 20]'); // first order only
 ```
 
-## Supported Formats
-
-Each format has a dedicated accessor with automatic parsing and security validation.
+## Supported formats
 
 <details>
 <summary><strong>JSON</strong></summary>
@@ -211,7 +279,7 @@ accessor.get('key'); // 'value'
 
 </details>
 
-## Reading & Writing
+## Reading & writing
 
 ```typescript
 const accessor = Inline.fromJson('{"a": {"b": 1, "c": 2}}');
@@ -244,7 +312,7 @@ readonly.set('a.b', 99); // throws ReadonlyViolationException
 
 ## Configure
 
-### Builder Pattern
+### Builder pattern
 
 ```typescript
 import { Inline, SecurityGuard, SecurityParser } from '@safeaccess/inline';
@@ -255,7 +323,7 @@ const accessor = Inline.withSecurityGuard(new SecurityGuard(512, ['secret']))
     .fromJson(untrustedInput);
 ```
 
-### Builder Methods
+### Builder methods
 
 | Method                               | Description                                      |
 | ------------------------------------ | ------------------------------------------------ |
@@ -265,50 +333,7 @@ const accessor = Inline.withSecurityGuard(new SecurityGuard(512, ['secret']))
 | `withParserIntegration(integration)` | Custom format parser for `fromAny()`             |
 | `withStrictMode(false)`              | Disable security validation (trusted input only) |
 
-## Security
-
-All public entry points validate input **by default**. Every key passes through `SecurityGuard` and `SecurityParser`.
-
-### Forbidden Keys
-
-| Category                      | Examples                                                                                                     | Reason                                              |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| Prototype pollution           | `__proto__`, `constructor`, `prototype`                                                                      | Prevents prototype pollution attacks                |
-| Legacy prototype manipulation | `__defineGetter__`, `__defineSetter__`, `__lookupGetter__`, `__lookupSetter__`                               | Prevents legacy prototype tampering                 |
-| Property shadow               | `hasOwnProperty`                                                                                             | Overriding it can bypass guard checks               |
-| Node.js globals               | `__dirname`, `__filename`                                                                                    | Prevents path-injection via dynamic property access |
-| Protocol / stream URIs        | `javascript:`, `blob:`, `ws://`, `wss://`, `node:`, `file://`, `http://`, `https://`, `ftp://`, `data:`, ... | Prevents URI injection and XSS vectors              |
-
-Add custom forbidden keys:
-
-```typescript
-const guard = new SecurityGuard(512, ['secret', 'internal_token']);
-const accessor = Inline.withSecurityGuard(guard).fromJson(data);
-```
-
-### Structural Limits
-
-| Limit                    | Default | Description                           |
-| ------------------------ | ------- | ------------------------------------- |
-| `maxPayloadBytes`        | 10 MB   | Maximum raw string input size         |
-| `maxKeys`                | 10,000  | Maximum total key count               |
-| `maxDepth`               | 512     | Maximum structural nesting depth      |
-| `maxResolveDepth`        | 100     | Maximum recursion for path resolution |
-| `maxCountRecursiveDepth` | 100     | Maximum recursion when counting keys  |
-
-### Format-Specific Protections
-
-| Format | Protection                                       |
-| ------ | ------------------------------------------------ |
-| XML    | Rejects `<!DOCTYPE` - prevents XXE attacks       |
-| YAML   | Blocks unsafe tags, anchors, aliases, merge keys |
-| All    | Forbidden key validation on every parsed key     |
-
-> Disable for trusted input: `Inline.withStrictMode(false).fromJson(trustedInput)`
-
-For vulnerability reports, see [SECURITY.md](../../SECURITY.md).
-
-## Error Handling
+## Error handling
 
 All exceptions extend `AccessorException`:
 
@@ -327,28 +352,28 @@ try {
     const value = accessor.getOrFail('config.key');
 } catch (e) {
     if (e instanceof InvalidFormatException) {
-        // Malformed JSON, XML, INI, or NDJSON
+        /* malformed JSON, XML, INI, or NDJSON */
     }
     if (e instanceof SecurityException) {
-        // Forbidden key, payload too large, depth/key-count exceeded
+        /* forbidden key, payload too large, depth exceeded */
     }
     if (e instanceof PathNotFoundException) {
-        // Path does not exist
+        /* path does not exist */
     }
     if (e instanceof ReadonlyViolationException) {
-        // Write on readonly accessor
+        /* write on readonly accessor */
     }
     if (e instanceof AccessorException) {
-        // Catch-all for any library error
+        /* catch-all for any library error */
     }
 }
 ```
 
-### Exception Hierarchy
+### Exception hierarchy
 
 | Exception                    | Extends                  | When                                      |
 | ---------------------------- | ------------------------ | ----------------------------------------- |
-| `AccessorException`          | `Error`                  | Root - catch-all                          |
+| `AccessorException`          | `Error`                  | Root — catch-all                          |
 | `SecurityException`          | `AccessorException`      | Forbidden key, payload, structural limits |
 | `InvalidFormatException`     | `AccessorException`      | Malformed JSON, XML, INI, NDJSON          |
 | `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |
@@ -357,9 +382,9 @@ try {
 | `UnsupportedTypeException`   | `AccessorException`      | Unknown accessor class in `make()`        |
 | `ParserException`            | `AccessorException`      | Internal parser errors                    |
 
-## Advanced Usage
+## Advanced usage
 
-### Strict Mode
+### Strict mode
 
 ```typescript
 // Disable all security validation for trusted input
@@ -368,7 +393,7 @@ const accessor = Inline.withStrictMode(false).fromJson(trustedPayload);
 
 > **Warning:** Disabling strict mode skips **all** validation. Only use with application-controlled input.
 
-### Path Cache
+### Path cache
 
 ```typescript
 // Implement PathCacheInterface for repeated lookups
@@ -390,7 +415,7 @@ accessor.get('deeply.nested.path'); // parses path
 accessor.get('deeply.nested.path'); // cache hit
 ```
 
-### Custom Format Integration
+### Custom format integration
 
 ```typescript
 // Implement ParseIntegrationInterface for custom formats
@@ -405,11 +430,11 @@ const csvIntegration: ParseIntegrationInterface = {
 const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString);
 ```
 
-## API Reference
+## API reference
 
-### `Inline` Facade
+### `Inline` facade
 
-#### Static Factory Methods
+#### Static factory methods
 
 | Method                        | Input                                    | Returns              |
 | ----------------------------- | ---------------------------------------- | -------------------- |
@@ -425,7 +450,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `from(typeFormat, data)`      | `TypeFormat` enum                        | `AccessorsInterface` |
 | `make(AccessorClass, data)`   | Accessor constructor                     | `AbstractAccessor`   |
 
-#### Accessor Read Methods
+#### Accessor read methods
 
 | Method                      | Returns                                 |
 | --------------------------- | --------------------------------------- |
@@ -440,7 +465,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `keys(path?)`               | `string[]`                              |
 | `getRaw()`                  | `unknown`                               |
 
-#### Accessor Write Methods (immutable)
+#### Accessor write methods (immutable)
 
 | Method                   | Description            |
 | ------------------------ | ---------------------- |
@@ -451,20 +476,20 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `merge(path, value)`     | Deep-merge at path     |
 | `mergeAll(value)`        | Deep-merge at root     |
 
-#### Modifier Methods
+#### Modifier methods
 
 | Method            | Description                |
 | ----------------- | -------------------------- |
 | `readonly(flag?)` | Block all writes           |
 | `strict(flag?)`   | Toggle security validation |
 
-#### TypeFormat Enum
+#### TypeFormat enum
 
 `Array` · `Object` · `Json` · `Xml` · `Yaml` · `Ini` · `Env` · `Ndjson` · `Any`
 
 ## Exports
 
-The package uses **named exports only** (no default exports). All public types are available from the main entry point:
+The package uses named exports only (no default exports). All public types are available from the main entry point:
 
 ```typescript
 import {

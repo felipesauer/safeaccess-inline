@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/felipesauer/safeaccess-inline/main/.github/assets/logo.svg" width="80" alt="safeaccess-inline logo">
 </p>
 
-<h1 align="center">Safe Access Inline - PHP</h1>
+<h1 align="center">Safe Access Inline — PHP</h1>
 
 <p align="center">
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
@@ -15,7 +15,31 @@
 
 ---
 
-PHP library for safe nested data access with dot notation — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects with built-in security validation, immutable writes, and a fluent builder API.
+PHP library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. Zero production dependencies.
+
+## The problem
+
+Reading nested data from external sources requires more than null-safe access. You also need to defend against XXE in XML, anchor bombs in YAML, PHP magic method injection, stream wrapper abuse, superglobal access, and payload size attacks. Without a tool for this, that validation is boilerplate you write manually for every format and every endpoint.
+
+**Without this library (XML from an external API):**
+
+```php
+libxml_disable_entity_loader(true);
+$xml = simplexml_load_string($input, 'SimpleXMLElement', LIBXML_NOENT);
+if ($xml === false) {
+    throw new RuntimeException('Invalid XML');
+}
+// validate keys against magic methods, superglobals, stream wrappers...
+// enforce depth and key count limits...
+$host = isset($xml->database->host) ? (string) $xml->database->host : null;
+```
+
+**With this library:**
+
+```php
+$host = Inline::fromXml($input)->get('database.host');
+// XXE blocked, forbidden keys validated, depth enforced — by default
+```
 
 ## Installation
 
@@ -27,7 +51,7 @@ composer require safeaccess/inline
 
 **Optional:** `ext-yaml` for improved YAML parsing performance (a built-in minimal parser is used by default).
 
-## Quick Start
+## Quick start
 
 ```php
 use SafeAccess\Inline\Inline;
@@ -45,9 +69,57 @@ $updated->get('user.email');           // 'alice@example.com'
 $accessor->has('user.email');          // false (original unchanged)
 ```
 
-## Dot Notation Syntax
+## Security
 
-### Basic Syntax
+All public entry points validate input **by default**. Every key passes through `SecurityGuard` and `SecurityParser` before being accessible.
+
+### What gets blocked
+
+| Category            | Examples                                                              | Reason                                   |
+| ------------------- | --------------------------------------------------------------------- | ---------------------------------------- |
+| PHP magic methods   | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, ... | Prevent PHP magic behavior via data keys |
+| Prototype pollution | `__proto__`, `constructor`, `prototype`                               | Prevent prototype pollution attacks      |
+| PHP superglobals    | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_SERVER`, `_ENV`, ...         | Prevent superglobal variable access      |
+| Stream wrapper URIs | `php://input`, `phar://...`, `data://...`, `file://...`               | Prevent stream wrapper injection         |
+
+### Format-specific protections
+
+| Format | Protection                                                              |
+| ------ | ----------------------------------------------------------------------- |
+| XML    | Rejects `<!DOCTYPE` — prevents XXE (XML External Entity) attacks        |
+| YAML   | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
+| All    | Forbidden key validation on every parsed key                            |
+
+### Structural limits
+
+| Limit                    | Default | Description                           |
+| ------------------------ | ------- | ------------------------------------- |
+| `maxPayloadBytes`        | 10 MB   | Maximum raw string input size         |
+| `maxKeys`                | 10,000  | Maximum total key count               |
+| `maxDepth`               | 512     | Maximum structural nesting depth      |
+| `maxResolveDepth`        | 100     | Maximum recursion for path resolution |
+| `maxCountRecursiveDepth` | 100     | Maximum recursion when counting keys  |
+
+### Custom forbidden keys
+
+```php
+$guard = new SecurityGuard(extraForbiddenKeys: ['secret', 'internal_token']);
+$accessor = Inline::withSecurityGuard($guard)->fromJson($data);
+```
+
+### Disabling validation for trusted input
+
+```php
+$accessor = Inline::withStrictMode(false)->fromJson($trustedPayload);
+```
+
+> **Warning:** Disabling strict mode skips **all** validation. Only use with application-controlled input.
+
+For vulnerability reports, see [SECURITY.md](../../SECURITY.md).
+
+## Dot notation syntax
+
+### Basic syntax
 
 | Syntax            | Example            | Description                     |
 | ----------------- | ------------------ | ------------------------------- |
@@ -67,19 +139,19 @@ $data->get('users.1.name'); // 'Bob'
 | Syntax          | Example             | Description                               |
 | --------------- | ------------------- | ----------------------------------------- |
 | `[0]`           | `users[0]`          | Bracket index access                      |
-| `*` or `[*]`    | `users.*`           | Wildcard - expand all children            |
-| `..key`         | `..name`            | Recursive descent - find key at any depth |
+| `*` or `[*]`    | `users.*`           | Wildcard — expand all children            |
+| `..key`         | `..name`            | Recursive descent — find key at any depth |
 | `..['a','b']`   | `..['name','age']`  | Multi-key recursive descent               |
 | `[0,1,2]`       | `users[0,1,2]`      | Multi-index selection                     |
 | `['a','b']`     | `['name','age']`    | Multi-key selection                       |
-| `[0:5]`         | `items[0:5]`        | Slice - indices 0 through 4               |
+| `[0:5]`         | `items[0:5]`        | Slice — indices 0 through 4               |
 | `[::2]`         | `items[::2]`        | Slice with step                           |
 | `[::-1]`        | `items[::-1]`       | Reverse slice                             |
 | `[?expr]`       | `users[?age>18]`    | Filter predicate expression               |
-| `.{fields}`     | `.{name, age}`      | Projection - select fields                |
+| `.{fields}`     | `.{name, age}`      | Projection — select fields                |
 | `.{alias: src}` | `.{fullName: name}` | Aliased projection                        |
 
-### Filter Expressions
+### Filter expressions
 
 ```php
 $data = Inline::fromJson('[
@@ -92,18 +164,18 @@ $data = Inline::fromJson('[
 $data->get('[?age>18]');                          // Alice and Carol
 
 // Logical: && and ||
-$data->get('[?age>18 && role==\'admin\']');         // Alice and Carol
+$data->get('[?age>18 && role==\'admin\']');       // Alice and Carol
 
 // Built-in functions: starts_with, contains, values
-$data->get('[?starts_with(@.name, \'A\')]');        // Alice
-$data->get('[?contains(@.name, \'ob\')]');          // Bob
+$data->get('[?starts_with(@.name, \'A\')]');      // Alice
+$data->get('[?contains(@.name, \'ob\')]');        // Bob
 
 // Arithmetic: +, -, *, /
 $orders = Inline::fromJson('[{"price": 10, "qty": 5}, {"price": 3, "qty": 2}]');
-$orders->get('[?@.price * @.qty > 20]');           // first order only
+$orders->get('[?@.price * @.qty > 20]');          // first order only
 ```
 
-## Supported Formats
+## Supported formats
 
 <details>
 <summary><strong>JSON</strong></summary>
@@ -216,7 +288,7 @@ $accessor->get('key'); // 'value'
 
 </details>
 
-## Reading & Writing
+## Reading & writing
 
 ```php
 $accessor = Inline::fromJson('{"a": {"b": 1, "c": 2}}');
@@ -252,7 +324,7 @@ $readonly->set('a.b', 99);             // throws ReadonlyViolationException
 
 ## Configure
 
-### Builder Pattern
+### Builder pattern
 
 ```php
 use SafeAccess\Inline\Inline;
@@ -265,7 +337,7 @@ $accessor = Inline::withSecurityGuard(new SecurityGuard(extraForbiddenKeys: ['se
     ->fromJson($untrustedInput);
 ```
 
-### Builder Methods
+### Builder methods
 
 | Method                                | Description                                      |
 | ------------------------------------- | ------------------------------------------------ |
@@ -275,49 +347,7 @@ $accessor = Inline::withSecurityGuard(new SecurityGuard(extraForbiddenKeys: ['se
 | `withParserIntegration($integration)` | Custom format parser for `fromAny()`             |
 | `withStrictMode(false)`               | Disable security validation (trusted input only) |
 
-## Security
-
-All public entry points validate input **by default**. Every key passes through `SecurityGuard` and `SecurityParser`.
-
-### Forbidden Keys
-
-| Category            | Examples                                                              | Reason                                   |
-| ------------------- | --------------------------------------------------------------------- | ---------------------------------------- |
-| PHP magic methods   | `__construct`, `__destruct`, `__wakeup`, `__sleep`, `__toString`, ... | Prevent PHP magic behavior via data keys |
-| Prototype pollution | `__proto__`, `constructor`, `prototype`                               | Prevent prototype pollution attacks      |
-| PHP superglobals    | `GLOBALS`, `_GET`, `_POST`, `_COOKIE`, `_SERVER`, `_ENV`, ...         | Prevent superglobal access               |
-| Stream wrappers     | `php://input`, `phar://...`, `data://...`, `file://...`               | Prevent stream wrapper injection         |
-
-Add custom forbidden keys:
-
-```php
-$guard = new SecurityGuard(extraForbiddenKeys: ['secret', 'internal_token']);
-$accessor = Inline::withSecurityGuard($guard)->fromJson($data);
-```
-
-### Structural Limits
-
-| Limit                    | Default | Description                           |
-| ------------------------ | ------- | ------------------------------------- |
-| `maxPayloadBytes`        | 10 MB   | Maximum raw string input size         |
-| `maxKeys`                | 10,000  | Maximum total key count               |
-| `maxDepth`               | 512     | Maximum structural nesting depth      |
-| `maxResolveDepth`        | 100     | Maximum recursion for path resolution |
-| `maxCountRecursiveDepth` | 100     | Maximum recursion when counting keys  |
-
-### Format-Specific Protections
-
-| Format | Protection                                       |
-| ------ | ------------------------------------------------ |
-| XML    | Rejects `<!DOCTYPE` - prevents XXE attacks       |
-| YAML   | Blocks unsafe tags, anchors, aliases, merge keys |
-| All    | Forbidden key validation on every parsed key     |
-
-> Disable for trusted input: `Inline::withStrictMode(false)->fromJson($trustedInput)`
-
-For vulnerability reports, see [SECURITY.md](../../SECURITY.md).
-
-## Error Handling
+## Error handling
 
 All exceptions extend `AccessorException`:
 
@@ -344,11 +374,11 @@ try {
 }
 ```
 
-### Exception Hierarchy
+### Exception hierarchy
 
 | Exception                    | Extends                  | When                                      |
 | ---------------------------- | ------------------------ | ----------------------------------------- |
-| `AccessorException`          | `RuntimeException`       | Root - catch-all                          |
+| `AccessorException`          | `RuntimeException`       | Root — catch-all                          |
 | `SecurityException`          | `AccessorException`      | Forbidden key, payload, structural limits |
 | `InvalidFormatException`     | `AccessorException`      | Malformed JSON, XML, INI, NDJSON          |
 | `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |
@@ -357,9 +387,9 @@ try {
 | `UnsupportedTypeException`   | `AccessorException`      | Unknown accessor class in `make()`        |
 | `ParserException`            | `AccessorException`      | Internal parser errors                    |
 
-## Advanced Usage
+## Advanced usage
 
-### Strict Mode
+### Strict mode
 
 ```php
 // Disable all security validation for trusted input
@@ -368,7 +398,7 @@ $accessor = Inline::withStrictMode(false)->fromJson($trustedPayload);
 
 > **Warning:** Disabling strict mode skips **all** validation. Only use with application-controlled input.
 
-### Path Cache
+### Path cache
 
 ```php
 // Implement PathCacheInterface for repeated lookups
@@ -378,7 +408,7 @@ $accessor->get('deeply.nested.path'); // parses path
 $accessor->get('deeply.nested.path'); // cache hit
 ```
 
-### Custom Format Integration
+### Custom format integration
 
 ```php
 // Implement ParseIntegrationInterface for custom formats
@@ -399,11 +429,11 @@ class CsvIntegration implements ParseIntegrationInterface
 $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvString);
 ```
 
-## API Reference
+## API reference
 
-### `Inline` Facade
+### `Inline` facade
 
-#### Static Factory Methods
+#### Static factory methods
 
 | Method                          | Input                              | Returns              |
 | ------------------------------- | ---------------------------------- | -------------------- |
@@ -419,7 +449,7 @@ $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvStr
 | `from($typeFormat, $data)`      | `TypeFormat` enum                  | `AccessorsInterface` |
 | `make($class, $data)`           | `class-string`                     | `AbstractAccessor`   |
 
-#### Accessor Read Methods
+#### Accessor read methods
 
 | Method                        | Returns                                 |
 | ----------------------------- | --------------------------------------- |
@@ -434,7 +464,7 @@ $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvStr
 | `keys($path?)`                | `list<string>`                          |
 | `getRaw()`                    | `mixed`                                 |
 
-#### Accessor Write Methods (immutable)
+#### Accessor write methods (immutable)
 
 | Method                     | Description            |
 | -------------------------- | ---------------------- |
@@ -445,14 +475,14 @@ $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvStr
 | `merge($path, $value)`     | Deep-merge at path     |
 | `mergeAll($value)`         | Deep-merge at root     |
 
-#### Modifier Methods
+#### Modifier methods
 
 | Method             | Description                |
 | ------------------ | -------------------------- |
 | `readonly($flag?)` | Block all writes           |
 | `strict($flag?)`   | Toggle security validation |
 
-#### TypeFormat Enum
+#### TypeFormat enum
 
 `Array` · `Object` · `Json` · `Xml` · `Yaml` · `Ini` · `Env` · `Ndjson` · `Any`
 
