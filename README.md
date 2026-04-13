@@ -160,6 +160,8 @@ Safe Access Inline applies security validation **by default** on every public en
 
 Keys starting with `__` are matched case-insensitively. Stream wrapper URIs and protocol schemes are matched by prefix.
 
+> **Per-runtime design:** The PHP and TypeScript packages intentionally block different keys because each package only guards against threats relevant to its own runtime. PHP magic methods and superglobals have no meaning in a JavaScript runtime; `__dirname`, `__filename`, and browser protocol schemes (`javascript:`, `blob:`, `ws://`) have no equivalent PHP attack surface.
+
 ### Format-specific protections
 
 | Format | Protection                                                              |
@@ -395,6 +397,8 @@ accessor.get('DB_HOST'); // 'localhost'
 
 <details>
 <summary><strong>NDJSON (Newline-Delimited JSON)</strong></summary>
+
+Each line is parsed as an independent JSON object and indexed from `0` by its position in the input. Blank lines and trailing newlines are skipped. Security validation is applied to each line individually.
 
 ```php
 // PHP

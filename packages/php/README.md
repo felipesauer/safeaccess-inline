@@ -242,6 +242,8 @@ $accessor->get('DB_HOST'); // 'localhost'
 <details>
 <summary><strong>NDJSON</strong></summary>
 
+Each line is parsed as an independent JSON object and indexed from `0` by its position in the input. Blank lines and trailing newlines are skipped. Security validation is applied to each line individually.
+
 ```php
 $ndjson = '{"id":1,"name":"Alice"}' . "\n" . '{"id":2,"name":"Bob"}';
 $accessor = Inline::fromNdjson($ndjson);
