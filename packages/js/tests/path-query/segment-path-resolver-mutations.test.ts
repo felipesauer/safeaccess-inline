@@ -623,4 +623,43 @@ describe(`${SegmentPathResolver.name} mutation tests`, () => {
             expect(result).toHaveLength(2);
         });
     });
+
+    describe('collectDescent - continuation array spread behavior', () => {
+        it('spreads array results from continuation segments into flat array', () => {
+            const data = {
+                a: { items: [1, 2] },
+                b: { items: [3, 4] },
+            };
+
+            const result = r(data, '..items[*]') as unknown[];
+
+            // Mutation: Array.isArray(resolved) → false  → results.push([1,2]) then results.push([3,4])
+            // Result: [[1,2],[3,4]] with mutation, [1,2,3,4] without
+            expect(Array.isArray(result[0])).toBe(false);
+            expect(result).toHaveLength(4);
+        });
+
+        it('does not wrap continuation array results in an extra array layer', () => {
+            const data = { root: { keys: ['x', 'y'] } };
+
+            const result = r(data, '..keys[*]') as unknown[];
+
+            // With mutation: [['x','y']] — result[0] would be an array
+            expect(result).toEqual(['x', 'y']);
+        });
+
+        it('handles nested objects where continuation produces multi-element array', () => {
+            const data = {
+                section1: { scores: [10, 20, 30] },
+                section2: { scores: [40, 50] },
+            };
+
+            const result = r(data, '..scores[0:2]') as unknown[];
+
+            // section1 wildcard [0:2] → [10,20]; section2 [0:2] → [40,50]
+            // Spread: [10,20,40,50]; with mutation: [[10,20],[40,50]]
+            expect(result).toHaveLength(4);
+            expect(Array.isArray(result[0])).toBe(false);
+        });
+    });
 });

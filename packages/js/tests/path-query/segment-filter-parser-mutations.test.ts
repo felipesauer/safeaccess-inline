@@ -733,3 +733,67 @@ describe(`${SegmentFilterParser.name} > mutation killing - toNumber in arithmeti
         expect(parser.evaluate({ x: 5 }, expr)).toBe(true);
     });
 });
+
+describe(`${SegmentFilterParser.name} > funcCompare operator/value field accuracy`, () => {
+    it('trims trailing whitespace from string value in funcCompare expression', () => {
+        const parser = new SegmentFilterParser(new SecurityGuard());
+
+        // 'true' with trailing spaces: without .trim(), parseValue('true   ') returns the raw string,
+        // not the boolean true
+        const expr = parser.parse("starts_with(@.name, 'A') == true   ");
+
+        expect(expr.conditions[0].value).toBe(true); // boolean, not 'true   '
+    });
+
+    it('stores correct operator (not value) for funcCompare conditions', () => {
+        const parser = new SegmentFilterParser(new SecurityGuard());
+
+        const expr = parser.parse('values(@.items) == 5');
+
+        // Mutation: operator = funcCompareMatch[4] = '5' (the value), not '=='
+        expect(expr.conditions[0].operator).toBe('==');
+        expect(expr.conditions[0].operator).not.toBe('5');
+    });
+
+    it('stores correct operator for funcCompare with > comparison', () => {
+        const parser = new SegmentFilterParser(new SecurityGuard());
+
+        const expr = parser.parse('values(@.tags) > 2');
+
+        // Mutation: operator = funcCompareMatch[4] = '2', not '>'
+        expect(expr.conditions[0].operator).toBe('>');
+        expect(expr.conditions[0].operator).not.toBe('2');
+    });
+});
+
+describe(`${SegmentFilterParser.name} > resolveField missing key returns null`, () => {
+    it('returns null for a missing simple field (not undefined)', () => {
+        const parser = new SegmentFilterParser(new SecurityGuard());
+
+        // Mutation: hasOwnProperty → true → item['missing'] = undefined
+        // undefined === null is false; null === null is true
+        const expr = parser.parse('missing == null');
+
+        expect(parser.evaluate({ a: 1 }, expr)).toBe(true);
+    });
+
+    it('returns null for missing field in inequality with null', () => {
+        const parser = new SegmentFilterParser(new SecurityGuard());
+
+        const expr = parser.parse('noSuchField != null');
+
+        // missing field → null → null != null → false
+        expect(parser.evaluate({ a: 1 }, expr)).toBe(false);
+    });
+
+    it('returns field value when key exists (not breaking the hasOwnProperty true path)', () => {
+        const parser = new SegmentFilterParser(new SecurityGuard());
+
+        const expr = parser.parse('name == null');
+
+        // field 'name' EXISTS and is null → should match
+        expect(parser.evaluate({ name: null }, expr)).toBe(true);
+        // field 'name' EXISTS but is not null → should not match
+        expect(parser.evaluate({ name: 'Alice' }, expr)).toBe(false);
+    });
+});
