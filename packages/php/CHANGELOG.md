@@ -2,6 +2,18 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.1.5](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.4...php-v0.1.5) (2026-04-13)
+
+
+### Bug Fixes
+
+* reject hyphenated YAML anchors and aliases ([#38](https://github.com/felipesauer/safeaccess-inline/issues/38)) ([9c77879](https://github.com/felipesauer/safeaccess-inline/commit/9c778790cf95742a57dae82721dd791ff623d75d))
+
+
+### Miscellaneous Chores
+
+* **php:** bump the dev-dependencies group in /packages/php with 2 updates ([#35](https://github.com/felipesauer/safeaccess-inline/issues/35)) ([996939b](https://github.com/felipesauer/safeaccess-inline/commit/996939b49d29f14a99e0188a6872537c079becbf))
+
 ## [0.1.4](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.3...php-v0.1.4) (2026-04-12)
 
 
