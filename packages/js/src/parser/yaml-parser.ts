@@ -62,11 +62,11 @@ export class YamlParser {
                 );
             }
 
-            if (/(?:^|\s)&\w+/.test(trimmed)) {
+            if (/(?:^|\s)&[\w-]+/.test(trimmed)) {
                 throw new YamlParseException(`YAML anchors are not supported (line ${i + 1}).`);
             }
 
-            if (/(?:^|\s)\*\w+/.test(trimmed)) {
+            if (/(?:^|\s)\*[\w-]+/.test(trimmed)) {
                 throw new YamlParseException(`YAML aliases are not supported (line ${i + 1}).`);
             }
 

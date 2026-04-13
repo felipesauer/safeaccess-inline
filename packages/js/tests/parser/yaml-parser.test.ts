@@ -172,6 +172,10 @@ describe(`${YamlParser.name} > security - unsafe constructs`, () => {
         expect(() => makeParser().parse('&anchor: value')).toThrow(YamlParseException);
     });
 
+    it('throws YamlParseException for anchor names with hyphens (&my-anchor)', () => {
+        expect(() => makeParser().parse('a: &my-anchor hello')).toThrow(YamlParseException);
+    });
+
     it('throws with a message mentioning anchors', () => {
         expect(() => makeParser().parse('a: &anchor hello')).toThrow(/anchor/i);
     });
@@ -190,6 +194,10 @@ describe(`${YamlParser.name} > security - unsafe constructs`, () => {
 
     it('throws YamlParseException for alias at start of line (no preceding space)', () => {
         expect(() => makeParser().parse('*alias: value')).toThrow(YamlParseException);
+    });
+
+    it('throws YamlParseException for alias names with hyphens (*my-alias)', () => {
+        expect(() => makeParser().parse('a: *my-alias hello')).toThrow(YamlParseException);
     });
 
     it('throws with a message mentioning aliases', () => {
