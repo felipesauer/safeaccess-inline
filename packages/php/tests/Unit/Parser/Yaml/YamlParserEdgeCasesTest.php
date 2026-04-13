@@ -75,8 +75,22 @@ describe(YamlParser::class, function (): void {
                 ->toThrow(YamlParseException::class);
         });
 
+        it('throws YamlParseException for an anchor with hyphens (&my-anchor)', function (): void {
+            $yaml = "base: &my-anchor\n  name: Alice";
+
+            expect(fn () => $this->parser->parse($yaml))
+                ->toThrow(YamlParseException::class);
+        });
+
         it('throws YamlParseException for a YAML alias (*)', function (): void {
             $yaml = "copy: *anchor";
+
+            expect(fn () => $this->parser->parse($yaml))
+                ->toThrow(YamlParseException::class);
+        });
+
+        it('throws YamlParseException for an alias with hyphens (*my-alias)', function (): void {
+            $yaml = "copy: *my-alias";
 
             expect(fn () => $this->parser->parse($yaml))
                 ->toThrow(YamlParseException::class);

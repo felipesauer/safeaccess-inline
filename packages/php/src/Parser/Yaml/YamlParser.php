@@ -78,13 +78,13 @@ final class YamlParser
                 );
             }
 
-            if (preg_match('/(?:^|\s)&\w+/', $trimmed)) {
+            if (preg_match('/(?:^|\s)&[\w-]+/', $trimmed)) {
                 throw new YamlParseException(
                     "YAML anchors are not supported (line " . ($lineNum + 1) . ")."
                 );
             }
 
-            if (preg_match('/(?:^|\s)\*\w+/', $trimmed)) {
+            if (preg_match('/(?:^|\s)\*[\w-]+/', $trimmed)) {
                 throw new YamlParseException(
                     "YAML aliases are not supported (line " . ($lineNum + 1) . ")."
                 );
