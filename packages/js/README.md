@@ -4,6 +4,8 @@
 
 <h1 align="center">Safe Access Inline — TypeScript</h1>
 
+TypeScript/JavaScript library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. ESM, zero production dependencies.
+
 <p align="center">
   <a href="https://www.npmjs.com/package/@safeaccess/inline"><img src="https://img.shields.io/npm/v/@safeaccess/inline?label=npm" alt="npm"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
@@ -14,8 +16,6 @@
 </p>
 
 ---
-
-TypeScript/JavaScript library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. ESM, zero production dependencies.
 
 ## The problem
 
