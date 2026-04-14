@@ -4,6 +4,8 @@
 
 <h1 align="center">Safe Access Inline — PHP</h1>
 
+PHP library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. Zero production dependencies.
+
 <p align="center">
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
@@ -14,8 +16,6 @@
 </p>
 
 ---
-
-PHP library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. Zero production dependencies.
 
 ## The problem
 
