@@ -19,7 +19,7 @@
         "format:php": "cd packages/php && composer format"
     },
     "devDependencies": {
-        "@commitlint/cli": "^20.4",
+        "@commitlint/cli": "^20.5",
         "@commitlint/config-conventional": "^20.4",
         "@eslint/js": "^10.0.1",
         "eslint": "^10.2.1",
@@ -27,7 +27,7 @@
         "lint-staged": "^16.3",
         "mermaid": "^11.13.0",
         "prettier": "^3.8",
-        "typescript-eslint": "^8.59.0",
+        "typescript-eslint": "^8.59.1",
         "vitepress": "^1.6.4",
         "vitepress-plugin-mermaid": "^2.0.17"
     },
