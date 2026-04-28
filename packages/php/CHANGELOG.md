@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.1.7](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.6...php-v0.1.7) (2026-04-28)
+
+
+### Miscellaneous Chores
+
+* **php:** bump phpstan/phpstan from 2.1.50 to 2.1.51 in /packages/php in the dev-dependencies group ([#47](https://github.com/felipesauer/safeaccess-inline/issues/47)) ([09a591e](https://github.com/felipesauer/safeaccess-inline/commit/09a591e332fd2d700048c7c9fc907f7ab2e1dea0))
+
 ## [0.1.6](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.5...php-v0.1.6) (2026-04-21)
 
 
