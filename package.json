@@ -25,9 +25,9 @@
         "eslint": "^10.3.0",
         "husky": "^9.0",
         "lint-staged": "^16.3",
-        "mermaid": "^11.13.0",
+        "mermaid": "^11.15.0",
         "prettier": "^3.8",
-        "typescript-eslint": "^8.59.2",
+        "typescript-eslint": "^8.59.3",
         "vitepress": "^1.6.4",
         "vitepress-plugin-mermaid": "^2.0.17"
     },
