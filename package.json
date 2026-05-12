@@ -19,7 +19,7 @@
         "format:php": "cd packages/php && composer format"
     },
     "devDependencies": {
-        "@commitlint/cli": "^20.5",
+        "@commitlint/cli": "^21.0",
         "@commitlint/config-conventional": "^21.0",
         "@eslint/js": "^10.0.1",
         "eslint": "^10.3.0",
