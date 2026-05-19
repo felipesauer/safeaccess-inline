@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.1.9](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.8...php-v0.1.9) (2026-05-19)
+
+
+### Miscellaneous Chores
+
+* **php:** bump the dev-dependencies group in /packages/php with 2 updates ([#58](https://github.com/felipesauer/safeaccess-inline/issues/58)) ([30e8aad](https://github.com/felipesauer/safeaccess-inline/commit/30e8aad6e5b19b8486a0a31316a701453ddc297a))
+
 ## [0.1.8](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.7...php-v0.1.8) (2026-05-04)
 
 
