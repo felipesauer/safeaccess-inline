@@ -262,6 +262,37 @@ describe(`${Inline.name} > PathQuery > filter (parity)`, () => {
         });
         expect(accessor.get("items[?contains(@.tag, 'world')].tag")).toEqual(['hello-world']);
     });
+
+    it('matches integer data with a scientific-notation literal (1e3 == 1000)', () => {
+        const accessor = Inline.fromArray({ items: [{ v: 1000 }, { v: 1 }] });
+        expect(accessor.get('items[?v == 1e3].v')).toEqual([1000]);
+    });
+
+    it('treats a hex literal as a string, matching only string data (0x1A)', () => {
+        const accessor = Inline.fromArray({ items: [{ v: '0x1A' }, { v: 26 }] });
+        expect(accessor.get('items[?v == 0x1A].v')).toEqual(['0x1A']);
+    });
+
+    it('excludes a non-numeric string from a > comparison', () => {
+        const accessor = Inline.fromArray({ items: [{ v: 'abc' }, { v: 10 }] });
+        expect(accessor.get('items[?v > 5].v')).toEqual([10]);
+    });
+
+    it('excludes a numeric string from a > comparison', () => {
+        const accessor = Inline.fromArray({ items: [{ v: '10' }, { v: 20 }] });
+        expect(accessor.get('items[?v > 5].v')).toEqual([20]);
+    });
+});
+
+describe(`${Inline.name} > PathQuery > YAML flow map (parity)`, () => {
+    it('splits a quoted flow-map key on the first colon outside quotes', () => {
+        const accessor = Inline.fromYaml('data: {"key:with:colons": value}');
+        expect(accessor.get('data')).toEqual({ 'key:with:colons': 'value' });
+    });
+
+    it('rejects a merge key used inside a flow map', () => {
+        expect(() => Inline.fromYaml('data: {<<: {a: 1}, b: 2}')).toThrow();
+    });
 });
 
 describe(`${Inline.name} > PathQuery > multi-key and multi-index (parity)`, () => {

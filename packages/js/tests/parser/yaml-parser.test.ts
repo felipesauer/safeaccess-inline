@@ -145,6 +145,53 @@ describe(`${YamlParser.name} > inline flow`, () => {
         const result = makeParser().parse(yaml);
         expect(result['tags']).toBe('[a b c');
     });
+
+    it('splits on the first colon outside quotes for a double-quoted flow-map key', () => {
+        // findFlowColon: a colon inside a quoted key must not split the pair
+        const yaml = 'data: {"key:with:colons": value}';
+        const result = makeParser().parse(yaml);
+        expect(result['data']).toEqual({ 'key:with:colons': 'value' });
+    });
+
+    it('unquotes a single-quoted flow-map key containing a colon', () => {
+        const yaml = "data: {'a:b': v}";
+        const result = makeParser().parse(yaml);
+        expect(result['data']).toEqual({ 'a:b': 'v' });
+    });
+
+    it('keeps a flow-map value containing a colon (URL) intact', () => {
+        // Regression: the first colon (after url) is outside quotes
+        const yaml = 'm: {url: http://x}';
+        const result = makeParser().parse(yaml);
+        expect(result['m']).toEqual({ url: 'http://x' });
+    });
+
+    it('treats a leading colon in a flow-map item as an empty key', () => {
+        // findFlowColon returns 0; the empty key is kept (colonPos < 0 guard)
+        const yaml = 'd: {: value}';
+        const result = makeParser().parse(yaml);
+        expect(result['d']).toEqual({ '': 'value' });
+    });
+
+    it('unquotes an empty double-quoted flow-map key', () => {
+        // unquoteKey strips a 2-char quoted key ("") to an empty string
+        const yaml = 'd: {"": v}';
+        const result = makeParser().parse(yaml);
+        expect(result['d']).toEqual({ '': 'v' });
+    });
+
+    it('unescapes doubled single quotes inside a single-quoted flow-map key', () => {
+        const yaml = "d: {'a''b': v}";
+        const result = makeParser().parse(yaml);
+        expect(result['d']).toEqual({ "a'b": 'v' });
+    });
+
+    it('ignores a flow-map item whose only colon is inside an unterminated quote', () => {
+        // The colon sits inside the quoted region, so no separator is found
+        const yaml = 'd: {"ab: v}';
+        const result = makeParser().parse(yaml);
+        expect(result['d']).toEqual({});
+    });
 });
 
 describe(`${YamlParser.name} > security - unsafe constructs`, () => {
@@ -230,6 +277,18 @@ describe(`${YamlParser.name} > security - unsafe constructs`, () => {
 
     it('does not throw for <<: appearing inside a string value', () => {
         expect(() => makeParser().parse('note: use <<: syntax')).not.toThrow();
+    });
+
+    it('throws YamlParseException for a merge key used as a flow-map key', () => {
+        expect(() => makeParser().parse('data: {<<: {a: 1}, b: 2}')).toThrow(/merge key/i);
+    });
+
+    it('throws YamlParseException for a merge key as a later flow-map key', () => {
+        expect(() => makeParser().parse('data: {a: 1, <<: {b: 2}}')).toThrow(/merge key/i);
+    });
+
+    it('does not throw for an ordinary flow map without merge keys', () => {
+        expect(() => makeParser().parse('data: {a: 1, b: 2}')).not.toThrow();
     });
 
     it('does not throw for ! inside double-quoted string', () => {

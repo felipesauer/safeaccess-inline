@@ -102,6 +102,36 @@ describe(YamlParser::class, function (): void {
             expect(fn () => $this->parser->parse($yaml))
                 ->toThrow(YamlParseException::class);
         });
+
+        it('throws YamlParseException for a merge key used as a flow-map key', function (): void {
+            $yaml = "data: {<<: {a: 1}, b: 2}";
+
+            expect(fn () => $this->parser->parse($yaml))
+                ->toThrow(YamlParseException::class, 'merge keys (<<) are not supported');
+        });
+
+        it('throws YamlParseException for a merge key as a later flow-map key', function (): void {
+            $yaml = "data: {a: 1, <<: {b: 2}}";
+
+            expect(fn () => $this->parser->parse($yaml))
+                ->toThrow(YamlParseException::class, 'merge keys (<<) are not supported');
+        });
+
+        it('does not throw for the "<<" text inside a quoted string value', function (): void {
+            $yaml = "note: use <<: syntax";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result)->toBe(['note' => 'use <<: syntax']);
+        });
+
+        it('does not treat a flow-map key containing a single "<" as a merge key', function (): void {
+            $yaml = "expr: {a: 1, b: 2}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['expr'])->toBe(['a' => 1, 'b' => 2]);
+        });
     });
 
     // parse() - coverage-gap scenarios
@@ -295,6 +325,67 @@ describe(YamlParser::class, function (): void {
 
             expect($result['meta']['valid'])->toBe(1);
             expect($result['meta']['other'])->toBe(2);
+        });
+
+        it('splits on the first colon outside quotes for a double-quoted flow-map key', function (): void {
+            // findFlowColon: a colon inside a quoted key must not split the pair
+            $yaml = "data: {\"key:with:colons\": value}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['data'])->toBe(['key:with:colons' => 'value']);
+        });
+
+        it('unquotes a single-quoted flow-map key containing a colon', function (): void {
+            $yaml = "data: {'a:b': v}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['data'])->toBe(['a:b' => 'v']);
+        });
+
+        it('keeps a flow-map value containing a colon (URL) intact', function (): void {
+            // Regression: the first colon (after url) is outside quotes
+            $yaml = "m: {url: http://x}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['m'])->toBe(['url' => 'http://x']);
+        });
+
+        it('treats a leading colon in a flow-map item as an empty key', function (): void {
+            // findFlowColon returns 0; the empty key is kept (colonPos < 0 guard)
+            $yaml = "d: {: value}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['d'])->toBe(['' => 'value']);
+        });
+
+        it('unquotes an empty double-quoted flow-map key', function (): void {
+            // unquoteKey strips a 2-char quoted key ("") to an empty string
+            $yaml = "d: {\"\": v}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['d'])->toBe(['' => 'v']);
+        });
+
+        it('unescapes doubled single quotes inside a single-quoted flow-map key', function (): void {
+            $yaml = "d: {'a''b': v}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['d'])->toBe(["a'b" => 'v']);
+        });
+
+        it('ignores a flow-map item whose only colon is inside an unterminated quote', function (): void {
+            // The colon sits inside the quoted region, so no separator is found
+            $yaml = "d: {\"ab: v}";
+
+            $result = $this->parser->parse($yaml);
+
+            expect($result['d'])->toBe([]);
         });
 
         it('handles quoted strings inside a flow sequence', function (): void {

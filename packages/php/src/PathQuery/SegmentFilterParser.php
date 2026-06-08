@@ -239,11 +239,50 @@ final class SegmentFilterParser implements FilterEvaluatorInterface
             return substr($raw, 1, -1);
         }
 
-        if (is_numeric($raw)) {
-            return str_contains($raw, '.') ? (float) $raw : (int) $raw;
+        return $this->numericLiteral($raw) ?? $raw;
+    }
+
+    /**
+     * Coerce a raw token to a number using a runtime-agnostic rule.
+     *
+     * Only plain decimal integers and decimal floats (including scientific
+     * notation) are treated as numbers. Hex (`0x`), binary (`0b`), octal
+     * (`0o`), and underscore-grouped literals are intentionally left as
+     * strings so PHP and JS produce identical results for untrusted input.
+     *
+     * A value that is mathematically an integer (e.g. `1e3`, `1.5e2`) is
+     * returned as an int so it compares equal to integer data under strict
+     * equality; only genuinely fractional values (e.g. `2.5`, `1e-3`) stay
+     * floats. This keeps PHP (int/float distinct) and JS (single number
+     * type) identical under `==`.
+     *
+     * @param string $raw Raw token.
+     *
+     * @return int|float|null The number, or null when the token is not numeric.
+     */
+    private function numericLiteral(string $raw): int|float|null
+    {
+        // Plain decimal integer (handled first so the float branch below
+        // always carries a dot or exponent).
+        if (preg_match('/^[+-]?\d+$/', $raw) === 1) {
+            return (int) $raw;
         }
 
-        return $raw;
+        // Decimal float (with a dot, optional exponent) or an integer mantissa
+        // with a mandatory exponent (e.g. 1e3). Hex/binary/octal never match.
+        if (preg_match('/^[+-]?(?:(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+)$/', $raw) === 1) {
+            $float = (float) $raw;
+
+            // Collapse integral values (1e3 → 1000) to int so they match
+            // integer data; keep fractional values as float.
+            if (is_finite($float) && floor($float) === $float && abs($float) < (float) PHP_INT_MAX) {
+                return (int) $float;
+            }
+
+            return $float;
+        }
+
+        return null;
     }
 
     /**
@@ -264,13 +303,19 @@ final class SegmentFilterParser implements FilterEvaluatorInterface
 
         $expected = $condition['value'];
 
+        // Relational operators only compare two numbers. Any other type
+        // combination yields false, keeping PHP and JS identical (PHP's
+        // native mixed-type comparison and JS coercion diverge otherwise).
+        $bothNumbers = (is_int($fieldValue) || is_float($fieldValue))
+            && (is_int($expected) || is_float($expected));
+
         return match ($condition['operator']) {
             '==' => $fieldValue === $expected,
             '!=' => $fieldValue !== $expected,
-            '>'  => $fieldValue > $expected,
-            '<'  => $fieldValue < $expected,
-            '>=' => $fieldValue >= $expected,
-            '<=' => $fieldValue <= $expected,
+            '>'  => $bothNumbers && $fieldValue > $expected,
+            '<'  => $bothNumbers && $fieldValue < $expected,
+            '>=' => $bothNumbers && $fieldValue >= $expected,
+            '<=' => $bothNumbers && $fieldValue <= $expected,
             default => false,
         };
     }
@@ -373,8 +418,11 @@ final class SegmentFilterParser implements FilterEvaluatorInterface
         }
 
         $toNumber = function (string $token) use ($item): float|int|null {
-            if (is_numeric($token) && !str_starts_with($token, '@')) {
-                return str_contains($token, '.') ? (float) $token : (int) $token;
+            if (!str_starts_with($token, '@')) {
+                $literal = $this->numericLiteral($token);
+                if ($literal !== null) {
+                    return $literal;
+                }
             }
 
             $val = $this->resolveFilterArg($item, $token);
@@ -383,8 +431,8 @@ final class SegmentFilterParser implements FilterEvaluatorInterface
                 return $val;
             }
 
-            if (is_numeric($val)) {
-                return str_contains((string) $val, '.') ? (float) $val : (int) $val;
+            if (is_string($val)) {
+                return $this->numericLiteral($val);
             }
 
             return null;

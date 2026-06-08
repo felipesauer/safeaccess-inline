@@ -212,11 +212,40 @@ export class SegmentFilterParser implements FilterEvaluatorInterface {
             return raw.substring(1, raw.length - 1);
         }
 
-        if (!isNaN(Number(raw)) && raw !== '') {
-            return raw.includes('.') ? parseFloat(raw) : parseInt(raw, 10);
+        return this.numericLiteral(raw) ?? raw;
+    }
+
+    /**
+     * Coerce a raw token to a number using a runtime-agnostic rule.
+     *
+     * Only plain decimal integers and decimal floats (including scientific
+     * notation) are treated as numbers. Hex (`0x`), binary (`0b`), octal
+     * (`0o`), and underscore-grouped literals are intentionally left as
+     * strings so PHP and JS produce identical results for untrusted input.
+     *
+     * The branch is chosen by which pattern matched (not by the presence of a
+     * dot), so `1e3` parses as the number 1000. JS has a single number type,
+     * so integral and fractional values are both plain numbers — this mirrors
+     * the PHP side, which collapses integral values (1e3 → int 1000) so they
+     * compare equal to integer data under strict equality.
+     *
+     * @param raw - Raw token.
+     * @returns The number, or null when the token is not numeric.
+     */
+    private numericLiteral(raw: string): number | null {
+        // Plain decimal integer (handled first so the float branch below
+        // always carries a dot or exponent).
+        if (/^[+-]?\d+$/.test(raw)) {
+            return parseInt(raw, 10);
         }
 
-        return raw;
+        // Decimal float (with a dot, optional exponent) or an integer mantissa
+        // with a mandatory exponent (e.g. 1e3). Hex/binary/octal never match.
+        if (/^[+-]?(?:(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+)$/.test(raw)) {
+            return parseFloat(raw);
+        }
+
+        return null;
     }
 
     /**
@@ -239,19 +268,29 @@ export class SegmentFilterParser implements FilterEvaluatorInterface {
 
         const expected = condition.value;
 
+        if (condition.operator === '==') {
+            return fieldValue === expected;
+        }
+        if (condition.operator === '!=') {
+            return fieldValue !== expected;
+        }
+
+        // Relational operators only compare two numbers. Any other type
+        // combination yields false, keeping PHP and JS identical (PHP's
+        // native mixed-type comparison and JS coercion diverge otherwise).
+        if (typeof fieldValue !== 'number' || typeof expected !== 'number') {
+            return false;
+        }
+
         switch (condition.operator) {
-            case '==':
-                return fieldValue === expected;
-            case '!=':
-                return fieldValue !== expected;
             case '>':
-                return (fieldValue as number) > (expected as number);
+                return fieldValue > expected;
             case '<':
-                return (fieldValue as number) < (expected as number);
+                return fieldValue < expected;
             case '>=':
-                return (fieldValue as number) >= (expected as number);
+                return fieldValue >= expected;
             case '<=':
-                return (fieldValue as number) <= (expected as number);
+                return fieldValue <= expected;
             default:
                 return false;
         }
@@ -355,8 +394,11 @@ export class SegmentFilterParser implements FilterEvaluatorInterface {
         }
 
         const toNumber = (token: string): number | null => {
-            if (!token.startsWith('@') && !isNaN(Number(token)) && token !== '') {
-                return token.includes('.') ? parseFloat(token) : parseInt(token, 10);
+            if (!token.startsWith('@')) {
+                const literal = this.numericLiteral(token);
+                if (literal !== null) {
+                    return literal;
+                }
             }
 
             const val = this.resolveFilterArg(item, token);
@@ -365,8 +407,8 @@ export class SegmentFilterParser implements FilterEvaluatorInterface {
                 return val;
             }
 
-            if (typeof val === 'string' && !isNaN(Number(val)) && val !== '') {
-                return val.includes('.') ? parseFloat(val) : parseInt(val, 10);
+            if (typeof val === 'string') {
+                return this.numericLiteral(val);
             }
 
             return null;
