@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.1.12](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.11...php-v0.1.12) (2026-06-08)
+
+
+### Bug Fixes
+
+* align filter coercion and YAML flow-map parsing across PHP and JS ([#69](https://github.com/felipesauer/safeaccess-inline/issues/69)) ([9aebe64](https://github.com/felipesauer/safeaccess-inline/commit/9aebe645bd5e61adad3852d103def2406ec5365c))
+
 ## [0.1.11](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.10...php-v0.1.11) (2026-06-08)
 
 
