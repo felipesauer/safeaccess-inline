@@ -44,6 +44,20 @@ describe(`${DotNotationParser.name} > pathCache integration`, () => {
         const parser = new DotNotationParser(new SecurityGuard(), new SecurityParser());
         expect(parser.get({ a: { b: 1 } }, 'a.b')).toBe(1);
     });
+
+    it('shares one cache entry across equivalent root-prefixed paths', () => {
+        const cache = new FakePathCache();
+        const parser = new DotNotationParser(new SecurityGuard(), new SecurityParser(), cache);
+        const data = { a: { b: 1 } };
+
+        parser.get(data, 'a.b');
+        parser.get(data, '$.a.b');
+        parser.get(data, '$a.b');
+
+        // All three normalize to the key 'a.b': parsed once, one cache entry.
+        expect(cache.setCallCount).toBe(1);
+        expect([...cache.store.keys()]).toEqual(['a.b']);
+    });
 });
 
 // Additional branch-coverage tests (targeting Stryker survivors)

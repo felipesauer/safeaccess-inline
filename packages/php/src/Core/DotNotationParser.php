@@ -201,15 +201,40 @@ final class DotNotationParser implements ValidatableParserInterface
      */
     private function segmentPathCache(string $path): array
     {
-        $cached = $this->pathCache->get($path);
+        $cacheKey = $this->normalizeCacheKey($path);
+
+        $cached = $this->pathCache->get($cacheKey);
         if ($cached !== null) {
             return $cached;
         }
 
         $segments = $this->segmentParser->parseSegments($path);
-        $this->pathCache->set($path, $segments);
+        $this->pathCache->set($cacheKey, $segments);
 
         return $segments;
+    }
+
+    /**
+     * Normalize a path to its cache key by stripping the optional root prefix.
+     *
+     * The segment parser ignores a leading `$` (and the `.` that may follow),
+     * so `$.a.b`, `$a.b`, and `a.b` parse identically. Collapsing them to one
+     * cache key avoids storing duplicate entries for equivalent paths.
+     *
+     * @param string $path Dot-notation path string.
+     *
+     * @return string Normalized cache key.
+     */
+    private function normalizeCacheKey(string $path): string
+    {
+        if (isset($path[0]) && $path[0] === '$') {
+            $path = substr($path, 1);
+            if (isset($path[0]) && $path[0] === '.') {
+                $path = substr($path, 1);
+            }
+        }
+
+        return $path;
     }
 
     /**

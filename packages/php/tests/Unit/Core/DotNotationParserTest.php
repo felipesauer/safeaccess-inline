@@ -72,6 +72,18 @@ describe(DotNotationParser::class, function (): void {
 
             expect($this->cache->setCallCount)->toBe(1);
         });
+
+        it('shares one cache entry across equivalent root-prefixed paths', function (): void {
+            $data = ['a' => ['b' => 1]];
+
+            $this->parser->get($data, 'a.b');
+            $this->parser->get($data, '$.a.b');
+            $this->parser->get($data, '$a.b');
+
+            // All three normalize to the key 'a.b': parsed once, one cache entry.
+            expect($this->cache->setCallCount)->toBe(1);
+            expect(array_keys($this->cache->store))->toBe(['a.b']);
+        });
     });
 
     // has()

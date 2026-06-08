@@ -374,4 +374,96 @@ describe(SegmentFilterParser::class, function (): void {
             expect($parser->evaluate(['other' => 'data'], $expr))->toBeFalse();
         });
     });
+
+    describe(SegmentFilterParser::class . ' > numeric literal coercion', function (): void {
+        $value = function (string $expr): mixed {
+            $parser = new SegmentFilterParser(new SecurityGuard());
+            return $parser->parse($expr)['conditions'][0]['value'];
+        };
+
+        it('parses scientific notation as a number (1e3 -> 1000)', function () use ($value): void {
+            expect($value('v==1e3'))->toBe(1000);
+        });
+
+        it('parses integral scientific notation as an integer (1.5e2 -> 150)', function () use ($value): void {
+            expect($value('v==1.5e2'))->toBe(150);
+        });
+
+        it('keeps a fractional value as a float (2.5)', function () use ($value): void {
+            expect($value('v==2.5'))->toBe(2.5);
+        });
+
+        it('keeps a negative-exponent value fractional (1e-3 -> 0.001)', function () use ($value): void {
+            expect($value('v==1e-3'))->toBe(0.001);
+        });
+
+        it('preserves a leading-zero decimal integer (007 -> 7)', function () use ($value): void {
+            expect($value('v==007'))->toBe(7);
+        });
+
+        it('leaves a hexadecimal literal as a string (0x1A)', function () use ($value): void {
+            expect($value('v==0x1A'))->toBe('0x1A');
+        });
+
+        it('leaves a binary literal as a string (0b101)', function () use ($value): void {
+            expect($value('v==0b101'))->toBe('0b101');
+        });
+
+        it('leaves an octal literal as a string (0o17)', function () use ($value): void {
+            expect($value('v==0o17'))->toBe('0o17');
+        });
+
+        it('leaves an underscore-grouped literal as a string (1_000)', function () use ($value): void {
+            expect($value('v==1_000'))->toBe('1_000');
+        });
+
+        it('matches integer data with a scientific-notation literal', function (): void {
+            $parser = new SegmentFilterParser(new SecurityGuard());
+            expect($parser->evaluate(['v' => 1000], $parser->parse('v==1e3')))->toBeTrue();
+        });
+
+        it('uses the same numeric rule inside arithmetic predicates', function (): void {
+            $parser = new SegmentFilterParser(new SecurityGuard());
+            expect($parser->evaluate(['v' => 1000], $parser->parse('v*1==1e3')))->toBeTrue();
+        });
+    });
+
+    describe(SegmentFilterParser::class . ' > relational operators require numbers', function (): void {
+        $evaluate = function (string $expr, array $item): bool {
+            $parser = new SegmentFilterParser(new SecurityGuard());
+            return $parser->evaluate($item, $parser->parse($expr));
+        };
+
+        it('returns false comparing a non-numeric string with > to a number', function () use ($evaluate): void {
+            expect($evaluate('v>5', ['v' => 'abc']))->toBeFalse();
+        });
+
+        it('returns false comparing an empty string with >= to zero', function () use ($evaluate): void {
+            expect($evaluate('v>=0', ['v' => '']))->toBeFalse();
+        });
+
+        it('returns false comparing a numeric string with > to a number', function () use ($evaluate): void {
+            expect($evaluate('v>5', ['v' => '10']))->toBeFalse();
+        });
+
+        it('returns false comparing null with > to a number', function () use ($evaluate): void {
+            expect($evaluate('v>0', ['v' => null]))->toBeFalse();
+        });
+
+        it('returns false comparing an array with > to a number', function () use ($evaluate): void {
+            expect($evaluate('v>1', ['v' => [1, 2]]))->toBeFalse();
+        });
+
+        it('still compares two numbers with > (regression)', function () use ($evaluate): void {
+            expect($evaluate('age>18', ['age' => 30]))->toBeTrue();
+        });
+
+        it('still compares two numbers with <= (regression)', function () use ($evaluate): void {
+            expect($evaluate('age<=30', ['age' => 30]))->toBeTrue();
+        });
+
+        it('still compares two floats with >= (regression)', function () use ($evaluate): void {
+            expect($evaluate('s>=9.5', ['s' => 9.5]))->toBeTrue();
+        });
+    });
 });

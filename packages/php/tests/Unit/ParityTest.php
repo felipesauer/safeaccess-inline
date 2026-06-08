@@ -250,6 +250,42 @@ describe(Inline::class . ' > PathQuery > filter (parity)', function (): void {
         ]);
         expect($accessor->get("items[?contains(@.tag, 'world')].tag"))->toBe(['hello-world']);
     });
+
+    it('matches integer data with a scientific-notation literal (1e3 == 1000)', function (): void {
+        $accessor = $this->inline->fromArray(['items' => [['v' => 1000], ['v' => 1]]]);
+        expect($accessor->get('items[?v == 1e3].v'))->toBe([1000]);
+    });
+
+    it('treats a hex literal as a string, matching only string data (0x1A)', function (): void {
+        $accessor = $this->inline->fromArray(['items' => [['v' => '0x1A'], ['v' => 26]]]);
+        expect($accessor->get('items[?v == 0x1A].v'))->toBe(['0x1A']);
+    });
+
+    it('excludes a non-numeric string from a > comparison', function (): void {
+        $accessor = $this->inline->fromArray(['items' => [['v' => 'abc'], ['v' => 10]]]);
+        expect($accessor->get('items[?v > 5].v'))->toBe([10]);
+    });
+
+    it('excludes a numeric string from a > comparison', function (): void {
+        $accessor = $this->inline->fromArray(['items' => [['v' => '10'], ['v' => 20]]]);
+        expect($accessor->get('items[?v > 5].v'))->toBe([20]);
+    });
+});
+
+describe(Inline::class . ' > PathQuery > YAML flow map (parity)', function (): void {
+    beforeEach(function (): void {
+        $this->inline = new Inline();
+    });
+
+    it('splits a quoted flow-map key on the first colon outside quotes', function (): void {
+        $accessor = $this->inline->fromYaml('data: {"key:with:colons": value}');
+        expect($accessor->get('data'))->toBe(['key:with:colons' => 'value']);
+    });
+
+    it('rejects a merge key used inside a flow map', function (): void {
+        expect(fn () => $this->inline->fromYaml('data: {<<: {a: 1}, b: 2}'))
+            ->toThrow(\SafeAccess\Inline\Exceptions\YamlParseException::class);
+    });
 });
 
 describe(Inline::class . ' > PathQuery > multi-key and multi-index (parity)', function (): void {

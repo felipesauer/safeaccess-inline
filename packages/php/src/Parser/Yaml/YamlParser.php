@@ -95,6 +95,16 @@ final class YamlParser
                     "YAML merge keys (<<) are not supported (line " . ($lineNum + 1) . ")."
                 );
             }
+
+            // Also block merge keys used as flow-map keys ("{<<:" or ", <<:"),
+            // which the line-start check above would miss. The negative
+            // lookbehind keeps the match in genuine key position and out of
+            // adjacent quoted regions; rejection is fail-closed.
+            if (preg_match('/(?<![\'"])[{,]\s*<<\s*:/', $line)) {
+                throw new YamlParseException(
+                    "YAML merge keys (<<) are not supported (line " . ($lineNum + 1) . ")."
+                );
+            }
         }
     }
 
@@ -532,6 +542,11 @@ final class YamlParser
     /**
      * Parse a YAML flow map ({a: b, c: d}) into a PHP associative array.
      *
+     * Values are scalars only: nested flow collections (e.g. {a: {b: 1}} or
+     * {a: [1, 2]}) are not expanded and are kept as their raw string value.
+     * This is an intentional limitation of the minimal parser and is mirrored
+     * in the JS implementation for behavioral parity.
+     *
      * @param string $value Raw flow map string including braces.
      *
      * @return array<string, mixed> Parsed key-value pairs.
@@ -547,16 +562,80 @@ final class YamlParser
         $items = $this->splitFlowItems($inner);
         foreach ($items as $item) {
             $item = trim($item);
-            $colonPos = strpos($item, ':');
-            if ($colonPos === false) {
+            $colonPos = $this->findFlowColon($item);
+            if ($colonPos < 0) {
                 continue;
             }
-            $key = trim(substr($item, 0, $colonPos));
+            $key = $this->unquoteKey(trim(substr($item, 0, $colonPos)));
             $val = trim(substr($item, $colonPos + 1));
             $result[$key] = $this->castScalar($val);
         }
 
         return $result;
+    }
+
+    /**
+     * Find the first colon outside of quoted regions in a flow-map item.
+     *
+     * A naive search would split on a colon inside a quoted key
+     * (e.g. {"a:b": v}), corrupting both key and value.
+     *
+     * @param string $item Single flow-map item (key/value pair).
+     *
+     * @return int Index of the separating colon, or -1 if none is found.
+     */
+    private function findFlowColon(string $item): int
+    {
+        $inQuote = false;
+        $quoteChar = '';
+        $len = strlen($item);
+
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $item[$i];
+
+            if ($inQuote) {
+                if ($ch === $quoteChar) {
+                    $inQuote = false;
+                }
+                continue;
+            }
+
+            if ($ch === '"' || $ch === "'") {
+                $inQuote = true;
+                $quoteChar = $ch;
+                continue;
+            }
+
+            if ($ch === ':') {
+                return $i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Strip a single matching pair of surrounding quotes from a flow-map key.
+     *
+     * Keys are always strings, so no scalar casting is applied; only the
+     * outer quotes are removed (and doubled single-quotes unescaped).
+     *
+     * @param string $key Raw flow-map key, possibly quoted.
+     *
+     * @return string Unquoted key.
+     */
+    private function unquoteKey(string $key): string
+    {
+        if (strlen($key) >= 2) {
+            if ($key[0] === '"' && $key[strlen($key) - 1] === '"') {
+                return $this->unescapeDoubleQuoted(substr($key, 1, -1));
+            }
+            if ($key[0] === "'" && $key[strlen($key) - 1] === "'") {
+                return str_replace("''", "'", substr($key, 1, -1));
+            }
+        }
+
+        return $key;
     }
 
     /**

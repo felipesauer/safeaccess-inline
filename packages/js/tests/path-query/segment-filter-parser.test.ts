@@ -321,6 +321,21 @@ describe(SegmentFilterParser.name, () => {
             expect(parser.evaluate({ qty: 5 }, expr)).toBe(false);
         });
 
+        it('evaluates false when an arithmetic operand resolves to a non-numeric type', () => {
+            // @.tags is an array (neither number nor numeric string) → not coercible
+            const parser = new SegmentFilterParser(new SecurityGuard());
+            const expr = parser.parse('@.tags * @.qty > 0');
+
+            expect(parser.evaluate({ tags: [1, 2], qty: 5 }, expr)).toBe(false);
+        });
+
+        it('evaluates false when an arithmetic operand resolves to a boolean', () => {
+            const parser = new SegmentFilterParser(new SecurityGuard());
+            const expr = parser.parse('@.flag + @.qty > 0');
+
+            expect(parser.evaluate({ flag: true, qty: 5 }, expr)).toBe(false);
+        });
+
         it('evaluates arithmetic addition between two field values', () => {
             const parser = new SegmentFilterParser(new SecurityGuard());
             const expr = parser.parse('@.a + @.b > 5');
@@ -495,6 +510,137 @@ describe(SegmentFilterParser.name, () => {
 
             expect(expr.conditions).toHaveLength(1);
             expect(expr.conditions[0].value).toBe('a && b');
+        });
+    });
+
+    describe(`${SegmentFilterParser.name} > numeric literal coercion`, () => {
+        const value = (expr: string): unknown =>
+            new SegmentFilterParser(new SecurityGuard()).parse(expr).conditions[0].value;
+
+        it('parses scientific notation as a number (1e3 -> 1000)', () => {
+            expect(value('v==1e3')).toBe(1000);
+        });
+
+        it('parses integral scientific notation as an integer-equal number (1.5e2 -> 150)', () => {
+            expect(value('v==1.5e2')).toBe(150);
+        });
+
+        it('keeps a fractional value as a float (2.5)', () => {
+            expect(value('v==2.5')).toBe(2.5);
+        });
+
+        it('keeps a negative-exponent value fractional (1e-3 -> 0.001)', () => {
+            expect(value('v==1e-3')).toBe(0.001);
+        });
+
+        it('preserves a leading-zero decimal integer (007 -> 7)', () => {
+            expect(value('v==007')).toBe(7);
+        });
+
+        it('leaves a hexadecimal literal as a string (0x1A)', () => {
+            expect(value('v==0x1A')).toBe('0x1A');
+        });
+
+        it('leaves a binary literal as a string (0b101)', () => {
+            expect(value('v==0b101')).toBe('0b101');
+        });
+
+        it('leaves an octal literal as a string (0o17)', () => {
+            expect(value('v==0o17')).toBe('0o17');
+        });
+
+        it('leaves an underscore-grouped literal as a string (1_000)', () => {
+            expect(value('v==1_000')).toBe('1_000');
+        });
+
+        it('parses a leading-plus integer (+5 -> 5)', () => {
+            expect(value('v==+5')).toBe(5);
+        });
+
+        it('parses a leading-minus integer (-10 -> -10)', () => {
+            expect(value('v==-10')).toBe(-10);
+        });
+
+        it('parses a leading-plus float (+1.5 -> 1.5)', () => {
+            expect(value('v==+1.5')).toBe(1.5);
+        });
+
+        it('parses an uppercase-exponent literal (1E3 -> 1000)', () => {
+            expect(value('v==1E3')).toBe(1000);
+        });
+
+        it('parses a multi-digit fraction (12.25 -> 12.25)', () => {
+            expect(value('v==12.25')).toBe(12.25);
+        });
+
+        it('parses a leading-dot multi-digit fraction (.25 -> 0.25)', () => {
+            expect(value('v==.25')).toBe(0.25);
+        });
+
+        it('treats a lone plus sign as a string (+)', () => {
+            expect(value('v==+')).toBe('+');
+        });
+
+        it('treats a non-numeric word as a string (abc)', () => {
+            expect(value('v==abc')).toBe('abc');
+        });
+
+        it('matches integer data with a scientific-notation literal', () => {
+            const parser = new SegmentFilterParser(new SecurityGuard());
+            expect(parser.evaluate({ v: 1000 }, parser.parse('v==1e3'))).toBe(true);
+        });
+
+        it('uses the same numeric rule inside arithmetic predicates', () => {
+            const parser = new SegmentFilterParser(new SecurityGuard());
+            expect(parser.evaluate({ v: 1000 }, parser.parse('v*1==1e3'))).toBe(true);
+        });
+    });
+
+    describe(`${SegmentFilterParser.name} > relational operators require numbers`, () => {
+        const evaluate = (expr: string, item: Record<string, unknown>): boolean => {
+            const parser = new SegmentFilterParser(new SecurityGuard());
+            return parser.evaluate(item, parser.parse(expr));
+        };
+
+        it('returns false comparing a non-numeric string with > to a number', () => {
+            expect(evaluate('v>5', { v: 'abc' })).toBe(false);
+        });
+
+        it('returns false comparing an empty string with >= to zero', () => {
+            expect(evaluate('v>=0', { v: '' })).toBe(false);
+        });
+
+        it('returns false comparing a numeric string with > to a number', () => {
+            expect(evaluate('v>5', { v: '10' })).toBe(false);
+        });
+
+        it('returns false comparing a number with > to a non-numeric expected value', () => {
+            // fieldValue is a number, expected ('abc') is a string → no comparison
+            expect(evaluate('v>abc', { v: 10 })).toBe(false);
+        });
+
+        it('returns false comparing a number with >= to a string expected value', () => {
+            expect(evaluate('v>=x', { v: 10 })).toBe(false);
+        });
+
+        it('returns false comparing null with > to a number', () => {
+            expect(evaluate('v>0', { v: null })).toBe(false);
+        });
+
+        it('returns false comparing an array with > to a number', () => {
+            expect(evaluate('v>1', { v: [1, 2] })).toBe(false);
+        });
+
+        it('still compares two numbers with > (regression)', () => {
+            expect(evaluate('age>18', { age: 30 })).toBe(true);
+        });
+
+        it('still compares two numbers with <= (regression)', () => {
+            expect(evaluate('age<=30', { age: 30 })).toBe(true);
+        });
+
+        it('still compares two floats with >= (regression)', () => {
+            expect(evaluate('s>=9.5', { s: 9.5 })).toBe(true);
         });
     });
 

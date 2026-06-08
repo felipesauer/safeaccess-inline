@@ -75,6 +75,16 @@ export class YamlParser {
                     `YAML merge keys (<<) are not supported (line ${i + 1}).`,
                 );
             }
+
+            // Also block merge keys used as flow-map keys ("{<<:" or ", <<:"),
+            // which the line-start check above would miss. The negative
+            // lookbehind keeps the match in genuine key position and out of
+            // adjacent quoted regions; rejection is fail-closed.
+            if (/(?<!['"])[{,]\s*<<\s*:/.test(rawLine)) {
+                throw new YamlParseException(
+                    `YAML merge keys (<<) are not supported (line ${i + 1}).`,
+                );
+            }
         }
     }
 
@@ -405,6 +415,11 @@ export class YamlParser {
     /**
      * Parse a YAML flow map ({a: b, c: d}) into a record.
      *
+     * Values are scalars only: nested flow collections (e.g. {a: {b: 1}} or
+     * {a: [1, 2]}) are not expanded and are kept as their raw string value.
+     * This is an intentional limitation of the minimal parser and is mirrored
+     * in the PHP implementation for behavioral parity.
+     *
      * @param value - Raw flow map string including braces.
      * @returns Parsed key-value pairs.
      */
@@ -418,16 +433,75 @@ export class YamlParser {
         const items = this.splitFlowItems(inner);
         for (const item of items) {
             const trimmedItem = item.trim();
-            const colonPos = trimmedItem.indexOf(':');
-            if (colonPos === -1) {
+            const colonPos = this.findFlowColon(trimmedItem);
+            if (colonPos < 0) {
                 continue;
             }
-            const key = trimmedItem.substring(0, colonPos).trim();
+            const key = this.unquoteKey(trimmedItem.substring(0, colonPos).trim());
             const val = trimmedItem.substring(colonPos + 1).trim();
             result[key] = this.castScalar(val);
         }
 
         return result;
+    }
+
+    /**
+     * Find the first colon outside of quoted regions in a flow-map item.
+     *
+     * A naive search would split on a colon inside a quoted key
+     * (e.g. {"a:b": v}), corrupting both key and value.
+     *
+     * @param item - Single flow-map item (key/value pair).
+     * @returns Index of the separating colon, or -1 if none is found.
+     */
+    private findFlowColon(item: string): number {
+        let inQuote = false;
+        let quoteChar = '';
+
+        for (let i = 0; i < item.length; i++) {
+            const ch = item[i];
+
+            if (inQuote) {
+                if (ch === quoteChar) {
+                    inQuote = false;
+                }
+                continue;
+            }
+
+            if (ch === '"' || ch === "'") {
+                inQuote = true;
+                quoteChar = ch;
+                continue;
+            }
+
+            if (ch === ':') {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Strip a single matching pair of surrounding quotes from a flow-map key.
+     *
+     * Keys are always strings, so no scalar casting is applied; only the
+     * outer quotes are removed (and doubled single-quotes unescaped).
+     *
+     * @param key - Raw flow-map key, possibly quoted.
+     * @returns Unquoted key.
+     */
+    private unquoteKey(key: string): string {
+        if (key.length >= 2) {
+            if (key.startsWith('"') && key.endsWith('"')) {
+                return this.unescapeDoubleQuoted(key.slice(1, -1));
+            }
+            if (key.startsWith("'") && key.endsWith("'")) {
+                return key.slice(1, -1).replace(/''/g, "'");
+            }
+        }
+
+        return key;
     }
 
     /**
