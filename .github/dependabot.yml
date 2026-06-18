@@ -1,80 +1,58 @@
 version: 2
 
 updates:
-    # JavaScript / TypeScript dependencies
-    - package-ecosystem: "npm"
-      directory: "/packages/js"
-      schedule:
-          interval: "weekly"
-          day: "monday"
-      labels:
-          - "dependencies"
-          - "js"
-      commit-message:
-          prefix: "chore(js)"
-      reviewers:
-          - "felipesauer"
-      groups:
-          dev-dependencies:
-              dependency-type: "development"
-              update-types:
-                  - "minor"
-                  - "patch"
-          production-dependencies:
-              dependency-type: "production"
-
     # PHP / Composer dependencies
-    - package-ecosystem: "composer"
-      directory: "/packages/php"
+    - package-ecosystem: 'composer'
+      directory: '/packages/php'
       schedule:
-          interval: "weekly"
-          day: "monday"
+          interval: 'weekly'
+          day: 'monday'
       labels:
-          - "dependencies"
-          - "php"
+          - 'dependencies'
+          - 'php'
       commit-message:
-          prefix: "chore(php)"
+          prefix: 'chore(php)'
       reviewers:
-          - "felipesauer"
+          - 'felipesauer'
       groups:
           dev-dependencies:
-              dependency-type: "development"
+              dependency-type: 'development'
               update-types:
-                  - "minor"
-                  - "patch"
+                  - 'minor'
+                  - 'patch'
           production-dependencies:
-              dependency-type: "production"
+              dependency-type: 'production'
 
-    # Root tooling (husky, commitlint, lint-staged, prettier)
-    - package-ecosystem: "npm"
-      directory: "/"
+    # All npm deps (root tooling + packages/js workspace — single shared lockfile)
+    - package-ecosystem: 'npm'
+      directory: '/'
       schedule:
-          interval: "weekly"
-          day: "monday"
+          interval: 'weekly'
+          day: 'monday'
       labels:
-          - "dependencies"
-          - "ci"
+          - 'dependencies'
+          - 'ci'
       commit-message:
-          prefix: "chore(deps)"
+          prefix: 'chore(deps)'
       reviewers:
-          - "felipesauer"
+          - 'felipesauer'
       groups:
-          root-tooling:
-              dependency-type: "development"
+          npm:
+              dependency-type: 'development'
               update-types:
-                  - "minor"
-                  - "patch"
+                  - 'minor'
+                  - 'patch'
 
     # GitHub Actions
-    - package-ecosystem: "github-actions"
-      directory: "/"
+    - package-ecosystem: 'github-actions'
+      directory: '/'
       schedule:
-          interval: "weekly"
-          day: "monday"
+          interval: 'weekly'
+          day: 'monday'
       labels:
-          - "dependencies"
-          - "ci"
+          - 'dependencies'
+          - 'ci'
       commit-message:
-          prefix: "chore(ci)"
+          prefix: 'chore(ci)'
       reviewers:
-          - "felipesauer"
+          - 'felipesauer'
