@@ -13,11 +13,13 @@ interface Constraint {
     arg: string;
 }
 
-/** A rule parsed into its optional flag, base type, and constraints. */
+/** A rule parsed into its optional flag, base type, constraints, and item rule. */
 interface ParsedRule {
     optional: boolean;
     type: string;
     constraints: Constraint[];
+    /** Rule each array element must satisfy (from `each:(...)`), or null. */
+    itemRule: ParsedRule | null;
 }
 
 const KNOWN_TYPES = ['string', 'int', 'float', 'number', 'bool', 'array', 'object', 'null', 'any'];
@@ -80,24 +82,79 @@ export class SchemaValidator {
                 continue;
             }
 
-            const value = this.get(path, MISSING);
-            if (!this.matchesType(parsed.type, value)) {
-                errors.push({
-                    path,
-                    expected: raw,
-                    actual: this.typeName(value),
-                    message: `Path "${path}" expected ${parsed.type}, got ${this.typeName(value)}.`,
-                });
-                continue;
-            }
-
-            const failure = this.checkConstraints(parsed, value, path);
+            const failure = this.validateValue(parsed, this.get(path, MISSING), path);
             if (failure !== null) {
                 errors.push({ ...failure, expected: raw });
             }
         }
 
         return new SchemaResult(errors);
+    }
+
+    /**
+     * Validate a single value against a parsed rule: base type, then
+     * constraints, then per-item rule for arrays. Recursive for nested `each`.
+     *
+     * @param parsed - The parsed rule.
+     * @param value - The value to validate.
+     * @param path - Path for error messages (item paths append `.index`).
+     * @returns A partial SchemaError (without `expected`) or null when valid.
+     */
+    private validateValue(
+        parsed: ParsedRule,
+        value: unknown,
+        path: string,
+    ): Omit<SchemaError, 'expected'> | null {
+        if (!this.matchesType(parsed.type, value)) {
+            return {
+                path,
+                actual: this.typeName(value),
+                message: `Path "${path}" expected ${parsed.type}, got ${this.typeName(value)}.`,
+            };
+        }
+
+        const constraintFailure = this.checkConstraints(parsed, value, path);
+        if (constraintFailure !== null) {
+            return constraintFailure;
+        }
+
+        if (parsed.itemRule !== null) {
+            return this.validateItems(parsed.itemRule, value, path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate each element of an array against the item rule, reporting the
+     * first failure with an indexed path.
+     *
+     * @param itemRule - The parsed rule every element must satisfy.
+     * @param value - The value that carried the `each` constraint.
+     * @param path - Parent path (item paths append `.index`).
+     * @returns A partial SchemaError or null when every element is valid.
+     */
+    private validateItems(
+        itemRule: ParsedRule,
+        value: unknown,
+        path: string,
+    ): Omit<SchemaError, 'expected'> | null {
+        if (!Array.isArray(value)) {
+            return {
+                path,
+                actual: this.typeName(value),
+                message: `Path "${path}" each constraint requires an array.`,
+            };
+        }
+
+        for (let i = 0; i < value.length; i++) {
+            const failure = this.validateValue(itemRule, value[i], `${path}.${i}`);
+            if (failure !== null) {
+                return failure;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -110,8 +167,17 @@ export class SchemaValidator {
      */
     private parseRule(raw: string, path: string): ParsedRule {
         const optional = raw.endsWith('?');
-        const body = optional ? raw.slice(0, -1) : raw;
-        const parts = body.split('|');
+        let body = optional ? raw.slice(0, -1) : raw;
+
+        // Extract an `each:(...)` segment first so its inner `|` is not split.
+        let itemRule: ParsedRule | null = null;
+        const each = this.extractEach(body, path);
+        if (each !== null) {
+            itemRule = this.parseRule(each.inner, `${path}.*`);
+            body = each.rest;
+        }
+
+        const parts = body.split('|').filter((p) => p !== '');
         const type = parts[0] as string;
 
         if (!KNOWN_TYPES.includes(type)) {
@@ -134,7 +200,60 @@ export class SchemaValidator {
             constraints.push({ name, arg });
         }
 
-        return { optional, type, constraints };
+        return { optional, type, constraints, itemRule };
+    }
+
+    /**
+     * Extract an `each:(...)` segment from a rule body, honouring nested
+     * parentheses, and return the inner item rule plus the body without it.
+     *
+     * @param body - Rule body (already stripped of the optional `?`).
+     * @param path - Path for error messages.
+     * @returns The inner rule and remaining body, or null when there is no `each`.
+     * @throws {AccessorException} When the parentheses are unbalanced or the shortcut form is malformed.
+     */
+    private extractEach(body: string, path: string): { inner: string; rest: string } | null {
+        const marker = 'each:';
+        const at = body.indexOf(marker);
+        if (at === -1) {
+            return null;
+        }
+
+        const after = body.slice(at + marker.length);
+        let inner: string;
+        let tail: string;
+
+        if (after.startsWith('(')) {
+            // Parenthesised form: balance nested parentheses.
+            let depth = 0;
+            let end = -1;
+            for (let i = 0; i < after.length; i++) {
+                if (after[i] === '(') depth++;
+                else if (after[i] === ')') {
+                    depth--;
+                    if (depth === 0) {
+                        end = i;
+                        break;
+                    }
+                }
+            }
+            if (end === -1) {
+                throw new AccessorException(
+                    `Schema constraint "each" has unbalanced parentheses for path "${path}".`,
+                );
+            }
+            inner = after.slice(1, end);
+            tail = after.slice(end + 1);
+        } else {
+            // Shortcut form `each:rule` (no `|` allowed inside the item rule).
+            const stop = after.indexOf('|');
+            inner = stop === -1 ? after : after.slice(0, stop);
+            tail = stop === -1 ? '' : after.slice(stop);
+        }
+
+        // Reassemble the body without the each segment, trimming a dangling `|`.
+        const rest = (body.slice(0, at) + tail).replace(/\|$/, '').replace(/\|\|/g, '|');
+        return { inner, rest };
     }
 
     /**

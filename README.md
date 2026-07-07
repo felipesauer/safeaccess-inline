@@ -636,6 +636,7 @@ Additional parts add constraints, applied once the type matches:
 | `email`         | string                  | must look like an email address                |
 | `url`           | string                  | must be an `http(s)` URL                       |
 | `uuid`          | string                  | must be a UUID                                 |
+| `each:(RULE)`   | array                   | every element must satisfy `RULE` (may nest)   |
 
 ```
 'db.port'    => 'int|min:1|max:65535'
@@ -643,6 +644,8 @@ Additional parts add constraints, applied once the type matches:
 'status'     => 'string|enum:active,inactive,pending'
 'code'       => 'string|pattern:^[A-Z]{3}$'
 'nickname'   => 'string|min:2|max:20?'    // optional; validated when present
+'scores'     => 'array|min:1|each:(int|min:0)'   // every element validated
+'emails'     => 'array|each:(string|email)'
 ```
 
 `validate()` returns a result you can inspect; `assert()` throws `SchemaValidationException` on failure and returns the accessor for chaining. A malformed rule (bad `min` argument, empty `enum`, invalid regex, unknown constraint) throws `AccessorException` — a mistake in the schema, not the data.
