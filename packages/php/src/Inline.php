@@ -7,12 +7,14 @@ namespace SafeAccess\Inline;
 use SafeAccess\Inline\Accessors\AbstractAccessor;
 use SafeAccess\Inline\Accessors\Formats\AnyAccessor;
 use SafeAccess\Inline\Accessors\Formats\ArrayAccessor;
+use SafeAccess\Inline\Accessors\Formats\CsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\EnvAccessor;
 use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
 use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
+use SafeAccess\Inline\Accessors\Formats\TsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Contracts\AccessorsInterface;
@@ -46,6 +48,8 @@ use SafeAccess\Inline\Exceptions\UnsupportedTypeException;
  * @method static IniAccessor           fromIni(string $data)
  * @method static EnvAccessor           fromEnv(string $data)
  * @method static NdjsonAccessor        fromNdjson(string $data)
+ * @method static CsvAccessor           fromCsv(string $data)
+ * @method static TsvAccessor           fromTsv(string $data)
  * @method static AnyAccessor           fromAny(mixed $data, ?ParseIntegrationInterface $integration = null)
  * @method static AbstractAccessor      make(string $accessorClass, mixed $data)
  * @method static AccessorsInterface    from(TypeFormat $typeFormat, mixed $data)
@@ -226,6 +230,44 @@ class Inline extends InlineBuilderAccessor
     }
 
     /**
+     * Create a CsvAccessor from a CSV string.
+     *
+     * @param string $data Raw CSV string.
+     *
+     * @return CsvAccessor Populated accessor instance.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\CsvParseException  When the CSV is malformed.
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromCsv("name,age\nAlice,30");
+     * $accessor->get('0.name'); // 'Alice'
+     */
+    protected function fromCsv(string $data): CsvAccessor
+    {
+        return $this->builder()->csv($data);
+    }
+
+    /**
+     * Create a TsvAccessor from a TSV string.
+     *
+     * @param string $data Raw TSV string.
+     *
+     * @return TsvAccessor Populated accessor instance.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\CsvParseException  When the TSV is malformed.
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromTsv("name\tage\nAlice\t30");
+     * $accessor->get('0.name'); // 'Alice'
+     */
+    protected function fromTsv(string $data): TsvAccessor
+    {
+        return $this->builder()->tsv($data);
+    }
+
+    /**
      * Create an AnyAccessor that auto-detects the data format.
      *
      * @param mixed                          $data        Raw data in any supported format.
@@ -276,6 +318,8 @@ class Inline extends InlineBuilderAccessor
             IniAccessor::class    => $factory->ini($data),
             EnvAccessor::class    => $factory->env($data),
             NdjsonAccessor::class => $factory->ndjson($data),
+            CsvAccessor::class    => $factory->csv($data),
+            TsvAccessor::class    => $factory->tsv($data),
             AnyAccessor::class    => $factory->any($data),
             default               => throw new UnsupportedTypeException(
                 "Unsupported accessor class: {$accessorClass}"
@@ -312,6 +356,8 @@ class Inline extends InlineBuilderAccessor
             TypeFormat::Ini    => $factory->ini($data),
             TypeFormat::Env    => $factory->env($data),
             TypeFormat::Ndjson => $factory->ndjson($data),
+            TypeFormat::Csv    => $factory->csv($data),
+            TypeFormat::Tsv    => $factory->tsv($data),
             TypeFormat::Any    => $factory->any($data),
         };
     }

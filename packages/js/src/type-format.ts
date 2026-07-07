@@ -27,6 +27,10 @@ export enum TypeFormat {
     Env = 'env',
     /** Newline-delimited JSON string. */
     Ndjson = 'ndjson',
+    /** CSV (comma-separated values) string. */
+    Csv = 'csv',
+    /** TSV (tab-separated values) string. */
+    Tsv = 'tsv',
     /** Auto-detected format via integration. */
     Any = 'any',
 }

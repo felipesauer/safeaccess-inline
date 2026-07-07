@@ -7,6 +7,8 @@ import { JsonAccessor } from '../accessors/formats/json-accessor.js';
 import { XmlAccessor } from '../accessors/formats/xml-accessor.js';
 import { YamlAccessor } from '../accessors/formats/yaml-accessor.js';
 import { TomlAccessor } from '../accessors/formats/toml-accessor.js';
+import { CsvAccessor } from '../accessors/formats/csv-accessor.js';
+import { TsvAccessor } from '../accessors/formats/tsv-accessor.js';
 import { IniAccessor } from '../accessors/formats/ini-accessor.js';
 import { EnvAccessor } from '../accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../accessors/formats/ndjson-accessor.js';
@@ -161,6 +163,30 @@ export class AccessorFactory {
      */
     ndjson(data: string): NdjsonAccessor {
         return this.applyOptions(new NdjsonAccessor(this.parser)).from(data);
+    }
+
+    /**
+     * Create a CsvAccessor from a CSV string.
+     *
+     * @param data - Raw CSV string.
+     * @returns Populated CsvAccessor.
+     * @throws {CsvParseException} When the CSV is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     */
+    csv(data: string): CsvAccessor {
+        return this.applyOptions(new CsvAccessor(this.parser)).from(data);
+    }
+
+    /**
+     * Create a TsvAccessor from a TSV string.
+     *
+     * @param data - Raw TSV string.
+     * @returns Populated TsvAccessor.
+     * @throws {CsvParseException} When the TSV is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     */
+    tsv(data: string): TsvAccessor {
+        return this.applyOptions(new TsvAccessor(this.parser)).from(data);
     }
 
     /**

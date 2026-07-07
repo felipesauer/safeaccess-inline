@@ -15,6 +15,8 @@ import { TomlAccessor } from './accessors/formats/toml-accessor.js';
 import { IniAccessor } from './accessors/formats/ini-accessor.js';
 import { EnvAccessor } from './accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from './accessors/formats/ndjson-accessor.js';
+import { CsvAccessor } from './accessors/formats/csv-accessor.js';
+import { TsvAccessor } from './accessors/formats/tsv-accessor.js';
 import { AnyAccessor } from './accessors/formats/any-accessor.js';
 import { UnsupportedTypeException } from './exceptions/unsupported-type-exception.js';
 import { InlineBuilderAccessor } from './core/inline-builder-accessor.js';
@@ -248,6 +250,36 @@ export class Inline extends InlineBuilderAccessor {
     }
 
     /**
+     * Create a CsvAccessor from a CSV string.
+     *
+     * @param data - Raw CSV string.
+     * @returns Populated CsvAccessor instance.
+     * @throws {CsvParseException} When the CSV is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     *
+     * @example
+     * inline.fromCsv('name,age\nAlice,30').get('0.name'); // 'Alice'
+     */
+    fromCsv(data: string): CsvAccessor {
+        return this.builder().csv(data);
+    }
+
+    /**
+     * Create a TsvAccessor from a TSV string.
+     *
+     * @param data - Raw TSV string.
+     * @returns Populated TsvAccessor instance.
+     * @throws {CsvParseException} When the TSV is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     *
+     * @example
+     * inline.fromTsv('name\tage\nAlice\t30').get('0.name'); // 'Alice'
+     */
+    fromTsv(data: string): TsvAccessor {
+        return this.builder().tsv(data);
+    }
+
+    /**
      * Create an AnyAccessor from raw data using a custom integration.
      *
      * Uses the integration provided via `withParserIntegration()` by default,
@@ -326,6 +358,10 @@ export class Inline extends InlineBuilderAccessor {
                 return this.fromEnv(data as string);
             case TypeFormat.Ndjson:
                 return this.fromNdjson(data as string);
+            case TypeFormat.Csv:
+                return this.fromCsv(data as string);
+            case TypeFormat.Tsv:
+                return this.fromTsv(data as string);
             case TypeFormat.Any:
                 return this.fromAny(data);
             default: {
@@ -470,6 +506,36 @@ export class Inline extends InlineBuilderAccessor {
      */
     static fromNdjson(data: string): NdjsonAccessor {
         return Inline.defaultInstance().fromNdjson(data);
+    }
+
+    /**
+     * Create a CsvAccessor from a CSV string.
+     *
+     * @param data - Raw CSV string.
+     * @returns Populated CsvAccessor instance.
+     * @throws {CsvParseException} When the CSV is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     *
+     * @example
+     * Inline.fromCsv('name,age\nAlice,30').get('0.name'); // 'Alice'
+     */
+    static fromCsv(data: string): CsvAccessor {
+        return Inline.defaultInstance().fromCsv(data);
+    }
+
+    /**
+     * Create a TsvAccessor from a TSV string.
+     *
+     * @param data - Raw TSV string.
+     * @returns Populated TsvAccessor instance.
+     * @throws {CsvParseException} When the TSV is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     *
+     * @example
+     * Inline.fromTsv('name\tage\nAlice\t30').get('0.name'); // 'Alice'
+     */
+    static fromTsv(data: string): TsvAccessor {
+        return Inline.defaultInstance().fromTsv(data);
     }
 
     /**

@@ -12,6 +12,8 @@ import { TomlAccessor } from '../../src/accessors/formats/toml-accessor.js';
 import { IniAccessor } from '../../src/accessors/formats/ini-accessor.js';
 import { EnvAccessor } from '../../src/accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../../src/accessors/formats/ndjson-accessor.js';
+import { CsvAccessor } from '../../src/accessors/formats/csv-accessor.js';
+import { TsvAccessor } from '../../src/accessors/formats/tsv-accessor.js';
 import { AnyAccessor } from '../../src/accessors/formats/any-accessor.js';
 import { InvalidFormatException } from '../../src/exceptions/invalid-format-exception.js';
 import { FakeParseIntegration } from '../mocks/fake-parse-integration.js';
@@ -114,6 +116,24 @@ describe(AccessorFactory.name, () => {
             const accessor = factory.ndjson('{"id":1}\n{"id":2}');
             expect(accessor).toBeInstanceOf(NdjsonAccessor);
             expect(accessor.get('0.id')).toBe(1);
+        });
+    });
+
+    describe('csv', () => {
+        it('creates a CsvAccessor from CSV string', () => {
+            const factory = new AccessorFactory(makeParser());
+            const accessor = factory.csv('name,age\nAlice,30');
+            expect(accessor).toBeInstanceOf(CsvAccessor);
+            expect(accessor.get('0.name')).toBe('Alice');
+        });
+    });
+
+    describe('tsv', () => {
+        it('creates a TsvAccessor from TSV string', () => {
+            const factory = new AccessorFactory(makeParser());
+            const accessor = factory.tsv('name\tage\nAlice\t30');
+            expect(accessor).toBeInstanceOf(TsvAccessor);
+            expect(accessor.get('0.name')).toBe('Alice');
         });
     });
 
