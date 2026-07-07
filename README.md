@@ -620,6 +620,50 @@ readonly.get('a.b'); // 1
 readonly.set('a.b', 99); // throws ReadonlyViolationException
 ```
 
+## Schema validation
+
+Beyond security, you can validate the **shape** of the data: which paths must exist and what type each holds. A schema maps dot-notation paths to compact rules — `string`, `int`, `float`, `number`, `bool`, `array`, `object`, `null`, `any` — where a trailing `?` marks the path optional. Validation runs against the already-parsed value, so a CSV or TOML string field checked as `int` fails (those formats carry no numeric type).
+
+`validate()` returns a result you can inspect; `assert()` throws `SchemaValidationException` on failure and returns the accessor for chaining.
+
+### PHP
+
+```php
+$accessor = Inline::fromJson('{"db":{"host":"localhost","port":5432}}');
+
+// Inspect without throwing
+$result = $accessor->validate([
+    'db.host' => 'string',
+    'db.port' => 'int',
+    'db.ssl'  => 'bool?',   // optional
+]);
+$result->isValid();                 // true
+$result->errors();                  // [] (array of SchemaError when invalid)
+
+// Assert and chain (throws SchemaValidationException on failure)
+$host = $accessor->assert(['db.host' => 'string'])->get('db.host');
+```
+
+### TypeScript
+
+```typescript
+const accessor = Inline.fromJson('{"db":{"host":"localhost","port":5432}}');
+
+// Inspect without throwing
+const result = accessor.validate({
+    'db.host': 'string',
+    'db.port': 'int',
+    'db.ssl': 'bool?', // optional
+});
+result.valid; // true
+result.errors; // [] (SchemaError[] when invalid)
+
+// Assert and chain (throws SchemaValidationException on failure)
+const host = accessor.assert({ 'db.host': 'string' }).get('db.host');
+```
+
+Each `SchemaError` carries `path`, `expected` (the rule), `actual` (the type found, or `missing`), and a human-readable `message`. An unrecognised rule throws `AccessorException` — that's a mistake in the schema, not the data.
+
 ## Configure
 
 Customize security, caching, and parsing via the builder pattern:
@@ -732,6 +776,7 @@ try {
 | `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                      |
 | `TomlParseException`         | `InvalidFormatException`     | Malformed TOML, duplicate keys, or redefined tables           |
 | `CsvParseException`          | `InvalidFormatException`     | Malformed CSV/TSV, duplicate columns, or field-count mismatch |
+| `SchemaValidationException`  | `AccessorException`          | `assert()` when data fails the schema                         |
 | `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                               |
 | `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                  |
 | `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                            |
@@ -841,6 +886,13 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `count(path?)`              | Element count                           |
 | `keys(path?)`               | Key names                               |
 | `getRaw()`                  | Original input                          |
+
+#### Accessor validation methods
+
+| Method             | Returns                                               |
+| ------------------ | ----------------------------------------------------- |
+| `validate(schema)` | `SchemaResult` (`.valid` / `.errors`), never throws   |
+| `assert(schema)`   | `this` when valid; throws `SchemaValidationException` |
 
 #### Accessor write methods (immutable)
 

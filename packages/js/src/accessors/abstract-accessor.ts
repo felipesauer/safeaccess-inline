@@ -2,6 +2,9 @@ import type { AccessorsInterface } from '../contracts/accessors-interface.js';
 import type { ValidatableParserInterface } from '../contracts/validatable-parser-interface.js';
 import { PathNotFoundException } from '../exceptions/path-not-found-exception.js';
 import { ReadonlyViolationException } from '../exceptions/readonly-violation-exception.js';
+import { SchemaValidationException } from '../exceptions/schema-validation-exception.js';
+import { SchemaValidator, type Schema } from '../schema/schema-validator.js';
+import { SchemaResult } from '../schema/schema-result.js';
 
 /** @internal Mutable state grouped to allow O(1) shallow clone in mutations. */
 interface AccessorState {
@@ -319,6 +322,49 @@ export abstract class AbstractAccessor implements AccessorsInterface {
     mergeAll(value: Record<string, unknown>): this {
         this.assertNotReadOnly();
         return this.mutateTo(this.parser.merge(this._state.data, '', value));
+    }
+
+    /**
+     * Validate the data shape against a schema without throwing.
+     *
+     * A schema maps dot-notation paths to compact type rules (`string`, `int`,
+     * `float`, `number`, `bool`, `array`, `object`, `null`, `any`); a trailing
+     * `?` marks the path optional. Validation runs against already-parsed
+     * values.
+     *
+     * @param schema - Map of dot-notation path to type rule.
+     * @returns The validation outcome; inspect `.valid` and `.errors`.
+     * @throws {AccessorException} When a rule string is not recognised.
+     *
+     * @example
+     * const result = accessor.validate({ 'db.host': 'string', 'db.port': 'int' });
+     * if (!result.valid) console.warn(result.errors);
+     */
+    validate(schema: Schema): SchemaResult {
+        const validator = new SchemaValidator(
+            (path) => this.has(path),
+            (path, fallback) => this.get(path, fallback),
+        );
+        return validator.validate(schema);
+    }
+
+    /**
+     * Validate the data shape and throw on failure, returning `this` when valid.
+     *
+     * @param schema - Map of dot-notation path to type rule.
+     * @returns The same accessor instance, for chaining.
+     * @throws {SchemaValidationException} When the data does not satisfy the schema.
+     * @throws {AccessorException} When a rule string is not recognised.
+     *
+     * @example
+     * accessor.assert({ 'db.host': 'string' }).get('db.host');
+     */
+    assert(schema: Schema): this {
+        const result = this.validate(schema);
+        if (!result.valid) {
+            throw new SchemaValidationException(result.errors);
+        }
+        return this;
     }
 
     /**
