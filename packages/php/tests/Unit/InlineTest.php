@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use SafeAccess\Inline\Accessors\Formats\AnyAccessor;
 use SafeAccess\Inline\Accessors\Formats\ArrayAccessor;
+use SafeAccess\Inline\Accessors\Formats\CsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\EnvAccessor;
 use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
 use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
+use SafeAccess\Inline\Accessors\Formats\TsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Enums\TypeFormat;
@@ -88,6 +90,20 @@ describe(Inline::class, function (): void {
             expect($accessor)->toBeInstanceOf(NdjsonAccessor::class);
             expect($accessor->get('0.name'))->toBe('Alice');
         });
+
+        it('fromCsv returns CsvAccessor and resolves via index', function (): void {
+            $accessor = $this->inline->fromCsv("name,age\nAlice,30");
+
+            expect($accessor)->toBeInstanceOf(CsvAccessor::class);
+            expect($accessor->get('0.name'))->toBe('Alice');
+        });
+
+        it('fromTsv returns TsvAccessor and resolves via index', function (): void {
+            $accessor = $this->inline->fromTsv("name\tage\nAlice\t30");
+
+            expect($accessor)->toBeInstanceOf(TsvAccessor::class);
+            expect($accessor->get('0.name'))->toBe('Alice');
+        });
     });
 
     // fromAny()
@@ -162,6 +178,18 @@ describe(Inline::class, function (): void {
             expect($accessor)->toBeInstanceOf(NdjsonAccessor::class);
         });
 
+        it('creates a CsvAccessor by class name', function (): void {
+            $accessor = $this->inline->make(CsvAccessor::class, "a\n1");
+
+            expect($accessor)->toBeInstanceOf(CsvAccessor::class);
+        });
+
+        it('creates a TsvAccessor by class name', function (): void {
+            $accessor = $this->inline->make(TsvAccessor::class, "a\n1");
+
+            expect($accessor)->toBeInstanceOf(TsvAccessor::class);
+        });
+
         it('creates an ObjectAccessor by class name', function (): void {
             $accessor = $this->inline->make(ObjectAccessor::class, (object) ['x' => 1]);
 
@@ -234,6 +262,18 @@ describe(Inline::class, function (): void {
             $accessor = $this->inline->from(TypeFormat::Ndjson, "{\"a\":1}\n");
 
             expect($accessor)->toBeInstanceOf(NdjsonAccessor::class);
+        });
+
+        it('creates a CsvAccessor via TypeFormat::Csv', function (): void {
+            $accessor = $this->inline->from(TypeFormat::Csv, "name,age\nAlice,30");
+
+            expect($accessor)->toBeInstanceOf(CsvAccessor::class);
+        });
+
+        it('creates a TsvAccessor via TypeFormat::Tsv', function (): void {
+            $accessor = $this->inline->from(TypeFormat::Tsv, "name\tage\nAlice\t30");
+
+            expect($accessor)->toBeInstanceOf(TsvAccessor::class);
         });
 
         it('creates an AnyAccessor via TypeFormat::Any when integration is configured', function (): void {

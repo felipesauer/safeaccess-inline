@@ -74,6 +74,16 @@ describe(`${Inline.name} > from`, () => {
         expect(accessor.get('0.id')).toBe(1);
     });
 
+    it('routes TypeFormat.Csv to CsvAccessor', () => {
+        const accessor = Inline.from(TypeFormat.Csv, 'name,age\nAlice,30');
+        expect(accessor.get('0.name')).toBe('Alice');
+    });
+
+    it('routes TypeFormat.Tsv to TsvAccessor', () => {
+        const accessor = Inline.from(TypeFormat.Tsv, 'name\tage\nAlice\t30');
+        expect(accessor.get('0.name')).toBe('Alice');
+    });
+
     it('routes TypeFormat.Object to ObjectAccessor', () => {
         const accessor = Inline.from(TypeFormat.Object, { name: 'Alice' });
         expect(accessor.get('name')).toBe('Alice');
@@ -159,6 +169,16 @@ describe(`${Inline.name} > format factories`, () => {
     it('creates NdjsonAccessor via fromNdjson', () => {
         const accessor = Inline.fromNdjson('{"id":1}');
         expect(accessor.get('0.id')).toBe(1);
+    });
+
+    it('creates CsvAccessor via fromCsv', () => {
+        const accessor = Inline.fromCsv('name,age\nAlice,30');
+        expect(accessor.get('0.name')).toBe('Alice');
+    });
+
+    it('creates TsvAccessor via fromTsv', () => {
+        const accessor = Inline.fromTsv('name\tage\nAlice\t30');
+        expect(accessor.get('0.name')).toBe('Alice');
     });
 
     it('creates ObjectAccessor via fromObject', () => {

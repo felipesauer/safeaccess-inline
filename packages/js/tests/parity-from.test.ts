@@ -9,6 +9,8 @@ import { TomlAccessor } from '../src/accessors/formats/toml-accessor.js';
 import { IniAccessor } from '../src/accessors/formats/ini-accessor.js';
 import { EnvAccessor } from '../src/accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../src/accessors/formats/ndjson-accessor.js';
+import { CsvAccessor } from '../src/accessors/formats/csv-accessor.js';
+import { TsvAccessor } from '../src/accessors/formats/tsv-accessor.js';
 import { AnyAccessor } from '../src/accessors/formats/any-accessor.js';
 import { DotNotationParser } from '../src/core/dot-notation-parser.js';
 import { InvalidFormatException } from '../src/exceptions/invalid-format-exception.js';
@@ -113,6 +115,26 @@ describe(`${AbstractAccessor.name} > from() > NdjsonAccessor (parity)`, () => {
 
     it('throws InvalidFormatException for an integer input', () => {
         expect(() => new NdjsonAccessor(makeParser()).from(42)).toThrow(InvalidFormatException);
+    });
+});
+
+describe(`${AbstractAccessor.name} > from() > CsvAccessor (parity)`, () => {
+    it('hydrates from a CSV string and resolves via index', () => {
+        expect(new CsvAccessor(makeParser()).from('name\nAlice').get('0.name')).toBe('Alice');
+    });
+
+    it('throws InvalidFormatException for an integer input', () => {
+        expect(() => new CsvAccessor(makeParser()).from(42)).toThrow(InvalidFormatException);
+    });
+});
+
+describe(`${AbstractAccessor.name} > from() > TsvAccessor (parity)`, () => {
+    it('hydrates from a TSV string and resolves via index', () => {
+        expect(new TsvAccessor(makeParser()).from('name\nAlice').get('0.name')).toBe('Alice');
+    });
+
+    it('throws InvalidFormatException for an integer input', () => {
+        expect(() => new TsvAccessor(makeParser()).from(42)).toThrow(InvalidFormatException);
     });
 });
 

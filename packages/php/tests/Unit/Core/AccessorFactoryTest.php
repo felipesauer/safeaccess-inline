@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use SafeAccess\Inline\Accessors\Formats\AnyAccessor;
 use SafeAccess\Inline\Accessors\Formats\ArrayAccessor;
+use SafeAccess\Inline\Accessors\Formats\CsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\EnvAccessor;
 use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
 use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
+use SafeAccess\Inline\Accessors\Formats\TsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Core\AccessorFactory;
@@ -166,6 +168,26 @@ describe(AccessorFactory::class, function (): void {
         it('resolves an index from NDJSON data', function (): void {
             $accessor = $this->factory->ndjson("{\"name\":\"Alice\"}\n");
 
+            expect($accessor->get('0.name'))->toBe('Alice');
+        });
+    });
+
+    // csv()
+    describe(AccessorFactory::class . ' > csv', function (): void {
+        it('returns a CsvAccessor from a CSV string', function (): void {
+            $accessor = $this->factory->csv("name,age\nAlice,30");
+
+            expect($accessor)->toBeInstanceOf(CsvAccessor::class);
+            expect($accessor->get('0.name'))->toBe('Alice');
+        });
+    });
+
+    // tsv()
+    describe(AccessorFactory::class . ' > tsv', function (): void {
+        it('returns a TsvAccessor from a TSV string', function (): void {
+            $accessor = $this->factory->tsv("name\tage\nAlice\t30");
+
+            expect($accessor)->toBeInstanceOf(TsvAccessor::class);
             expect($accessor->get('0.name'))->toBe('Alice');
         });
     });

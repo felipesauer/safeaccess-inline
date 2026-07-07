@@ -96,6 +96,26 @@ describe(AbstractAccessor::class . '::from() > NdjsonAccessor (parity)', functio
     });
 });
 
+describe(AbstractAccessor::class . '::from() > CsvAccessor (parity)', function (): void {
+    it('hydrates from a CSV string and resolves via index', function (): void {
+        expect(factory()->csv("name\nAlice")->get('0.name'))->toBe('Alice');
+    });
+
+    it('throws InvalidFormatException for an integer input', function (): void {
+        expect(fn () => factory()->csv(42))->toThrow(InvalidFormatException::class);
+    });
+});
+
+describe(AbstractAccessor::class . '::from() > TsvAccessor (parity)', function (): void {
+    it('hydrates from a TSV string and resolves via index', function (): void {
+        expect(factory()->tsv("name\nAlice")->get('0.name'))->toBe('Alice');
+    });
+
+    it('throws InvalidFormatException for an integer input', function (): void {
+        expect(fn () => factory()->tsv(42))->toThrow(InvalidFormatException::class);
+    });
+});
+
 describe(AbstractAccessor::class . '::from() > AnyAccessor (parity)', function (): void {
     it('hydrates via integration and resolves a key', function (): void {
         $integration = new FakeParseIntegration(accepts: true, parsed: ['name' => 'Alice']);

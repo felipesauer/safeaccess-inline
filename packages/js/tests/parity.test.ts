@@ -5,6 +5,8 @@ import { IniAccessor } from '../src/accessors/formats/ini-accessor.js';
 import { TomlAccessor } from '../src/accessors/formats/toml-accessor.js';
 import { EnvAccessor } from '../src/accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../src/accessors/formats/ndjson-accessor.js';
+import { CsvAccessor } from '../src/accessors/formats/csv-accessor.js';
+import { TsvAccessor } from '../src/accessors/formats/tsv-accessor.js';
 import { JsonAccessor } from '../src/accessors/formats/json-accessor.js';
 import { DotNotationParser } from '../src/core/dot-notation-parser.js';
 import { SecurityGuard } from '../src/security/security-guard.js';
@@ -73,6 +75,16 @@ describe(`${Inline.name} > make (parity)`, () => {
     it('creates NdjsonAccessor by constructor', () => {
         const accessor = Inline.make(NdjsonAccessor, '{"id":1}\n{"id":2}');
         expect(accessor.get('0.id')).toBe(1);
+    });
+
+    it('creates CsvAccessor by constructor', () => {
+        const accessor = Inline.make(CsvAccessor, 'name,age\nAlice,30');
+        expect(accessor.get('0.name')).toBe('Alice');
+    });
+
+    it('creates TsvAccessor by constructor', () => {
+        const accessor = Inline.make(TsvAccessor, 'name\tage\nAlice\t30');
+        expect(accessor.get('0.name')).toBe('Alice');
     });
 
     it('creates ObjectAccessor by constructor', () => {

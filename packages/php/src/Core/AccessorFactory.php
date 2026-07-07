@@ -6,12 +6,14 @@ namespace SafeAccess\Inline\Core;
 
 use SafeAccess\Inline\Accessors\Formats\AnyAccessor;
 use SafeAccess\Inline\Accessors\Formats\ArrayAccessor;
+use SafeAccess\Inline\Accessors\Formats\CsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\EnvAccessor;
 use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
 use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
+use SafeAccess\Inline\Accessors\Formats\TsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Contracts\ParseIntegrationInterface;
@@ -192,6 +194,36 @@ final class AccessorFactory
     public function ndjson(mixed $data): NdjsonAccessor
     {
         return $this->applyOptions(new NdjsonAccessor($this->parser))->from($data);
+    }
+
+    /**
+     * Create a CsvAccessor from a CSV string.
+     *
+     * @param mixed $data Raw CSV string.
+     *
+     * @return CsvAccessor
+     *
+     * @throws \SafeAccess\Inline\Exceptions\CsvParseException  When the CSV is malformed.
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     */
+    public function csv(mixed $data): CsvAccessor
+    {
+        return $this->applyOptions(new CsvAccessor($this->parser))->from($data);
+    }
+
+    /**
+     * Create a TsvAccessor from a TSV string.
+     *
+     * @param mixed $data Raw TSV string.
+     *
+     * @return TsvAccessor
+     *
+     * @throws \SafeAccess\Inline\Exceptions\CsvParseException  When the TSV is malformed.
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     */
+    public function tsv(mixed $data): TsvAccessor
+    {
+        return $this->applyOptions(new TsvAccessor($this->parser))->from($data);
     }
 
     /**

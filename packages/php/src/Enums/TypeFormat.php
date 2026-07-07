@@ -44,6 +44,12 @@ enum TypeFormat: string
     /** Newline-delimited JSON (NDJSON) string input. */
     case Ndjson = 'ndjson';
 
+    /** CSV (comma-separated values) string input. */
+    case Csv = 'csv';
+
+    /** TSV (tab-separated values) string input. */
+    case Tsv = 'tsv';
+
     /** Auto-detected format via ParseIntegrationInterface. */
     case Any = 'any';
 }

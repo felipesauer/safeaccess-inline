@@ -17,6 +17,8 @@ export { TomlAccessor } from './accessors/formats/toml-accessor.js';
 export { IniAccessor } from './accessors/formats/ini-accessor.js';
 export { EnvAccessor } from './accessors/formats/env-accessor.js';
 export { NdjsonAccessor } from './accessors/formats/ndjson-accessor.js';
+export { CsvAccessor } from './accessors/formats/csv-accessor.js';
+export { TsvAccessor } from './accessors/formats/tsv-accessor.js';
 export { AnyAccessor } from './accessors/formats/any-accessor.js';
 
 // Core
@@ -33,6 +35,7 @@ export { AccessorException } from './exceptions/accessor-exception.js';
 export { InvalidFormatException } from './exceptions/invalid-format-exception.js';
 export { YamlParseException } from './exceptions/yaml-parse-exception.js';
 export { TomlParseException } from './exceptions/toml-parse-exception.js';
+export { CsvParseException } from './exceptions/csv-parse-exception.js';
 export { ParserException } from './exceptions/parser-exception.js';
 export { PathNotFoundException } from './exceptions/path-not-found-exception.js';
 export { ReadonlyViolationException } from './exceptions/readonly-violation-exception.js';

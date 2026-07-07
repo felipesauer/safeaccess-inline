@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use SafeAccess\Inline\Accessors\Formats\CsvAccessor;
 use SafeAccess\Inline\Accessors\Formats\EnvAccessor;
 use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
 use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
+use SafeAccess\Inline\Accessors\Formats\TsvAccessor;
 use SafeAccess\Inline\Exceptions\InvalidFormatException;
 use SafeAccess\Inline\Inline;
 use SafeAccess\Inline\Tests\Mocks\FakeParseIntegration;
@@ -454,6 +456,16 @@ describe(Inline::class . ' > make (parity)', function (): void {
     it('creates NdjsonAccessor by class-string', function (): void {
         $accessor = Inline::make(NdjsonAccessor::class, "{\"id\":1}\n{\"id\":2}");
         expect($accessor->get('0.id'))->toBe(1);
+    });
+
+    it('creates CsvAccessor by class-string', function (): void {
+        $accessor = Inline::make(CsvAccessor::class, "name,age\nAlice,30");
+        expect($accessor->get('0.name'))->toBe('Alice');
+    });
+
+    it('creates TsvAccessor by class-string', function (): void {
+        $accessor = Inline::make(TsvAccessor::class, "name\tage\nAlice\t30");
+        expect($accessor->get('0.name'))->toBe('Alice');
     });
 
     it('creates ObjectAccessor by class-string', function (): void {

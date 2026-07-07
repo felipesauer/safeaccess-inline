@@ -46,7 +46,7 @@ $host = Inline::fromXml($input)->get('database.host');
 // XXE blocked, forbidden keys validated, depth enforced — by default
 ```
 
-The same applies to JSON, YAML, TOML, INI, ENV, and NDJSON. Every format is parsed with security validation enabled out of the box. No configuration required for safe defaults.
+The same applies to JSON, YAML, TOML, INI, ENV, NDJSON, and CSV/TSV. Every format is parsed with security validation enabled out of the box. No configuration required for safe defaults.
 
 ## When to use this — and when not to
 
@@ -464,6 +464,35 @@ accessor.get('1.name'); // 'Bob'
 </details>
 
 <details>
+<summary><strong>CSV / TSV</strong></summary>
+
+The first row is the header; each subsequent row becomes a record indexed from `0` by position, keyed by the header columns. All values are strings — CSV has no type system, so `007` stays `"007"`. Quoted fields may contain the delimiter, escaped quotes (`""`), and embedded newlines. Duplicate header columns, rows whose field count differs from the header, and unterminated quotes are rejected. Header columns are validated against forbidden keys.
+
+```php
+// PHP
+$csv = "name,age,city\nAlice,30,Porto\nBob,25,Lisbon";
+$accessor = Inline::fromCsv($csv);
+$accessor->get('0.name'); // 'Alice'
+$accessor->get('1.city'); // 'Lisbon'
+
+// Tab-separated
+$accessor = Inline::fromTsv("name\tage\nAlice\t30");
+$accessor->get('0.age'); // '30'
+```
+
+```typescript
+// TypeScript
+const accessor = Inline.fromCsv('name,age,city\nAlice,30,Porto\nBob,25,Lisbon');
+accessor.get('0.name'); // 'Alice'
+accessor.get('1.city'); // 'Lisbon'
+
+const tsv = Inline.fromTsv('name\tage\nAlice\t30');
+tsv.get('0.age'); // '30'
+```
+
+</details>
+
+<details>
 <summary><strong>Array / Object</strong></summary>
 
 ```php
@@ -695,17 +724,18 @@ try {
 
 ### Exception hierarchy
 
-| Exception                    | Extends                      | When                                                         |
-| ---------------------------- | ---------------------------- | ------------------------------------------------------------ |
-| `AccessorException`          | `RuntimeException` / `Error` | Root — catch-all for any library error                       |
-| `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded |
-| `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                             |
-| `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                     |
-| `TomlParseException`         | `InvalidFormatException`     | Malformed TOML, duplicate keys, or redefined tables          |
-| `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                              |
-| `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                 |
-| `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                           |
-| `ParserException`            | `AccessorException`          | Reserved for custom parser-level errors                      |
+| Exception                    | Extends                      | When                                                          |
+| ---------------------------- | ---------------------------- | ------------------------------------------------------------- |
+| `AccessorException`          | `RuntimeException` / `Error` | Root — catch-all for any library error                        |
+| `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded  |
+| `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                              |
+| `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                      |
+| `TomlParseException`         | `InvalidFormatException`     | Malformed TOML, duplicate keys, or redefined tables           |
+| `CsvParseException`          | `InvalidFormatException`     | Malformed CSV/TSV, duplicate columns, or field-count mismatch |
+| `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                               |
+| `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                  |
+| `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                            |
+| `ParserException`            | `AccessorException`          | Reserved for custom parser-level errors                       |
 
 ## Advanced usage
 
@@ -791,6 +821,8 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `fromIni(data)`               | INI `string`                       | `IniAccessor`        |
 | `fromEnv(data)`               | dotenv `string`                    | `EnvAccessor`        |
 | `fromNdjson(data)`            | NDJSON `string`                    | `NdjsonAccessor`     |
+| `fromCsv(data)`               | CSV `string`                       | `CsvAccessor`        |
+| `fromTsv(data)`               | TSV `string`                       | `TsvAccessor`        |
 | `fromAny(data, integration?)` | Any format                         | `AnyAccessor`        |
 | `from(typeFormat, data)`      | `TypeFormat` enum                  | `AccessorsInterface` |
 | `make(accessorClass, data)`   | Accessor class                     | `AbstractAccessor`   |
@@ -830,7 +862,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 #### TypeFormat enum
 
-`Array` · `Object` · `Json` · `Xml` · `Yaml` · `Toml` · `Ini` · `Env` · `Ndjson` · `Any`
+`Array` · `Object` · `Json` · `Xml` · `Yaml` · `Toml` · `Ini` · `Env` · `Ndjson` · `Csv` · `Tsv` · `Any`
 
 ## Comparison
 
