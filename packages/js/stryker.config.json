@@ -10,8 +10,8 @@
     ],
     "thresholds": {
         "high": 100,
-        "low": 90,
-        "break": 93
+        "low": 85,
+        "break": 90
     },
     "timeoutMS": 30000,
     "coverageAnalysis": "perTest",

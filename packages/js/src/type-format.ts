@@ -19,6 +19,8 @@ export enum TypeFormat {
     Xml = 'xml',
     /** YAML string. */
     Yaml = 'yaml',
+    /** TOML configuration string. */
+    Toml = 'toml',
     /** INI configuration string. */
     Ini = 'ini',
     /** Dotenv-formatted string. */

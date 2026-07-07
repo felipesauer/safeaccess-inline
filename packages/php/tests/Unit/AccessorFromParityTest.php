@@ -56,6 +56,16 @@ describe(AbstractAccessor::class . '::from() > YamlAccessor (parity)', function 
     });
 });
 
+describe(AbstractAccessor::class . '::from() > TomlAccessor (parity)', function (): void {
+    it('hydrates from a TOML string and resolves a key', function (): void {
+        expect(factory()->toml("[s]\nname = \"Alice\"")->get('s.name'))->toBe('Alice');
+    });
+
+    it('throws InvalidFormatException for an integer input', function (): void {
+        expect(fn () => factory()->toml(42))->toThrow(InvalidFormatException::class);
+    });
+});
+
 describe(AbstractAccessor::class . '::from() > IniAccessor (parity)', function (): void {
     it('hydrates from an INI string and resolves a key', function (): void {
         expect(factory()->ini("[s]\nname=Alice")->get('s.name'))->toBe('Alice');

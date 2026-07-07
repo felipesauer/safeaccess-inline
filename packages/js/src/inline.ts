@@ -11,6 +11,7 @@ import { ObjectAccessor } from './accessors/formats/object-accessor.js';
 import { JsonAccessor } from './accessors/formats/json-accessor.js';
 import { XmlAccessor } from './accessors/formats/xml-accessor.js';
 import { YamlAccessor } from './accessors/formats/yaml-accessor.js';
+import { TomlAccessor } from './accessors/formats/toml-accessor.js';
 import { IniAccessor } from './accessors/formats/ini-accessor.js';
 import { EnvAccessor } from './accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from './accessors/formats/ndjson-accessor.js';
@@ -188,6 +189,21 @@ export class Inline extends InlineBuilderAccessor {
     }
 
     /**
+     * Create a TomlAccessor from a TOML string.
+     *
+     * @param data - Raw TOML string.
+     * @returns Populated TomlAccessor instance.
+     * @throws {TomlParseException} When the TOML is malformed or contains rejected constructs.
+     * @throws {SecurityException} When security constraints are violated.
+     *
+     * @example
+     * inline.fromToml('[server]\nhost = "0.0.0.0"').get('server.host'); // '0.0.0.0'
+     */
+    fromToml(data: string): TomlAccessor {
+        return this.builder().toml(data);
+    }
+
+    /**
      * Create an IniAccessor from an INI string.
      *
      * @param data - Raw INI string.
@@ -302,6 +318,8 @@ export class Inline extends InlineBuilderAccessor {
                 return this.fromXml(data as string);
             case TypeFormat.Yaml:
                 return this.fromYaml(data as string);
+            case TypeFormat.Toml:
+                return this.fromToml(data as string);
             case TypeFormat.Ini:
                 return this.fromIni(data as string);
             case TypeFormat.Env:
@@ -393,6 +411,21 @@ export class Inline extends InlineBuilderAccessor {
      */
     static fromYaml(data: string): YamlAccessor {
         return Inline.defaultInstance().fromYaml(data);
+    }
+
+    /**
+     * Create a TomlAccessor from a TOML string.
+     *
+     * @param data - Raw TOML string.
+     * @returns Populated TomlAccessor instance.
+     * @throws {TomlParseException} When the TOML is malformed or contains rejected constructs.
+     * @throws {SecurityException} When security constraints are violated.
+     *
+     * @example
+     * Inline.fromToml('[server]\nhost = "0.0.0.0"').get('server.host'); // '0.0.0.0'
+     */
+    static fromToml(data: string): TomlAccessor {
+        return Inline.defaultInstance().fromToml(data);
     }
 
     /**

@@ -32,6 +32,9 @@ enum TypeFormat: string
     /** YAML-encoded string input. */
     case Yaml = 'yaml';
 
+    /** TOML-formatted string input. */
+    case Toml = 'toml';
+
     /** INI-formatted string input. */
     case Ini = 'ini';
 

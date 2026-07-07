@@ -6,6 +6,7 @@ use SafeAccess\Inline\Accessors\Formats\EnvAccessor;
 use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
+use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
 use SafeAccess\Inline\Exceptions\InvalidFormatException;
 use SafeAccess\Inline\Inline;
 use SafeAccess\Inline\Tests\Mocks\FakeParseIntegration;
@@ -440,6 +441,11 @@ describe(Inline::class . ' > make (parity)', function (): void {
         expect($accessor->get('section.key'))->toBe('value');
     });
 
+    it('creates TomlAccessor by class-string', function (): void {
+        $accessor = Inline::make(TomlAccessor::class, "[section]\nkey = \"value\"");
+        expect($accessor->get('section.key'))->toBe('value');
+    });
+
     it('creates EnvAccessor by class-string', function (): void {
         $accessor = Inline::make(EnvAccessor::class, 'APP_NAME=MyApp');
         expect($accessor->get('APP_NAME'))->toBe('MyApp');
@@ -498,6 +504,12 @@ describe(Inline::class . ' > getRaw (parity)', function (): void {
     it('stores raw input for YamlAccessor', function (): void {
         $raw = 'name: Alice';
         $accessor = Inline::fromYaml($raw);
+        expect($accessor->getRaw())->toBe($raw);
+    });
+
+    it('stores raw input for TomlAccessor', function (): void {
+        $raw = "[section]\nkey = \"value\"";
+        $accessor = Inline::fromToml($raw);
         expect($accessor->getRaw())->toBe($raw);
     });
 

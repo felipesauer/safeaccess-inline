@@ -5,6 +5,7 @@ import { ObjectAccessor } from '../src/accessors/formats/object-accessor.js';
 import { JsonAccessor } from '../src/accessors/formats/json-accessor.js';
 import { XmlAccessor } from '../src/accessors/formats/xml-accessor.js';
 import { YamlAccessor } from '../src/accessors/formats/yaml-accessor.js';
+import { TomlAccessor } from '../src/accessors/formats/toml-accessor.js';
 import { IniAccessor } from '../src/accessors/formats/ini-accessor.js';
 import { EnvAccessor } from '../src/accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../src/accessors/formats/ndjson-accessor.js';
@@ -68,6 +69,18 @@ describe(`${AbstractAccessor.name} > from() > YamlAccessor (parity)`, () => {
 
     it('throws InvalidFormatException for an integer input', () => {
         expect(() => new YamlAccessor(makeParser()).from(42)).toThrow(InvalidFormatException);
+    });
+});
+
+describe(`${AbstractAccessor.name} > from() > TomlAccessor (parity)`, () => {
+    it('hydrates from a TOML string and resolves a key', () => {
+        expect(new TomlAccessor(makeParser()).from('[s]\nname = "Alice"').get('s.name')).toBe(
+            'Alice',
+        );
+    });
+
+    it('throws InvalidFormatException for an integer input', () => {
+        expect(() => new TomlAccessor(makeParser()).from(42)).toThrow(InvalidFormatException);
     });
 });
 

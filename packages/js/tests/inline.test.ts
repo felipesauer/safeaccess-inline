@@ -52,6 +52,12 @@ describe(`${Inline.name} > from`, () => {
         expect(accessor.get('name')).toBe('Alice');
     });
 
+    it('routes TypeFormat.Toml to TomlAccessor (TOML syntax specific)', () => {
+        // Use TOML-specific syntax (quoted value); a non-TOML accessor would not parse this
+        const accessor = Inline.from(TypeFormat.Toml, '[db]\nhost = "localhost"');
+        expect(accessor.get('db.host')).toBe('localhost');
+    });
+
     it('routes TypeFormat.Ini to IniAccessor (INI syntax specific)', () => {
         // Use INI-specific syntax (section); a non-INI accessor would not parse this
         const accessor = Inline.from(TypeFormat.Ini, '[db]\nhost=localhost');
@@ -133,6 +139,11 @@ describe(`${Inline.name} > format factories`, () => {
     it('creates YamlAccessor via fromYaml', () => {
         const accessor = Inline.fromYaml('name: Alice\nage: 30');
         expect(accessor.get('name')).toBe('Alice');
+    });
+
+    it('creates TomlAccessor via fromToml', () => {
+        const accessor = Inline.fromToml('[section]\nkey = "value"');
+        expect(accessor.get('section.key')).toBe('value');
     });
 
     it('creates IniAccessor via fromIni', () => {
@@ -400,9 +411,9 @@ describe(`${Inline.name} > withStrictMode`, () => {
     });
 
     it('withStrictMode(true) enforces forbidden key validation', () => {
-        expect(() =>
-            Inline.withStrictMode(true).fromJson('{"__proto__":"injected"}'),
-        ).toThrow(SecurityException);
+        expect(() => Inline.withStrictMode(true).fromJson('{"__proto__":"injected"}')).toThrow(
+            SecurityException,
+        );
     });
 
     it('default strict mode enforces security', () => {
