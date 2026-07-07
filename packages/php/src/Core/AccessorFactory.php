@@ -11,6 +11,7 @@ use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
+use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Contracts\ParseIntegrationInterface;
@@ -132,6 +133,21 @@ final class AccessorFactory
     public function yaml(mixed $data): YamlAccessor
     {
         return $this->applyOptions(new YamlAccessor($this->parser))->from($data);
+    }
+
+    /**
+     * Create a TomlAccessor from a TOML string.
+     *
+     * @param mixed $data Raw TOML string.
+     *
+     * @return TomlAccessor
+     *
+     * @throws \SafeAccess\Inline\Exceptions\TomlParseException When the TOML is malformed.
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     */
+    public function toml(mixed $data): TomlAccessor
+    {
+        return $this->applyOptions(new TomlAccessor($this->parser))->from($data);
     }
 
     /**

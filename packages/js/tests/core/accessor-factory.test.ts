@@ -8,6 +8,7 @@ import { ObjectAccessor } from '../../src/accessors/formats/object-accessor.js';
 import { JsonAccessor } from '../../src/accessors/formats/json-accessor.js';
 import { XmlAccessor } from '../../src/accessors/formats/xml-accessor.js';
 import { YamlAccessor } from '../../src/accessors/formats/yaml-accessor.js';
+import { TomlAccessor } from '../../src/accessors/formats/toml-accessor.js';
 import { IniAccessor } from '../../src/accessors/formats/ini-accessor.js';
 import { EnvAccessor } from '../../src/accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../../src/accessors/formats/ndjson-accessor.js';
@@ -77,6 +78,15 @@ describe(AccessorFactory.name, () => {
             const accessor = factory.yaml('key: value');
             expect(accessor).toBeInstanceOf(YamlAccessor);
             expect(accessor.get('key')).toBe('value');
+        });
+    });
+
+    describe('toml', () => {
+        it('creates a TomlAccessor from TOML string', () => {
+            const factory = new AccessorFactory(makeParser());
+            const accessor = factory.toml('[section]\nkey = "value"');
+            expect(accessor).toBeInstanceOf(TomlAccessor);
+            expect(accessor.get('section.key')).toBe('value');
         });
     });
 

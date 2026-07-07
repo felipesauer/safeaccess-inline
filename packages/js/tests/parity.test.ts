@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Inline } from '../src/inline.js';
 import { ObjectAccessor } from '../src/accessors/formats/object-accessor.js';
 import { IniAccessor } from '../src/accessors/formats/ini-accessor.js';
+import { TomlAccessor } from '../src/accessors/formats/toml-accessor.js';
 import { EnvAccessor } from '../src/accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../src/accessors/formats/ndjson-accessor.js';
 import { JsonAccessor } from '../src/accessors/formats/json-accessor.js';
@@ -59,6 +60,11 @@ describe(`${Inline.name} > make (parity)`, () => {
         expect(accessor.get('section.key')).toBe('value');
     });
 
+    it('creates TomlAccessor by constructor', () => {
+        const accessor = Inline.make(TomlAccessor, '[section]\nkey = "value"');
+        expect(accessor.get('section.key')).toBe('value');
+    });
+
     it('creates EnvAccessor by constructor', () => {
         const accessor = Inline.make(EnvAccessor, 'APP_NAME=MyApp');
         expect(accessor.get('APP_NAME')).toBe('MyApp');
@@ -105,6 +111,12 @@ describe(`${Inline.name} > getRaw (parity)`, () => {
     it('stores raw input for YamlAccessor', () => {
         const raw = 'name: Alice';
         const accessor = Inline.fromYaml(raw);
+        expect(accessor.getRaw()).toBe(raw);
+    });
+
+    it('stores raw input for TomlAccessor', () => {
+        const raw = '[section]\nkey = "value"';
+        const accessor = Inline.fromToml(raw);
         expect(accessor.getRaw()).toBe(raw);
     });
 

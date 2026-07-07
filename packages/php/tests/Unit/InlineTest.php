@@ -9,6 +9,7 @@ use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
+use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Enums\TypeFormat;
@@ -57,6 +58,13 @@ describe(Inline::class, function (): void {
             $accessor = $this->inline->fromYaml("name: Alice\n");
 
             expect($accessor)->toBeInstanceOf(YamlAccessor::class);
+            expect($accessor->get('name'))->toBe('Alice');
+        });
+
+        it('fromToml returns TomlAccessor and resolves a key', function (): void {
+            $accessor = $this->inline->fromToml("name = \"Alice\"\n");
+
+            expect($accessor)->toBeInstanceOf(TomlAccessor::class);
             expect($accessor->get('name'))->toBe('Alice');
         });
 
@@ -130,6 +138,12 @@ describe(Inline::class, function (): void {
             expect($accessor)->toBeInstanceOf(YamlAccessor::class);
         });
 
+        it('creates a TomlAccessor by class name', function (): void {
+            $accessor = $this->inline->make(TomlAccessor::class, "k = \"v\"\n");
+
+            expect($accessor)->toBeInstanceOf(TomlAccessor::class);
+        });
+
         it('creates an IniAccessor by class name', function (): void {
             $accessor = $this->inline->make(IniAccessor::class, "k=v\n");
 
@@ -196,6 +210,12 @@ describe(Inline::class, function (): void {
             $accessor = $this->inline->from(TypeFormat::Yaml, "k: v\n");
 
             expect($accessor)->toBeInstanceOf(YamlAccessor::class);
+        });
+
+        it('creates a TomlAccessor via TypeFormat::Toml', function (): void {
+            $accessor = $this->inline->from(TypeFormat::Toml, "k = \"v\"\n");
+
+            expect($accessor)->toBeInstanceOf(TomlAccessor::class);
         });
 
         it('creates an IniAccessor via TypeFormat::Ini', function (): void {

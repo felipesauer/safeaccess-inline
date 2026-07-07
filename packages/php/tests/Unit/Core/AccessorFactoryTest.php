@@ -9,6 +9,7 @@ use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
+use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Core\AccessorFactory;
@@ -104,6 +105,21 @@ describe(AccessorFactory::class, function (): void {
 
         it('resolves a key from YAML data', function (): void {
             $accessor = $this->factory->yaml("city: Porto\n");
+
+            expect($accessor->get('city'))->toBe('Porto');
+        });
+    });
+
+    // toml()
+    describe(AccessorFactory::class . ' > toml', function (): void {
+        it('returns a TomlAccessor from a TOML string', function (): void {
+            $accessor = $this->factory->toml("name = \"Alice\"\n");
+
+            expect($accessor)->toBeInstanceOf(TomlAccessor::class);
+        });
+
+        it('resolves a key from TOML data', function (): void {
+            $accessor = $this->factory->toml("city = \"Porto\"\n");
 
             expect($accessor->get('city'))->toBe('Porto');
         });

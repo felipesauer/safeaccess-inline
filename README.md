@@ -46,7 +46,7 @@ $host = Inline::fromXml($input)->get('database.host');
 // XXE blocked, forbidden keys validated, depth enforced — by default
 ```
 
-The same applies to JSON, YAML, INI, ENV, and NDJSON. Every format is parsed with security validation enabled out of the box. No configuration required for safe defaults.
+The same applies to JSON, YAML, TOML, INI, ENV, and NDJSON. Every format is parsed with security validation enabled out of the box. No configuration required for safe defaults.
 
 ## When to use this — and when not to
 
@@ -168,6 +168,7 @@ Keys starting with `__` are matched case-insensitively. Stream wrapper URIs and 
 | ------ | ----------------------------------------------------------------------- |
 | XML    | Rejects `<!DOCTYPE` — prevents XXE (XML External Entity) attacks        |
 | YAML   | Blocks unsafe tags, anchors (`&`), aliases (`*`), and merge keys (`<<`) |
+| TOML   | Rejects duplicate keys and redefined tables; enforces nesting depth     |
 | All    | Forbidden key validation on every parsed key                            |
 
 ### Structural limits
@@ -337,6 +338,51 @@ const yaml = `database:
 const accessor = Inline.fromYaml(yaml);
 accessor.get('database.credentials.user'); // 'admin'
 ```
+
+</details>
+
+<details>
+<summary><strong>TOML</strong></summary>
+
+```php
+// PHP
+$toml = <<<TOML
+[database]
+host = "localhost"
+port = 5432
+
+[[servers]]
+name = "alpha"
+
+[[servers]]
+name = "beta"
+TOML;
+
+$accessor = Inline::fromToml($toml);
+$accessor->get('database.host'); // 'localhost'
+$accessor->get('servers.1.name'); // 'beta'
+```
+
+```typescript
+// TypeScript
+const toml = `[database]
+host = "localhost"
+port = 5432
+
+[[servers]]
+name = "alpha"
+
+[[servers]]
+name = "beta"`;
+
+const accessor = Inline.fromToml(toml);
+accessor.get('database.host'); // 'localhost'
+accessor.get('servers.1.name'); // 'beta'
+```
+
+Supports tables, arrays of tables, dotted keys, inline arrays and tables, and
+the scalar types (integer, float, boolean, string). Duplicate keys and redefined
+tables are rejected; datetimes are preserved as strings.
 
 </details>
 
@@ -655,6 +701,7 @@ try {
 | `SecurityException`          | `AccessorException`          | Forbidden key, payload too large, structural limits exceeded |
 | `InvalidFormatException`     | `AccessorException`          | Malformed JSON, XML, INI, NDJSON                             |
 | `YamlParseException`         | `InvalidFormatException`     | Unsafe or malformed YAML                                     |
+| `TomlParseException`         | `InvalidFormatException`     | Malformed TOML, duplicate keys, or redefined tables          |
 | `PathNotFoundException`      | `AccessorException`          | `getOrFail()` on a missing path                              |
 | `ReadonlyViolationException` | `AccessorException`          | Write on a readonly accessor                                 |
 | `UnsupportedTypeException`   | `AccessorException`          | Unknown accessor class in `make()`                           |
@@ -740,6 +787,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 | `fromJson(data)`              | JSON `string`                      | `JsonAccessor`       |
 | `fromXml(data)`               | XML `string` or `SimpleXMLElement` | `XmlAccessor`        |
 | `fromYaml(data)`              | YAML `string`                      | `YamlAccessor`       |
+| `fromToml(data)`              | TOML `string`                      | `TomlAccessor`       |
 | `fromIni(data)`               | INI `string`                       | `IniAccessor`        |
 | `fromEnv(data)`               | dotenv `string`                    | `EnvAccessor`        |
 | `fromNdjson(data)`            | NDJSON `string`                    | `NdjsonAccessor`     |
@@ -782,7 +830,7 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 #### TypeFormat enum
 
-`Array` · `Object` · `Json` · `Xml` · `Yaml` · `Ini` · `Env` · `Ndjson` · `Any`
+`Array` · `Object` · `Json` · `Xml` · `Yaml` · `Toml` · `Ini` · `Env` · `Ndjson` · `Any`
 
 ## Comparison
 

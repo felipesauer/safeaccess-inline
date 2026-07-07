@@ -6,6 +6,7 @@ import { ObjectAccessor } from '../accessors/formats/object-accessor.js';
 import { JsonAccessor } from '../accessors/formats/json-accessor.js';
 import { XmlAccessor } from '../accessors/formats/xml-accessor.js';
 import { YamlAccessor } from '../accessors/formats/yaml-accessor.js';
+import { TomlAccessor } from '../accessors/formats/toml-accessor.js';
 import { IniAccessor } from '../accessors/formats/ini-accessor.js';
 import { EnvAccessor } from '../accessors/formats/env-accessor.js';
 import { NdjsonAccessor } from '../accessors/formats/ndjson-accessor.js';
@@ -113,6 +114,18 @@ export class AccessorFactory {
      */
     yaml(data: string): YamlAccessor {
         return this.applyOptions(new YamlAccessor(this.parser)).from(data);
+    }
+
+    /**
+     * Create a TomlAccessor from a TOML string.
+     *
+     * @param data - Raw TOML string.
+     * @returns Populated TomlAccessor.
+     * @throws {TomlParseException} When the TOML is malformed.
+     * @throws {SecurityException} When security constraints are violated.
+     */
+    toml(data: string): TomlAccessor {
+        return this.applyOptions(new TomlAccessor(this.parser)).from(data);
     }
 
     /**

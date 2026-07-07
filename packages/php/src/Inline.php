@@ -12,6 +12,7 @@ use SafeAccess\Inline\Accessors\Formats\IniAccessor;
 use SafeAccess\Inline\Accessors\Formats\JsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\NdjsonAccessor;
 use SafeAccess\Inline\Accessors\Formats\ObjectAccessor;
+use SafeAccess\Inline\Accessors\Formats\TomlAccessor;
 use SafeAccess\Inline\Accessors\Formats\XmlAccessor;
 use SafeAccess\Inline\Accessors\Formats\YamlAccessor;
 use SafeAccess\Inline\Contracts\AccessorsInterface;
@@ -41,6 +42,7 @@ use SafeAccess\Inline\Exceptions\UnsupportedTypeException;
  * @method static JsonAccessor          fromJson(string $data)
  * @method static XmlAccessor           fromXml(string|\SimpleXMLElement $data)
  * @method static YamlAccessor          fromYaml(string $data)
+ * @method static TomlAccessor          fromToml(string $data)
  * @method static IniAccessor           fromIni(string $data)
  * @method static EnvAccessor           fromEnv(string $data)
  * @method static NdjsonAccessor        fromNdjson(string $data)
@@ -149,6 +151,25 @@ class Inline extends InlineBuilderAccessor
     }
 
     /**
+     * Create a TomlAccessor from a TOML string.
+     *
+     * @param string $data Raw TOML string.
+     *
+     * @return TomlAccessor Populated accessor instance.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\TomlParseException When the TOML is malformed or contains rejected constructs.
+     * @throws \SafeAccess\Inline\Exceptions\SecurityException  When security constraints are violated.
+     *
+     * @example
+     * $accessor = Inline::fromToml("[server]\nhost = \"0.0.0.0\"");
+     * $accessor->get('server.host'); // '0.0.0.0'
+     */
+    protected function fromToml(string $data): TomlAccessor
+    {
+        return $this->builder()->toml($data);
+    }
+
+    /**
      * Create an IniAccessor from an INI string.
      *
      * @param string $data Raw INI string.
@@ -251,6 +272,7 @@ class Inline extends InlineBuilderAccessor
             JsonAccessor::class   => $factory->json($data),
             XmlAccessor::class    => $factory->xml($data),
             YamlAccessor::class   => $factory->yaml($data),
+            TomlAccessor::class   => $factory->toml($data),
             IniAccessor::class    => $factory->ini($data),
             EnvAccessor::class    => $factory->env($data),
             NdjsonAccessor::class => $factory->ndjson($data),
@@ -286,6 +308,7 @@ class Inline extends InlineBuilderAccessor
             TypeFormat::Json   => $factory->json($data),
             TypeFormat::Xml    => $factory->xml($data),
             TypeFormat::Yaml   => $factory->yaml($data),
+            TypeFormat::Toml   => $factory->toml($data),
             TypeFormat::Ini    => $factory->ini($data),
             TypeFormat::Env    => $factory->env($data),
             TypeFormat::Ndjson => $factory->ndjson($data),
