@@ -46,6 +46,14 @@ describe('AbstractAccessor > validate', function (): void {
         expect(fn () => sample()->validate(['db.host' => 'text']))
             ->toThrow(AccessorException::class);
     });
+
+    it('groups failures by path via errorsByPath', function (): void {
+        $result = sample()->validate(['db.port' => 'string', 'db.name' => 'string']);
+        expect($result->errorsByPath())->toBe([
+            'db.port' => ['Path "db.port" expected string, got int.'],
+            'db.name' => ['Missing required path "db.name" (expected string).'],
+        ]);
+    });
 });
 
 describe('AbstractAccessor > assert', function (): void {

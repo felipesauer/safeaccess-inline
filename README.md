@@ -688,7 +688,7 @@ result.errors; // [] (SchemaError[] when invalid)
 const host = accessor.assert({ 'db.host': 'string' }).get('db.host');
 ```
 
-Each `SchemaError` carries `path`, `expected` (the rule), `actual` (the type found, or `missing`), and a human-readable `message`. An unrecognised rule throws `AccessorException` — that's a mistake in the schema, not the data.
+Each `SchemaError` carries `path`, `expected` (the rule), `actual` (the type found, or `missing`), and a human-readable `message`. For per-field reporting (forms, API responses), `result.errorsByPath()` groups the messages into a map keyed by path. An unrecognised rule throws `AccessorException` — that's a mistake in the schema, not the data.
 
 ## Configure
 
@@ -915,10 +915,10 @@ const accessor = Inline.withParserIntegration(csvIntegration).fromAny(csvString)
 
 #### Accessor validation methods
 
-| Method             | Returns                                               |
-| ------------------ | ----------------------------------------------------- |
-| `validate(schema)` | `SchemaResult` (`.valid` / `.errors`), never throws   |
-| `assert(schema)`   | `this` when valid; throws `SchemaValidationException` |
+| Method             | Returns                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `validate(schema)` | `SchemaResult` (`.valid` / `.errors` / `.errorsByPath()`), never throws |
+| `assert(schema)`   | `this` when valid; throws `SchemaValidationException`                   |
 
 #### Accessor write methods (immutable)
 

@@ -36,6 +36,14 @@ describe('AbstractAccessor > validate', () => {
     it('throws AccessorException on an unknown rule', () => {
         expect(() => sample().validate({ 'db.host': 'text' })).toThrow(AccessorException);
     });
+
+    it('groups failures by path via errorsByPath', () => {
+        const result = sample().validate({ 'db.port': 'string', 'db.name': 'string' });
+        expect(result.errorsByPath()).toEqual({
+            'db.port': ['Path "db.port" expected string, got int.'],
+            'db.name': ['Missing required path "db.name" (expected string).'],
+        });
+    });
 });
 
 describe('AbstractAccessor > assert', () => {
