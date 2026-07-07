@@ -622,9 +622,30 @@ readonly.set('a.b', 99); // throws ReadonlyViolationException
 
 ## Schema validation
 
-Beyond security, you can validate the **shape** of the data: which paths must exist and what type each holds. A schema maps dot-notation paths to compact rules — `string`, `int`, `float`, `number`, `bool`, `array`, `object`, `null`, `any` — where a trailing `?` marks the path optional. Validation runs against the already-parsed value, so a CSV or TOML string field checked as `int` fails (those formats carry no numeric type).
+Beyond security, you can validate the **shape** of the data: which paths must exist, their type, and additional constraints. A schema maps dot-notation paths to pipe-separated rules. The first part is the base type — `string`, `int`, `float`, `number`, `bool`, `array`, `object`, `null`, `any` — and a trailing `?` marks the path optional. Validation runs against the already-parsed value, so a CSV or TOML string field checked as `int` fails (those formats carry no numeric type).
 
-`validate()` returns a result you can inspect; `assert()` throws `SchemaValidationException` on failure and returns the accessor for chaining.
+Additional parts add constraints, applied once the type matches:
+
+| Constraint      | Applies to              | Meaning                                        |
+| --------------- | ----------------------- | ---------------------------------------------- |
+| `min:N`         | number                  | value `>= N`                                   |
+| `min:N`         | string / array          | length / size `>= N`                           |
+| `max:N`         | number / string / array | value or length / size `<= N`                  |
+| `enum:a,b,c`    | string / number         | value must be one of the listed options        |
+| `pattern:REGEX` | string                  | must match the (unanchored) regular expression |
+| `email`         | string                  | must look like an email address                |
+| `url`           | string                  | must be an `http(s)` URL                       |
+| `uuid`          | string                  | must be a UUID                                 |
+
+```
+'db.port'    => 'int|min:1|max:65535'
+'user.email' => 'string|email'
+'status'     => 'string|enum:active,inactive,pending'
+'code'       => 'string|pattern:^[A-Z]{3}$'
+'nickname'   => 'string|min:2|max:20?'    // optional; validated when present
+```
+
+`validate()` returns a result you can inspect; `assert()` throws `SchemaValidationException` on failure and returns the accessor for chaining. A malformed rule (bad `min` argument, empty `enum`, invalid regex, unknown constraint) throws `AccessorException` — a mistake in the schema, not the data.
 
 ### PHP
 
@@ -633,8 +654,8 @@ $accessor = Inline::fromJson('{"db":{"host":"localhost","port":5432}}');
 
 // Inspect without throwing
 $result = $accessor->validate([
-    'db.host' => 'string',
-    'db.port' => 'int',
+    'db.host' => 'string|min:1',
+    'db.port' => 'int|min:1|max:65535',
     'db.ssl'  => 'bool?',   // optional
 ]);
 $result->isValid();                 // true
