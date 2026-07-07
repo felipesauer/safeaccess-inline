@@ -648,6 +648,8 @@ Additional parts add constraints, applied once the type matches:
 'emails'     => 'array|each:(string|email)'
 ```
 
+A path may contain `*` wildcards to apply a rule to every matching element. `'users.*.email' => 'string|email'` validates the email of every user; failures report the expansion index (`users.*.email.2`). An absent or empty collection matches nothing and passes — require it separately with a concrete rule like `'users' => 'array|min:1'`.
+
 `validate()` returns a result you can inspect; `assert()` throws `SchemaValidationException` on failure and returns the accessor for chaining. A malformed rule (bad `min` argument, empty `enum`, invalid regex, unknown constraint) throws `AccessorException` — a mistake in the schema, not the data.
 
 ### PHP

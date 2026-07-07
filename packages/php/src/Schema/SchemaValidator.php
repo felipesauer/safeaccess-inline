@@ -71,31 +71,83 @@ final class SchemaValidator
      */
     public function validate(array $schema): SchemaResult
     {
-        $sentinel = new \stdClass();
         $errors = [];
 
         foreach ($schema as $path => $raw) {
             $parsed = $this->parseRule($raw, $path);
 
-            if (!($this->has)($path)) {
-                if (!$parsed['optional']) {
-                    $errors[] = new SchemaError(
-                        $path,
-                        $raw,
-                        'missing',
-                        "Missing required path \"{$path}\" (expected {$parsed['type']})."
-                    );
-                }
-                continue;
-            }
+            $failure = str_contains($path, '*')
+                ? $this->validateWildcard($parsed, $path)
+                : $this->validatePath($parsed, $path);
 
-            $failure = $this->validateValue($parsed, ($this->get)($path, $sentinel), $path);
             if ($failure !== null) {
                 $errors[] = new SchemaError($failure['path'], $raw, $failure['actual'], $failure['message']);
             }
         }
 
         return new SchemaResult($errors);
+    }
+
+    /**
+     * Validate a concrete (wildcard-free) path against a rule.
+     *
+     * @param ParsedRule $parsed The parsed rule.
+     * @param string     $path   Concrete dot-notation path.
+     *
+     * @return array{path: string, actual: string, message: string}|null A failure, or null when valid.
+     */
+    private function validatePath(array $parsed, string $path): ?array
+    {
+        if (!($this->has)($path)) {
+            if ($parsed['optional']) {
+                return null;
+            }
+
+            return [
+                'path' => $path,
+                'actual' => 'missing',
+                'message' => "Missing required path \"{$path}\" (expected {$parsed['type']}).",
+            ];
+        }
+
+        $sentinel = new \stdClass();
+
+        return $this->validateValue($parsed, ($this->get)($path, $sentinel), $path);
+    }
+
+    /**
+     * Validate every value produced by a wildcard path (e.g. `users.*.email`)
+     * against the rule, reporting the first failure with an expansion index.
+     *
+     * An absent or non-expandable base yields no matches and is treated as
+     * valid (like `each` over an empty array).
+     *
+     * @param ParsedRule $parsed The parsed rule applied to each expanded value.
+     * @param string     $path   Dot-notation path containing one or more `*` segments.
+     *
+     * @return array{path: string, actual: string, message: string}|null A failure, or null when every expanded value is valid.
+     */
+    private function validateWildcard(array $parsed, string $path): ?array
+    {
+        // Resolve with a null fallback: a non-expandable base returns null (no
+        // matches → valid), while absent element keys surface as null inside
+        // the expanded array (handled per-item below).
+        $expanded = ($this->get)($path, null);
+        if (!is_array($expanded)) {
+            return null;
+        }
+
+        foreach ($expanded as $i => $value) {
+            if ($value === null && $parsed['optional']) {
+                continue;
+            }
+            $failure = $this->validateValue($parsed, $value, "{$path}.{$i}");
+            if ($failure !== null) {
+                return $failure;
+            }
+        }
+
+        return null;
     }
 
     /**

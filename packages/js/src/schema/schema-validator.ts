@@ -70,25 +70,76 @@ export class SchemaValidator {
             const raw = schema[path] as string;
             const parsed = this.parseRule(raw, path);
 
-            if (!this.has(path)) {
-                if (!parsed.optional) {
-                    errors.push({
-                        path,
-                        expected: raw,
-                        actual: 'missing',
-                        message: `Missing required path "${path}" (expected ${parsed.type}).`,
-                    });
-                }
-                continue;
-            }
+            const failure = path.split('.').includes('*')
+                ? this.validateWildcard(parsed, path)
+                : this.validatePath(parsed, path);
 
-            const failure = this.validateValue(parsed, this.get(path, MISSING), path);
             if (failure !== null) {
                 errors.push({ ...failure, expected: raw });
             }
         }
 
         return new SchemaResult(errors);
+    }
+
+    /**
+     * Validate a concrete (wildcard-free) path against a rule.
+     *
+     * @param parsed - The parsed rule.
+     * @param path - Concrete dot-notation path.
+     * @returns A partial SchemaError (without `expected`) or null when valid.
+     */
+    private validatePath(parsed: ParsedRule, path: string): Omit<SchemaError, 'expected'> | null {
+        if (!this.has(path)) {
+            if (parsed.optional) {
+                return null;
+            }
+            return {
+                path,
+                actual: 'missing',
+                message: `Missing required path "${path}" (expected ${parsed.type}).`,
+            };
+        }
+
+        return this.validateValue(parsed, this.get(path, MISSING), path);
+    }
+
+    /**
+     * Validate every value produced by a wildcard path (e.g. `users.*.email`)
+     * against the rule, reporting the first failure with an expansion index.
+     *
+     * An absent or non-expandable base yields no matches and is treated as
+     * valid (like `each` over an empty array). Require the collection itself
+     * with a separate concrete rule if needed.
+     *
+     * @param parsed - The parsed rule applied to each expanded value.
+     * @param path - Dot-notation path containing one or more `*` segments.
+     * @returns A partial SchemaError or null when every expanded value is valid.
+     */
+    private validateWildcard(
+        parsed: ParsedRule,
+        path: string,
+    ): Omit<SchemaError, 'expected'> | null {
+        // Resolve with a null fallback: a non-expandable base returns null (no
+        // matches → valid), while absent element keys surface as null inside
+        // the expanded array (handled per-item below).
+        const expanded = this.get(path, null);
+        if (!Array.isArray(expanded)) {
+            return null;
+        }
+
+        for (let i = 0; i < expanded.length; i++) {
+            const value = expanded[i];
+            if (value === null && parsed.optional) {
+                continue;
+            }
+            const failure = this.validateValue(parsed, value, `${path}.${i}`);
+            if (failure !== null) {
+                return failure;
+            }
+        }
+
+        return null;
     }
 
     /**
