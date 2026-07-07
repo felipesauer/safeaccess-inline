@@ -52,4 +52,24 @@ export class SchemaResult {
     get errors(): SchemaError[] {
         return [...this.failures];
     }
+
+    /**
+     * Group failure messages by their path, in first-seen path order.
+     *
+     * Convenient for surfacing per-field errors (forms, API responses)
+     * without reducing the flat error list yourself.
+     *
+     * @returns A record mapping each failing path to its messages (empty when valid).
+     *
+     * @example
+     * const byField = accessor.validate(schema).errorsByPath();
+     * // { 'user.email': ['Path "user.email" must be a valid email.'] }
+     */
+    errorsByPath(): Record<string, string[]> {
+        const grouped: Record<string, string[]> = {};
+        for (const failure of this.failures) {
+            (grouped[failure.path] ??= []).push(failure.message);
+        }
+        return grouped;
+    }
 }

@@ -47,4 +47,26 @@ final class SchemaResult
     {
         return $this->failures;
     }
+
+    /**
+     * Group failure messages by their path, in first-seen path order.
+     *
+     * Convenient for surfacing per-field errors (forms, API responses)
+     * without reducing the flat error list yourself.
+     *
+     * @return array<string, list<string>> Map of each failing path to its messages (empty when valid).
+     *
+     * @example
+     * $byField = Inline::fromJson($json)->validate($schema)->errorsByPath();
+     * // ['user.email' => ['Path "user.email" must be a valid email.']]
+     */
+    public function errorsByPath(): array
+    {
+        $grouped = [];
+        foreach ($this->failures as $failure) {
+            $grouped[$failure->path][] = $failure->message;
+        }
+
+        return $grouped;
+    }
 }
