@@ -21,6 +21,12 @@ use SafeAccess\Inline\Exceptions\AccessorException;
  * Behaviour is mirrored in the JS implementation for parity.
  *
  * @internal
+ *
+ * @phpstan-type Constraint array{name: string, arg: string}
+ * @phpstan-type ParsedRule array{optional: bool, type: string, constraints: list<Constraint>, itemRule: mixed}
+ *
+ * itemRule holds a nested ParsedRule (or null); typed as mixed because PHPStan
+ * cannot express the self-recursive shape.
  */
 final class SchemaValidator
 {
@@ -83,25 +89,111 @@ final class SchemaValidator
                 continue;
             }
 
-            $value = ($this->get)($path, $sentinel);
-            if (!$this->matchesType($parsed['type'], $value)) {
-                $actual = $this->typeName($value);
-                $errors[] = new SchemaError(
-                    $path,
-                    $raw,
-                    $actual,
-                    "Path \"{$path}\" expected {$parsed['type']}, got {$actual}."
-                );
-                continue;
-            }
-
-            $message = $this->checkConstraints($parsed['constraints'], $value, $path);
-            if ($message !== null) {
-                $errors[] = new SchemaError($path, $raw, $this->describe($value), $message);
+            $failure = $this->validateValue($parsed, ($this->get)($path, $sentinel), $path);
+            if ($failure !== null) {
+                $errors[] = new SchemaError($failure['path'], $raw, $failure['actual'], $failure['message']);
             }
         }
 
         return new SchemaResult($errors);
+    }
+
+    /**
+     * Validate a single value against a parsed rule: base type, then
+     * constraints, then per-item rule for arrays. Recursive for nested `each`.
+     *
+     * @param ParsedRule $parsed The parsed rule.
+     * @param mixed  $value The value to validate.
+     * @param string $path  Path for error messages (item paths append `.index`).
+     *
+     * @return array{path: string, actual: string, message: string}|null A failure, or null when valid.
+     */
+    private function validateValue(array $parsed, mixed $value, string $path): ?array
+    {
+        if (!$this->matchesType($parsed['type'], $value)) {
+            $actual = $this->typeName($value);
+
+            return [
+                'path' => $path,
+                'actual' => $actual,
+                'message' => "Path \"{$path}\" expected {$parsed['type']}, got {$actual}.",
+            ];
+        }
+
+        $message = $this->checkConstraints($parsed['constraints'], $value, $path);
+        if ($message !== null) {
+            return ['path' => $path, 'actual' => $this->describe($value), 'message' => $message];
+        }
+
+        if ($parsed['itemRule'] !== null) {
+            return $this->validateItems($parsed, $value, $path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate each element of an array against the item rule, reporting the
+     * first failure with an indexed path.
+     *
+     * @param ParsedRule $parent The rule whose `itemRule` every element must satisfy.
+     * @param mixed      $value  The value that carried the `each` constraint.
+     * @param string     $path   Parent path (item paths append `.index`).
+     *
+     * @return array{path: string, actual: string, message: string}|null A failure, or null when every element is valid.
+     */
+    private function validateItems(array $parent, mixed $value, string $path): ?array
+    {
+        if (!(is_array($value) && array_is_list($value))) {
+            return [
+                'path' => $path,
+                'actual' => $this->typeName($value),
+                'message' => "Path \"{$path}\" each constraint requires an array.",
+            ];
+        }
+
+        // Rebuild the nested rule with a checked shape (parseRule guarantees it,
+        // but the recursive type is expressed as mixed on itemRule).
+        $itemRule = $this->asParsedRule($parent['itemRule']);
+
+        foreach ($value as $i => $item) {
+            $failure = $this->validateValue($itemRule, $item, "{$path}.{$i}");
+            if ($failure !== null) {
+                return $failure;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Rebuild the ParsedRule shape from a nested item rule, which parseRule()
+     * produces but exposes as mixed because the type is self-recursive.
+     *
+     * @param mixed $rule The nested rule produced by parseRule().
+     *
+     * @return ParsedRule
+     */
+    private function asParsedRule(mixed $rule): array
+    {
+        $rule = is_array($rule) ? $rule : [];
+        $type = isset($rule['type']) && is_string($rule['type']) ? $rule['type'] : 'any';
+        $optional = isset($rule['optional']) && $rule['optional'] === true;
+        $constraints = [];
+        if (isset($rule['constraints']) && is_array($rule['constraints'])) {
+            foreach ($rule['constraints'] as $c) {
+                if (is_array($c) && isset($c['name'], $c['arg']) && is_string($c['name']) && is_string($c['arg'])) {
+                    $constraints[] = ['name' => $c['name'], 'arg' => $c['arg']];
+                }
+            }
+        }
+
+        return [
+            'optional' => $optional,
+            'type' => $type,
+            'constraints' => $constraints,
+            'itemRule' => $rule['itemRule'] ?? null,
+        ];
     }
 
     /**
@@ -110,7 +202,7 @@ final class SchemaValidator
      * @param string $raw  Rule string, e.g. `int|min:1|max:10?`.
      * @param string $path Path the rule belongs to (for error messages).
      *
-     * @return array{optional: bool, type: string, constraints: list<array{name: string, arg: string}>}
+     * @return ParsedRule
      *
      * @throws \SafeAccess\Inline\Exceptions\AccessorException When the type or a constraint is unrecognised or malformed.
      */
@@ -118,7 +210,16 @@ final class SchemaValidator
     {
         $optional = str_ends_with($raw, '?');
         $body = $optional ? substr($raw, 0, -1) : $raw;
-        $parts = explode('|', $body);
+
+        // Extract an `each:(...)` segment first so its inner `|` is not split.
+        $itemRule = null;
+        $each = $this->extractEach($body, $path);
+        if ($each !== null) {
+            $itemRule = $this->parseRule($each['inner'], "{$path}.*");
+            $body = $each['rest'];
+        }
+
+        $parts = array_values(array_filter(explode('|', $body), static fn (string $p): bool => $p !== ''));
         $type = $parts[0];
 
         if (!in_array($type, self::KNOWN_TYPES, true)) {
@@ -140,7 +241,66 @@ final class SchemaValidator
             $constraints[] = ['name' => $name, 'arg' => $arg];
         }
 
-        return ['optional' => $optional, 'type' => $type, 'constraints' => $constraints];
+        return ['optional' => $optional, 'type' => $type, 'constraints' => $constraints, 'itemRule' => $itemRule];
+    }
+
+    /**
+     * Extract an `each:(...)` segment from a rule body, honouring nested
+     * parentheses, and return the inner item rule plus the body without it.
+     *
+     * @param string $body Rule body (already stripped of the optional `?`).
+     * @param string $path Path for error messages.
+     *
+     * @return array{inner: string, rest: string}|null The inner rule and remaining body, or null when there is no `each`.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\AccessorException When the parentheses are unbalanced.
+     */
+    private function extractEach(string $body, string $path): ?array
+    {
+        $marker = 'each:';
+        $at = strpos($body, $marker);
+        if ($at === false) {
+            return null;
+        }
+
+        $after = substr($body, $at + strlen($marker));
+
+        if (str_starts_with($after, '(')) {
+            // Parenthesised form: balance nested parentheses.
+            $depth = 0;
+            $end = -1;
+            $len = strlen($after);
+            for ($i = 0; $i < $len; $i++) {
+                if ($after[$i] === '(') {
+                    $depth++;
+                } elseif ($after[$i] === ')') {
+                    $depth--;
+                    if ($depth === 0) {
+                        $end = $i;
+                        break;
+                    }
+                }
+            }
+            if ($end === -1) {
+                throw new AccessorException(
+                    "Schema constraint \"each\" has unbalanced parentheses for path \"{$path}\"."
+                );
+            }
+            $inner = substr($after, 1, $end - 1);
+            $tail = substr($after, $end + 1);
+        } else {
+            // Shortcut form `each:rule` (no `|` allowed inside the item rule).
+            $stop = strpos($after, '|');
+            $inner = $stop === false ? $after : substr($after, 0, $stop);
+            $tail = $stop === false ? '' : substr($after, $stop);
+        }
+
+        // Reassemble the body without the each segment, trimming a dangling `|`.
+        $rest = substr($body, 0, $at) . $tail;
+        $rest = preg_replace('/\|$/', '', $rest) ?? $rest;
+        $rest = str_replace('||', '|', $rest);
+
+        return ['inner' => $inner, 'rest' => $rest];
     }
 
     /**
