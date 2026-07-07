@@ -8,6 +8,9 @@ use SafeAccess\Inline\Contracts\AccessorsInterface;
 use SafeAccess\Inline\Contracts\ValidatableParserInterface;
 use SafeAccess\Inline\Exceptions\PathNotFoundException;
 use SafeAccess\Inline\Exceptions\ReadonlyViolationException;
+use SafeAccess\Inline\Exceptions\SchemaValidationException;
+use SafeAccess\Inline\Schema\SchemaResult;
+use SafeAccess\Inline\Schema\SchemaValidator;
 
 /**
  * Base accessor providing read, write, and lifecycle operations.
@@ -286,5 +289,54 @@ abstract class AbstractAccessor implements AccessorsInterface
         $newData = $this->dotNotationParser->merge($this->data, '', $value);
 
         return $this->mutate($newData);
+    }
+
+    /**
+     * Validate the data shape against a schema without throwing.
+     *
+     * A schema maps dot-notation paths to compact type rules (`string`, `int`,
+     * `float`, `number`, `bool`, `array`, `object`, `null`, `any`); a trailing
+     * `?` marks the path optional. Validation runs against already-parsed values.
+     *
+     * @param array<string, string> $schema Map of dot-notation path to type rule.
+     *
+     * @return SchemaResult The validation outcome; inspect isValid() and errors().
+     *
+     * @throws \SafeAccess\Inline\Exceptions\AccessorException When a rule string is not recognised.
+     *
+     * @example
+     * $result = Inline::fromJson($json)->validate(['db.host' => 'string', 'db.port' => 'int']);
+     */
+    public function validate(array $schema): SchemaResult
+    {
+        $validator = new SchemaValidator(
+            fn (string $path): bool => $this->has($path),
+            fn (string $path, mixed $fallback): mixed => $this->get($path, $fallback),
+        );
+
+        return $validator->validate($schema);
+    }
+
+    /**
+     * Validate the data shape and throw on failure, returning $this when valid.
+     *
+     * @param array<string, string> $schema Map of dot-notation path to type rule.
+     *
+     * @return static The same accessor instance, for chaining.
+     *
+     * @throws \SafeAccess\Inline\Exceptions\SchemaValidationException When the data does not satisfy the schema.
+     * @throws \SafeAccess\Inline\Exceptions\AccessorException          When a rule string is not recognised.
+     *
+     * @example
+     * Inline::fromJson($json)->assert(['db.host' => 'string'])->get('db.host');
+     */
+    public function assert(array $schema): static
+    {
+        $result = $this->validate($schema);
+        if (!$result->isValid()) {
+            throw new SchemaValidationException($result->errors());
+        }
+
+        return $this;
     }
 }
