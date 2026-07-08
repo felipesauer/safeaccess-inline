@@ -2,6 +2,19 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.2.0](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.13...php-v0.2.0) (2026-07-08)
+
+
+### Features
+
+* add CSV and TSV format support to both packages ([be4f2ff](https://github.com/felipesauer/safeaccess-inline/commit/be4f2ff8a7eb935749fa2c3dbcd656fcc4550c18))
+* add optional schema validation to both packages ([216babc](https://github.com/felipesauer/safeaccess-inline/commit/216babc9c59e9aad8a7acb346f4510a7bb63d831))
+* add TOML format support to both packages ([9d30c4d](https://github.com/felipesauer/safeaccess-inline/commit/9d30c4ddb83f165d40da89aca4c5e5d39700152c))
+* extend schema validation with constraints ([69a0eba](https://github.com/felipesauer/safeaccess-inline/commit/69a0ebaa967c260770ac22b8ecf1ca268c3e9dff))
+* group schema failures by path with errorsByPath ([35a2d02](https://github.com/felipesauer/safeaccess-inline/commit/35a2d02112c2b718385df747d4d9f1bff020e21b))
+* support wildcard paths in schema validation ([bf633f0](https://github.com/felipesauer/safeaccess-inline/commit/bf633f0489b71afc07c50dcd7e0c846f4ee5a15e))
+* validate array items with the each constraint ([f205c6e](https://github.com/felipesauer/safeaccess-inline/commit/f205c6ef83ea7d7a523e886895c58c86ad524718))
+
 ## [0.1.13](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.12...php-v0.1.13) (2026-07-07)
 
 
