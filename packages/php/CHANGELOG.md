@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.2.1](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.2.0...php-v0.2.1) (2026-07-08)
+
+
+### Documentation
+
+* add 0.2.0 highlights to package READMEs ([819cc78](https://github.com/felipesauer/safeaccess-inline/commit/819cc785643f9e1a9cf7e2c4bb56f473c87bb87c))
+
 ## [0.2.0](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.1.13...php-v0.2.0) (2026-07-08)
 
 
