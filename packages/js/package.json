@@ -1,6 +1,6 @@
 {
     "name": "@safeaccess/inline",
-    "version": "0.1.6",
+    "version": "0.2.0",
     "private": false,
     "description": "Safe nested data access with dot notation - JavaScript/TypeScript",
     "license": "MIT",
