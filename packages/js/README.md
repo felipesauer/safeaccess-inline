@@ -17,6 +17,11 @@ TypeScript/JavaScript library for safe nested data access with security validati
 
 ---
 
+## What's new in 0.2.0
+
+- **New formats:** TOML (`fromToml`) and CSV/TSV (`fromCsv`, `fromTsv`).
+- **Optional schema validation:** `validate()` / `assert()` with type rules, constraints (`min`, `max`, `enum`, `pattern`, `email`, `url`, `uuid`), per-item `each:(...)`, and `*` wildcard paths.
+
 ## The problem
 
 Reading nested data from external sources requires more than optional chaining. You also need to defend against prototype pollution in JSON, URI injection, Node.js global shadowing, and payload size attacks. Without a tool for this, that validation is boilerplate you write manually for every format and every endpoint.
