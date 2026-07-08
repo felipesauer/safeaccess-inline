@@ -4,7 +4,7 @@
 
 <h1 align="center">Safe Access Inline — PHP</h1>
 
-PHP library for safe nested data access with security validation on by default — JSON, YAML, XML, INI, ENV, NDJSON, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections. Zero production dependencies.
+PHP library for safe nested data access with security validation on by default — JSON, YAML, TOML, XML, INI, ENV, NDJSON, CSV/TSV, arrays and objects. Includes a full PathQuery engine with filters, wildcards, slices, and projections, plus optional schema validation. Zero production dependencies.
 
 <p align="center">
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
@@ -206,6 +206,31 @@ $accessor->get('database.credentials.user'); // 'admin'
 </details>
 
 <details>
+<summary><strong>TOML</strong></summary>
+
+```php
+$toml = <<<TOML
+[database]
+host = "localhost"
+port = 5432
+
+[[servers]]
+name = "alpha"
+
+[[servers]]
+name = "beta"
+TOML;
+
+$accessor = Inline::fromToml($toml);
+$accessor->get('database.host'); // 'localhost'
+$accessor->get('servers.1.name'); // 'beta'
+```
+
+Supports tables, arrays of tables, dotted keys, inline arrays and tables, and the scalar types (integer, float, boolean, string). Duplicate keys and redefined tables are rejected; datetimes are preserved as strings.
+
+</details>
+
+<details>
 <summary><strong>XML</strong></summary>
 
 ```php
@@ -249,6 +274,24 @@ $ndjson = '{"id":1,"name":"Alice"}' . "\n" . '{"id":2,"name":"Bob"}';
 $accessor = Inline::fromNdjson($ndjson);
 $accessor->get('0.name'); // 'Alice'
 $accessor->get('1.name'); // 'Bob'
+```
+
+</details>
+
+<details>
+<summary><strong>CSV / TSV</strong></summary>
+
+The first row is the header; each subsequent row becomes a record indexed from `0` by position, keyed by the header columns. All values are strings — CSV has no type system, so `007` stays `"007"`. Quoted fields may contain the delimiter, escaped quotes (`""`), and embedded newlines. Duplicate header columns, rows whose field count differs from the header, and unterminated quotes are rejected. Header columns are validated against forbidden keys.
+
+```php
+$csv = "name,age,city\nAlice,30,Porto\nBob,25,Lisbon";
+$accessor = Inline::fromCsv($csv);
+$accessor->get('0.name'); // 'Alice'
+$accessor->get('1.city'); // 'Lisbon'
+
+// Tab-separated
+$accessor = Inline::fromTsv("name\tage\nAlice\t30");
+$accessor->get('0.age'); // '30'
 ```
 
 </details>
@@ -324,6 +367,40 @@ $readonly->get('a.b');                  // 1 (reads work)
 $readonly->set('a.b', 99);             // throws ReadonlyViolationException
 ```
 
+## Schema validation
+
+Beyond security, validate the **shape** of the data. A schema maps dot-notation paths to pipe-separated rules: a base type (`string`, `int`, `float`, `number`, `bool`, `array`, `object`, `null`, `any`) followed by optional constraints. A trailing `?` marks the path optional. Validation runs against the already-parsed value.
+
+| Constraint           | Applies to              | Meaning                                        |
+| -------------------- | ----------------------- | ---------------------------------------------- |
+| `min:N`              | number                  | value `>= N`                                   |
+| `min:N`              | string / array          | length / size `>= N`                           |
+| `max:N`              | number / string / array | value or length / size `<= N`                  |
+| `enum:a,b,c`         | string / number         | value must be one of the listed options        |
+| `pattern:REGEX`      | string                  | must match the (unanchored) regular expression |
+| `email` `url` `uuid` | string                  | common string formats                          |
+| `each:(RULE)`        | array                   | every element must satisfy `RULE` (may nest)   |
+
+`validate()` returns a `SchemaResult` you can inspect; `assert()` throws `SchemaValidationException` on failure and returns the accessor for chaining. A path may contain `*` wildcards to apply a rule to every match. A malformed rule throws `AccessorException`.
+
+```php
+$accessor = Inline::fromJson('{"db":{"host":"localhost","port":5432},"users":[{"email":"a@b.com"}]}');
+
+// Inspect without throwing
+$result = $accessor->validate([
+    'db.host'       => 'string|min:1',
+    'db.port'       => 'int|min:1|max:65535',
+    'db.ssl'        => 'bool?',           // optional
+    'users.*.email' => 'string|email',    // every user's email
+]);
+$result->isValid();       // true
+$result->errors();        // SchemaError[] when invalid
+$result->errorsByPath();  // ['path' => [messages]] grouped per field
+
+// Assert and chain (throws SchemaValidationException on failure)
+$host = $accessor->assert(['db.host' => 'string'])->get('db.host');
+```
+
 ## Configure
 
 ### Builder pattern
@@ -384,6 +461,9 @@ try {
 | `SecurityException`          | `AccessorException`      | Forbidden key, payload, structural limits |
 | `InvalidFormatException`     | `AccessorException`      | Malformed JSON, XML, INI, NDJSON          |
 | `YamlParseException`         | `InvalidFormatException` | Unsafe or malformed YAML                  |
+| `TomlParseException`         | `InvalidFormatException` | Malformed TOML, duplicate keys, tables    |
+| `CsvParseException`          | `InvalidFormatException` | Malformed CSV/TSV, duplicate columns      |
+| `SchemaValidationException`  | `AccessorException`      | `assert()` when data fails the schema     |
 | `PathNotFoundException`      | `AccessorException`      | `getOrFail()` on missing path             |
 | `ReadonlyViolationException` | `AccessorException`      | Write on readonly accessor                |
 | `UnsupportedTypeException`   | `AccessorException`      | Unknown accessor class in `make()`        |
@@ -444,9 +524,12 @@ $accessor = Inline::withParserIntegration(new CsvIntegration())->fromAny($csvStr
 | `fromJson($data)`               | JSON `string`                      | `JsonAccessor`       |
 | `fromXml($data)`                | XML `string` or `SimpleXMLElement` | `XmlAccessor`        |
 | `fromYaml($data)`               | YAML `string`                      | `YamlAccessor`       |
+| `fromToml($data)`               | TOML `string`                      | `TomlAccessor`       |
 | `fromIni($data)`                | INI `string`                       | `IniAccessor`        |
 | `fromEnv($data)`                | dotenv `string`                    | `EnvAccessor`        |
 | `fromNdjson($data)`             | NDJSON `string`                    | `NdjsonAccessor`     |
+| `fromCsv($data)`                | CSV `string`                       | `CsvAccessor`        |
+| `fromTsv($data)`                | TSV `string`                       | `TsvAccessor`        |
 | `fromAny($data, $integration?)` | `mixed`                            | `AnyAccessor`        |
 | `from($typeFormat, $data)`      | `TypeFormat` enum                  | `AccessorsInterface` |
 | `make($class, $data)`           | `class-string`                     | `AbstractAccessor`   |
