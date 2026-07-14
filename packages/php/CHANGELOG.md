@@ -2,6 +2,13 @@
 
 All notable changes to the `safeaccess/inline` PHP package are documented in this file.
 
+## [0.2.2](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.2.1...php-v0.2.2) (2026-07-14)
+
+
+### Miscellaneous Chores
+
+* **php:** bump friendsofphp/php-cs-fixer from 3.95.11 to 3.95.13 in /packages/php in the dev-dependencies group ([#99](https://github.com/felipesauer/safeaccess-inline/issues/99)) ([45ad1f2](https://github.com/felipesauer/safeaccess-inline/commit/45ad1f2d14e6f1dcb381a5a85cfd4e97cf54f34b))
+
 ## [0.2.1](https://github.com/felipesauer/safeaccess-inline/compare/php-v0.2.0...php-v0.2.1) (2026-07-08)
 
 
