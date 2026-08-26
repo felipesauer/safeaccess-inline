@@ -8,9 +8,9 @@ PHP library for safe nested data access with security validation on by default �
 
 <p align="center">
   <a href="https://packagist.org/packages/safeaccess/inline"><img src="https://img.shields.io/packagist/v/safeaccess/inline?label=packagist" alt="Packagist"></a>
-  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
-  <img src="https://img.shields.io/badge/PHPStan-max-0A6DAD" alt="PHPStan max">
+  <img src="https://img.shields.io/badge/PHPStan-level%209-0A6DAD" alt="PHPStan level 9">
   <img src="https://img.shields.io/badge/Tested%20with-Pest-FF5733" alt="Tested with Pest">
   <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/felipesauer/80c602b17107f88fb17794d4d44c94fa/raw/infection-msi.json" alt="Infection MSI">
 </p>
@@ -582,4 +582,4 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for development setup, commit conve
 
 ## License
 
-[MIT](../../LICENSE) © Felipe Sauer
+[MIT](LICENSE) © Felipe Sauer

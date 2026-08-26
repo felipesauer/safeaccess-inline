@@ -45,12 +45,46 @@ cd packages/js
 
 Available scripts:
 
-| Script              | Purpose                 |
-| ------------------- | ----------------------- |
-| `npm run build`     | Compile TypeScript      |
-| `npm test`          | Run tests               |
-| `npm run typecheck` | Type-check without emit |
-| `npm run lint`      | Run ESLint              |
+| Script                  | Purpose                                     |
+| ----------------------- | ------------------------------------------- |
+| `npm run build`         | Compile TypeScript                          |
+| `npm test`              | Run tests                                   |
+| `npm run test:coverage` | Run tests with a coverage report            |
+| `npm run test:mutation` | Run Stryker mutation testing                |
+| `npm run test:parity`   | Run the PHP/TypeScript cross-parity vectors |
+| `npm run typecheck`     | Type-check without emit                     |
+| `npm run lint`          | Run ESLint                                  |
+
+PHP has the matching set, run from `packages/php`:
+
+| Script                   | Purpose                                     |
+| ------------------------ | ------------------------------------------- |
+| `composer test`          | Run tests with strict 100% coverage         |
+| `composer test:coverage` | Same, forcing pcov on                       |
+| `composer test:mutation` | Run Infection mutation testing              |
+| `composer test:parity`   | Run the PHP/TypeScript cross-parity vectors |
+| `composer analyse`       | Run PHPStan                                 |
+| `composer format`        | Apply php-cs-fixer                          |
+
+## A note on TypeScript 7
+
+`typescript@7` is the compiler rewritten in Go. The npm package is now a
+wrapper around a native binary: `tsc` behaves as before, but the default
+entrypoint exports only `{ version, versionMajorMinor }` — the programmatic
+API moved to `typescript/unstable/*`.
+
+Nothing in `src/` uses that API, so builds and tests are unaffected. Tooling
+that reads it is not: Stryker's sandbox calls `ts.parseConfigFileTextToJson`
+and crashes. That is why `packages/js/stryker.config.json` sets
+
+```json
+"tsconfigFile": "tsconfig.stryker-none.json"
+```
+
+to a path that does not exist — it makes Stryker skip the tsconfig rewrite it
+only needs for `extends` / `references` pointing outside the sandbox, which
+this project does not use. **Remove that line once Stryker supports
+TypeScript 7.**
 
 ## Commit Messages
 
