@@ -84,13 +84,15 @@ export class InlineBuilderAccessor {
      * @returns New builder instance with the integration configured.
      */
     withParserIntegration(integration: ParseIntegrationInterface): this {
-        return new (this.constructor as new (
-            guard: SecurityGuardInterface,
-            secParser: SecurityParserInterface,
-            pathCache: PathCacheInterface | null,
-            integration: ParseIntegrationInterface | null,
-            strictMode: boolean | null,
-        ) => this)(this._guard, this._secParser, this._pathCache, integration, this._strictMode);
+        return new (
+            this.constructor as new (
+                guard: SecurityGuardInterface,
+                secParser: SecurityParserInterface,
+                pathCache: PathCacheInterface | null,
+                integration: ParseIntegrationInterface | null,
+                strictMode: boolean | null,
+            ) => this
+        )(this._guard, this._secParser, this._pathCache, integration, this._strictMode);
     }
 
     /**
@@ -100,13 +102,15 @@ export class InlineBuilderAccessor {
      * @returns New builder instance with the guard configured.
      */
     withSecurityGuard(guard: SecurityGuardInterface): this {
-        return new (this.constructor as new (
-            guard: SecurityGuardInterface,
-            secParser: SecurityParserInterface,
-            pathCache: PathCacheInterface | null,
-            integration: ParseIntegrationInterface | null,
-            strictMode: boolean | null,
-        ) => this)(guard, this._secParser, this._pathCache, this._integration, this._strictMode);
+        return new (
+            this.constructor as new (
+                guard: SecurityGuardInterface,
+                secParser: SecurityParserInterface,
+                pathCache: PathCacheInterface | null,
+                integration: ParseIntegrationInterface | null,
+                strictMode: boolean | null,
+            ) => this
+        )(guard, this._secParser, this._pathCache, this._integration, this._strictMode);
     }
 
     /**
@@ -116,13 +120,15 @@ export class InlineBuilderAccessor {
      * @returns New builder instance with the parser configured.
      */
     withSecurityParser(parser: SecurityParserInterface): this {
-        return new (this.constructor as new (
-            guard: SecurityGuardInterface,
-            secParser: SecurityParserInterface,
-            pathCache: PathCacheInterface | null,
-            integration: ParseIntegrationInterface | null,
-            strictMode: boolean | null,
-        ) => this)(this._guard, parser, this._pathCache, this._integration, this._strictMode);
+        return new (
+            this.constructor as new (
+                guard: SecurityGuardInterface,
+                secParser: SecurityParserInterface,
+                pathCache: PathCacheInterface | null,
+                integration: ParseIntegrationInterface | null,
+                strictMode: boolean | null,
+            ) => this
+        )(this._guard, parser, this._pathCache, this._integration, this._strictMode);
     }
 
     /**
@@ -132,13 +138,15 @@ export class InlineBuilderAccessor {
      * @returns New builder instance with the cache configured.
      */
     withPathCache(cache: PathCacheInterface): this {
-        return new (this.constructor as new (
-            guard: SecurityGuardInterface,
-            secParser: SecurityParserInterface,
-            pathCache: PathCacheInterface | null,
-            integration: ParseIntegrationInterface | null,
-            strictMode: boolean | null,
-        ) => this)(this._guard, this._secParser, cache, this._integration, this._strictMode);
+        return new (
+            this.constructor as new (
+                guard: SecurityGuardInterface,
+                secParser: SecurityParserInterface,
+                pathCache: PathCacheInterface | null,
+                integration: ParseIntegrationInterface | null,
+                strictMode: boolean | null,
+            ) => this
+        )(this._guard, this._secParser, cache, this._integration, this._strictMode);
     }
 
     /**
@@ -152,12 +160,14 @@ export class InlineBuilderAccessor {
      *           Only use with fully trusted, application-controlled input.
      */
     withStrictMode(strict: boolean): this {
-        return new (this.constructor as new (
-            guard: SecurityGuardInterface,
-            secParser: SecurityParserInterface,
-            pathCache: PathCacheInterface | null,
-            integration: ParseIntegrationInterface | null,
-            strictMode: boolean | null,
-        ) => this)(this._guard, this._secParser, this._pathCache, this._integration, strict);
+        return new (
+            this.constructor as new (
+                guard: SecurityGuardInterface,
+                secParser: SecurityParserInterface,
+                pathCache: PathCacheInterface | null,
+                integration: ParseIntegrationInterface | null,
+                strictMode: boolean | null,
+            ) => this
+        )(this._guard, this._secParser, this._pathCache, this._integration, strict);
     }
 }
