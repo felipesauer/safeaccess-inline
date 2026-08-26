@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 /**
  * Shared ESLint configuration for all TypeScript packages in the monorepo.
- * Imported by packages/js/eslint.config.js and packages/cli/eslint.config.js.
+ * Imported by packages/js/eslint.config.js.
  */
 export default tseslint.config(
     eslint.configs.recommended,
