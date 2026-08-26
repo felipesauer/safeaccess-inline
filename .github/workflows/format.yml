@@ -1,0 +1,32 @@
+name: Format
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    prettier:
+        name: Prettier
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Node.js
+              uses: ./.github/actions/setup-node-cached
+              with:
+                  node-version: '24'
+
+            - name: Install dependencies
+              run: npm install
+
+            # No paths filter: most of what drifted out of style lives at the
+            # repo root, which the js-ci and php-ci filters never match.
+            - name: Check formatting
+              run: npx prettier --check . --ignore-path .gitignore --ignore-path .prettierignore
