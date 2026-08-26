@@ -7,6 +7,7 @@
         "customPath": "vendor/bin/pest"
     },
     "testFramework": "phpunit",
+    // Keep in sync with scripts/mutation.sh and the PHP CI workflow (both use 100).
     "minMsi": 100,
     "minCoveredMsi": 100,
     "threads": "max",
@@ -14,6 +15,7 @@
         "@default": true
     },
     "logs": {
+        "summary": "build/infection/infection-summary.json",
         "json": "build/infection/infection.json"
     }
 }
