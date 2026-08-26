@@ -1,6 +1,8 @@
 {
     "testRunner": "vitest",
     "tsconfigFile": "tsconfig.stryker-none.json",
+    "coverageAnalysis": "perTest",
+    "timeoutMS": 30000,
     "mutate": [
         "src/**/*.ts",
         "!src/**/*.test.ts",
@@ -11,17 +13,18 @@
     ],
     "thresholds": {
         "high": 100,
-        "low": 85,
+        "low": 90,
         "break": 90
     },
-    "timeoutMS": 30000,
-    "coverageAnalysis": "perTest",
+    "incremental": true,
+    "incrementalFile": "reports/mutation/.incremental.json",
     "reporters": ["json", "clear-text", "progress", "dashboard"],
-    "dashboard": {
-        "project": "github.com/felipesauer/safeaccess-inline",
-        "version": "main"
-    },
     "jsonReporter": {
         "fileName": "reports/mutation/mutation.json"
+    },
+    "dashboard": {
+        "project": "github.com/felipesauer/safeaccess-inline",
+        "version": "main",
+        "reportType": "full"
     }
 }
