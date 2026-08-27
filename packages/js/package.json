@@ -7,6 +7,11 @@
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "src",
+        "CHANGELOG.md"
+    ],
     "exports": {
         ".": {
             "import": "./dist/index.js",
