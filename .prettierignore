@@ -4,6 +4,10 @@ CHANGELOG.md
 packages/*/CHANGELOG.md
 .release-please-manifest.json
 
+# mnema's record is signed bytes (tailproof.json included): reformatting any
+# of it invalidates the proof it carries.
+.mnema/
+
 # Test fixtures are inputs, not source. Their exact bytes are what is under
 # test — indentation included.
 packages/php/tests/Fixtures/

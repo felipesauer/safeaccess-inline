@@ -106,6 +106,9 @@ ci: add matrix build for PHP 8.3
 deps: bump eslint to v10
 ```
 
+The local `commit-msg` hook checks each commit, but merges are squash-only: the **pull request title**
+is what lands on `main`. A CI check runs commitlint on the title, so it must follow the same format.
+
 ## Pull Request Workflow
 
 1. Fork the repository
