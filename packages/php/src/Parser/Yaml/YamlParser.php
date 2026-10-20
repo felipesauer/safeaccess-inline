@@ -262,10 +262,10 @@ final class YamlParser
 
         // Block scalars
         if ($rawValue === '|' || $rawValue === '|-' || $rawValue === '|+') {
-            return $this->parseBlockScalar($lines, $currentLine + 1, $childIndent, $childEnd, 'literal', $rawValue);
+            return $this->parseBlockScalar($lines, $currentLine + 1, $childEnd, 'literal', $rawValue);
         }
         if ($rawValue === '>' || $rawValue === '>-' || $rawValue === '>+') {
-            return $this->parseBlockScalar($lines, $currentLine + 1, $childIndent, $childEnd, 'folded', $rawValue);
+            return $this->parseBlockScalar($lines, $currentLine + 1, $childEnd, 'folded', $rawValue);
         }
 
         // If rawValue is empty, parse child block
@@ -294,14 +294,13 @@ final class YamlParser
      *
      * @param array<int, string> $lines    All document lines.
      * @param int                $start    Start line index for block content.
-     * @param int                $indent   Expected minimum indentation.
      * @param int                $end      End boundary.
      * @param string             $style    Either 'literal' or 'folded'.
      * @param string             $chomping Chomping indicator (|, |-, |+, >, >-, >+).
      *
      * @return string Assembled block scalar string.
      */
-    private function parseBlockScalar(array $lines, int $start, int $indent, int $end, string $style, string $chomping): string
+    private function parseBlockScalar(array $lines, int $start, int $end, string $style, string $chomping): string
     {
         $blockLines = [];
         $actualIndent = null;
