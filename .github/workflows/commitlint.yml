@@ -1,0 +1,41 @@
+name: Commitlint
+
+on:
+    pull_request:
+        branches: [main]
+        # `edited` re-runs the check when the title is changed after the PR is opened.
+        types: [opened, edited, synchronize, reopened]
+
+permissions:
+    contents: read
+
+jobs:
+    pr-title:
+        name: PR title
+        runs-on: ubuntu-latest
+        # The check is for humans. Bots write their own titles: release-please uses the "main"
+        # scope, and Dependabot titles can reach the 100-character header limit. The rules in
+        # commitlint.config.js stay as they are; these PRs are skipped, not relaxed. Keyed on the
+        # PR author, so a person editing a bot PR's title is still not checked.
+        if: >-
+            github.event.pull_request.user.login != 'dependabot[bot]' &&
+            github.event.pull_request.user.login != 'github-actions[bot]'
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Node.js
+              uses: ./.github/actions/setup-node-cached
+              with:
+                  node-version: '24'
+
+            - name: Install dependencies
+              run: npm install
+
+            # Merges are squash-only and the PR title becomes the commit subject on main,
+            # so the title is the one message the local commit-msg hook never sees.
+            # Passed through the environment so a crafted title cannot inject shell.
+            - name: Lint PR title
+              env:
+                  PR_TITLE: ${{ github.event.pull_request.title }}
+              run: printf '%s\n' "$PR_TITLE" | npx --no -- commitlint --verbose

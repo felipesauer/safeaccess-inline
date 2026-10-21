@@ -36,6 +36,11 @@ updates:
               update-types:
                   - 'minor'
                   - 'patch'
+      ignore:
+          # vitepress-plugin-mermaid only accepts mermaid 10 or 11 as a peer, so a
+          # mermaid 12 PR can never install. Revisit once the plugin widens its range.
+          - dependency-name: 'mermaid'
+            update-types: ['version-update:semver-major']
 
     # GitHub Actions
     - package-ecosystem: 'github-actions'
