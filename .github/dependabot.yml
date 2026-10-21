@@ -31,8 +31,17 @@ updates:
       reviewers:
           - 'felipesauer'
       groups:
+          # vitest and @vitest/* must move together: @vitest/coverage-v8 pins the exact vitest
+          # version as a peer, so a PR for only one of them can never install or pass.
+          vitest:
+              patterns:
+                  - 'vitest'
+                  - '@vitest/*'
           npm:
               dependency-type: 'development'
+              exclude-patterns:
+                  - 'vitest'
+                  - '@vitest/*'
               update-types:
                   - 'minor'
                   - 'patch'
@@ -40,6 +49,14 @@ updates:
           # vitepress-plugin-mermaid only accepts mermaid 10 or 11 as a peer, so a
           # mermaid 12 PR can never install. Revisit once the plugin widens its range.
           - dependency-name: 'mermaid'
+            update-types: ['version-update:semver-major']
+          # vitest 5 breaks @stryker-mutator/vitest-runner: its per-test filter matches nothing, so
+          # every covered mutant survives and the mutation score collapses. Upstream bug:
+          # https://github.com/stryker-mutator/stryker-js/issues/6210
+          # Drop these two entries once a vitest-runner release fixes it.
+          - dependency-name: 'vitest'
+            update-types: ['version-update:semver-major']
+          - dependency-name: '@vitest/*'
             update-types: ['version-update:semver-major']
 
     # GitHub Actions
