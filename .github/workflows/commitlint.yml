@@ -13,6 +13,13 @@ jobs:
     pr-title:
         name: PR title
         runs-on: ubuntu-latest
+        # The check is for humans. Bots write their own titles: release-please uses the "main"
+        # scope, and Dependabot titles can reach the 100-character header limit. The rules in
+        # commitlint.config.js stay as they are; these PRs are skipped, not relaxed. Keyed on the
+        # PR author, so a person editing a bot PR's title is still not checked.
+        if: >-
+            github.event.pull_request.user.login != 'dependabot[bot]' &&
+            github.event.pull_request.user.login != 'github-actions[bot]'
 
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
