@@ -27,7 +27,7 @@
         "lint-staged": "^17.6",
         "mermaid": "^11.17.2",
         "prettier": "^3.9",
-        "typescript-eslint": "^8.71.2",
+        "typescript-eslint": "^8.72.0",
         "vitepress": "^1.6.4",
         "vitepress-plugin-mermaid": "^2.0.17"
     },
