@@ -18,6 +18,11 @@ cd safeaccess-inline
 
 ## PHP Development
 
+Development happens in `packages/php/composer.json`. The `composer.json` at the repository root is what Packagist installs from:
+when you change `name`, `require`, `suggest` or the autoload paths there, change the root file the same way
+(`php .github/scripts/check-root-composer.php` fails when they differ). The archive that `composer require` downloads holds only
+`composer.json`, `LICENSE`, `README.md` and `packages/php/` sources, selected by the `export-ignore` lines in `.gitattributes`.
+
 ```bash
 cd packages/php
 composer install

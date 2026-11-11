@@ -17,7 +17,7 @@
         "packages/php": {
             "release-type": "php",
             "component": "php",
-            "include-component-in-tag": true,
+            "include-component-in-tag": false,
             "initial-version": "0.1.0",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": true,
@@ -33,5 +33,6 @@
             "bump-patch-for-minor-pre-major": false
         }
     },
+    "last-release-sha": "79607f88bdff65665e4bddb83cc896683570db80",
     "separate-pull-requests": true
 }

@@ -56,6 +56,23 @@
 /package.json export-ignore
 /release-please-config.json export-ignore
 /.release-please-manifest.json export-ignore
+/.mnema/ export-ignore
+/.prettierignore export-ignore
+/.prettierrc.json export-ignore
+/AGENTS.md export-ignore
+/CHANGELOG.md export-ignore
+/CLAUDE.md export-ignore
+/CONTRIBUTING.md export-ignore
+/SECURITY.md export-ignore
+/codecov.yml export-ignore
+/eslint.config.js export-ignore
+/package-lock.json export-ignore
+
+# The archive GitHub serves (what `composer require` downloads) holds only the PHP package:
+# composer.json, LICENSE, README.md and packages/php/{src,README.md,CHANGELOG.md}.
+/packages/js/ export-ignore
+/packages/php/composer.json export-ignore
+/packages/php/LICENSE export-ignore
 
 # GitHub Linguist overrides
 packages/php/vendor/ linguist-vendored
