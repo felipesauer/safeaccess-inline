@@ -62,5 +62,8 @@ TypeScript, Node 22+) and `packages/php` (`safeaccess/inline`, PHP 8.2+). Each r
 
 - `packages/js/src`, `packages/php/src`: `accessors/` (one per format), `core/`, `parser/`, `path-query/`, `schema/`, `security/`,
   `cache/`, `contracts/`, `exceptions/`; tests mirror that layout under `packages/js/tests` and `packages/php/tests/Unit`.
-- `.github/workflows/`: `js-ci.yml`, `php-ci.yml`, `format.yml`, `commitlint.yml`, `release.yml`, `split-packages.yml`.
+- `.github/workflows/`: `js-ci.yml`, `php-ci.yml`, `format.yml`, `commitlint.yml`, `release.yml`. Both packages are published from this repository alone: `release.yml` publishes `packages/js` to npm,
+  and Packagist reads the root `composer.json`.
+- `composer.json` (root): the PHP package as Packagist installs it; it must agree with `packages/php/composer.json` on `name`, `require`, `suggest`
+  and autoload (`.github/scripts/check-root-composer.php`, run by `php-ci.yml`). `.gitattributes` keeps the archive Composer downloads to the PHP package only.
 - Humans' guide: `CONTRIBUTING.md`. Sibling repository with the same layout and tooling: `safeaccess-identum`.

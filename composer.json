@@ -1,0 +1,48 @@
+{
+    "name": "safeaccess/inline",
+    "description": "Safe nested data access with dot notation for PHP.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "safeaccess",
+        "dot-notation",
+        "nested-data",
+        "data-access",
+        "array-access",
+        "object-access",
+        "null-safe"
+    ],
+    "homepage": "https://github.com/felipesauer/safeaccess-inline",
+    "authors": [
+        {
+            "name": "Felipe Sauer",
+            "email": "felipesauer11@hotmail.com",
+            "homepage": "https://github.com/felipesauer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/felipesauer/safeaccess-inline/issues",
+        "source": "https://github.com/felipesauer/safeaccess-inline/tree/main/packages/php"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-simplexml": "*",
+        "ext-libxml": "*"
+    },
+    "suggest": {
+        "ext-yaml": "For improved YAML parsing performance (optional - a built-in minimal parser is used by default)"
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/felipesauer"
+        }
+    ],
+    "minimum-stability": "alpha",
+    "autoload": {
+        "psr-4": {
+            "SafeAccess\\Inline\\": "packages/php/src/"
+        }
+    }
+}

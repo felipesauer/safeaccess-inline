@@ -5,11 +5,17 @@ on:
         branches: [main]
         paths:
             - 'packages/php/**'
+            - 'composer.json'
+            - '.gitattributes'
+            - '.github/scripts/check-root-composer.php'
             - '.github/workflows/php-ci.yml'
     pull_request:
         branches: [main]
         paths:
             - 'packages/php/**'
+            - 'composer.json'
+            - '.gitattributes'
+            - '.github/scripts/check-root-composer.php'
             - '.github/workflows/php-ci.yml'
     workflow_dispatch:
 
@@ -17,6 +23,35 @@ permissions:
     contents: read
 
 jobs:
+    # Packagist installs from the repository root, so the root composer.json and the
+    # archive GitHub serves must stay in step with packages/php.
+    root-package:
+        name: Root package
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+              with:
+                  php-version: '8.4'
+
+            - name: Validate the root composer.json
+              run: composer validate --strict --no-check-lock composer.json
+
+            - name: Check the root composer.json against packages/php/composer.json
+              run: php .github/scripts/check-root-composer.php
+
+            - name: Check the archive holds only the PHP package
+              run: |
+                  git archive HEAD | tar -t | grep -v '/$' > "$RUNNER_TEMP/archive.txt"
+                  if grep -v -E '^(composer\.json|LICENSE|README\.md|packages/php/(README\.md|CHANGELOG\.md|src/.+))$' "$RUNNER_TEMP/archive.txt"; then
+                      echo '::error::the files above are in the archive but are not part of the PHP package'
+                      exit 1
+                  fi
+                  grep -q '^packages/php/src/' "$RUNNER_TEMP/archive.txt"
+
     test:
         name: PHP ${{ matrix.php }} (${{ matrix.deps }})
         runs-on: ubuntu-latest
