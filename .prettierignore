@@ -15,3 +15,6 @@ packages/php/tests/Fixtures/
 # Infection reads json5; Prettier rewrites the quoting style, which would
 # fork this file away from its twin in safeaccess-identum.
 packages/php/infection.json5
+
+# Written by `mnema instructions`, which recognises only its own bytes.
+.github/instructions/mnema-instructions.instructions.md
